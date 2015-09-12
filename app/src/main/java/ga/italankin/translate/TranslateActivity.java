@@ -117,6 +117,9 @@ public class TranslateActivity extends AppCompatActivity implements LanguagesTas
 
         mLangFrom = mPrefs.getString(PREF_LANG_FROM, AUTO);
         mAuto = TextUtils.equals(mLangFrom, AUTO);
+        if (!mAuto) {
+            mLangFromLast = mLangFrom;
+        }
         mLangTo = mPrefs.getString(PREF_LANG_TO, Locale.getDefault().getDisplayLanguage());
 
         mInput.setOnKeyListener(new View.OnKeyListener() {
@@ -430,6 +433,7 @@ public class TranslateActivity extends AppCompatActivity implements LanguagesTas
 
     /**
      * Callback function to handle translation task results
+     *
      * @param result result of translation request
      */
     public void onTranslateTaskResult(TranslateTask.Result result) {
