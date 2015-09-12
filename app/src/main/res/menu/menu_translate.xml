@@ -1,0 +1,22 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".TranslateActivity">
+    <item
+        android:id="@+id/action_copy"
+        android:icon="@drawable/ic_action_copy"
+        android:orderInCategory="100"
+        android:title="@string/action_copy"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_switch"
+        android:icon="@drawable/ic_action_refresh"
+        android:orderInCategory="101"
+        android:title="@string/action_switch"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="105"
+        android:title="@string/action_settings"
+        app:showAsAction="never" />
+</menu>
