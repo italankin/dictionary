@@ -10,7 +10,7 @@
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_switch"
-        android:icon="@drawable/ic_action_refresh"
+        android:icon="@drawable/ic_action_switch"
         android:orderInCategory="101"
         android:title="@string/action_switch"
         app:showAsAction="ifRoom" />
