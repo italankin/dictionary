@@ -4,10 +4,19 @@ public class TranslatorHelper {
 
     public static final String TRANSLATE_URL = "https://translate.yandex.net/api/v1.5/tr.json/translate";
     public static final String LANGS_URL = "https://translate.yandex.net/api/v1.5/tr.json/getLangs";
-    public static final String AUTO = "auto";
 
     private String fromLang;
     private String toLang;
+    private boolean auto = false;
+
+    public TranslatorHelper() {
+        super();
+    }
+
+    public TranslatorHelper(String to) {
+        toLang = to;
+        auto = true;
+    }
 
     public TranslatorHelper(String from, String to) {
         fromLang = from;
@@ -20,10 +29,10 @@ public class TranslatorHelper {
 
     public String translateUrl(String text, String apiKey) {
         String lang = toLang;
-        if (!AUTO.equals(fromLang)) {
+        if (!auto) {
             lang = fromLang + "-" + toLang;
         }
-        return String.format("%s?key=%s&lang=%s&text=%s", TRANSLATE_URL, apiKey, lang, text);
+        return String.format("%s?key=%s&lang=%s&text=%s", TRANSLATE_URL, apiKey, lang.toLowerCase(), text);
     }
 
 }

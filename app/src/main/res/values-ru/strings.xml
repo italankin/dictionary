@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Translate</string>
+    <string name="action_about">О программе</string>
+    <string name="action_copy">Копировать</string>
+    <string name="action_settings">Настройки</string>
+    <string name="action_switch">Переключить язык</string>
+    <string name="error_blocked_key">Ошибка: API ключ заблокирован</string>
+    <string name="error_copy_nothing">Нет данных для копирования</string>
+    <string name="error_char_limit">Ошибка: длина запроса превышает лимит</string>
+    <string name="error_daily_limit">Ошибка: превышено суточное ограничение на количество запросов</string>
+    <string name="error_empty_query">Ошибка: пустой запрос</string>
+    <string name="error_invalid_key">Ошибка: неверный API ключ</string>
+    <string name="error_invalid_lang">Ошибка: язык не поддерживается</string>
+    <string name="error_no_connection">Ошибка: нет соединения</string>
+    <string name="error_nonsense">Ошибка: сервер прислал странную информацию</string>
+    <string name="error_not_supported">Ошибка: выбранное направление перевода не поддерживается</string>
+    <string name="error_something_wrong">Что-то пошло не так, проверьте запрос</string>
+    <string name="error_unprocessable">Ошибка: текст не может быть переведен</string>
+    <string name="error_volume_limit">Ошибка: превышено суточное ограничение на объем переведенного текста</string>
+    <string name="lang_detect">Определить язык</string>
+    <string name="loading">Загрузка</string>
+    <string name="placeholder_input">Введите текст</string>
+    <string name="placeholder_lang">Язык</string>
+    <string name="placeholder_output">Перевод будет показан здесь</string>
+    <string name="text_auto">Авто</string>
+    <string name="toast_copy">Скопировано</string>
+    <string name="choose_language_from">Язык исходного текста</string>
+    <string name="choose_language_to">Язык перевода</string>
+</resources>

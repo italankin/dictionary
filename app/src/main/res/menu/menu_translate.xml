@@ -14,9 +14,4 @@
         android:orderInCategory="101"
         android:title="@string/action_switch"
         app:showAsAction="ifRoom" />
-    <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="105"
-        android:title="@string/action_settings"
-        app:showAsAction="never" />
 </menu>
