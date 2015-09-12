@@ -1,9 +1,8 @@
-# README #
+# Translator #
 
-Simple Android application for translating text/
+Simple Android application for translating text.
 
-### What is this repository for? ###
+### Used APIs and libraries ###
 
-* Translate
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+* [Yandex Translate API](https://tech.yandex.com/translate/)
+* [OkHttp](http://square.github.io/okhttp/)
