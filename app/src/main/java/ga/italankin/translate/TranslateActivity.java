@@ -379,36 +379,27 @@ public class TranslateActivity extends AppCompatActivity implements LanguagesTas
      * @param i      identifier of task caller
      */
     public void onLanguagesTaskResult(LanguagesTask.Result result, int i) {
+        String message = null;
         switch (result.code) {
             // no connection
             case 0:
-                Toast.makeText(this,
-                        getString(R.string.error_no_connection),
-                        Toast.LENGTH_SHORT).show();
+                message = getString(R.string.error_no_connection);
                 break;
             // cannot parse data received from the server
             case 1:
-                Toast.makeText(this,
-                        getString(R.string.error_nonsense),
-                        Toast.LENGTH_SHORT).show();
+                message = getString(R.string.error_nonsense);
                 break;
             // something strange happened, generally request sending failed
             case 2:
-                Toast.makeText(this,
-                        getString(R.string.error_something_wrong),
-                        Toast.LENGTH_SHORT);
+                message = getString(R.string.error_something_wrong);
                 break;
             // invalid API key
             case 401:
-                Toast.makeText(this,
-                        getString(R.string.error_invalid_key),
-                        Toast.LENGTH_SHORT).show();
+                message = getString(R.string.error_invalid_key);
                 break;
             // API key is blocked
             case 402:
-                Toast.makeText(this,
-                        getString(R.string.error_blocked_key),
-                        Toast.LENGTH_SHORT).show();
+                message = getString(R.string.error_blocked_key);
                 break;
             // ok behaviour
             default:
@@ -421,6 +412,9 @@ public class TranslateActivity extends AppCompatActivity implements LanguagesTas
                         showChooseDestDialog();
                         break;
                 }
+        }
+        if (message != null && i >= 0) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -437,73 +431,63 @@ public class TranslateActivity extends AppCompatActivity implements LanguagesTas
      * @param result result of translation request
      */
     public void onTranslateTaskResult(TranslateTask.Result result) {
+        String message = null;
         switch (result.code) {
             // no connection
             case 0:
-                Toast.makeText(this,
-                        getString(R.string.error_no_connection),
-                        Toast.LENGTH_SHORT).show();
+                message = getString(R.string.error_no_connection);
                 break;
+
             // data received from server failed to parse
             case 1:
-                Toast.makeText(this,
-                        getString(R.string.error_nonsense),
-                        Toast.LENGTH_SHORT).show();
+                message = getString(R.string.error_nonsense);
                 break;
+
             // something strange happened, generally request sending failed
             case 2:
-                Toast.makeText(this,
-                        getString(R.string.error_something_wrong),
-                        Toast.LENGTH_SHORT);
+                message = getString(R.string.error_something_wrong);
                 break;
+
             // translate direction is not supported by server
             case 400:
-                Toast.makeText(this,
-                        getString(R.string.error_not_supported),
-                        Toast.LENGTH_SHORT).show();
+                message = getString(R.string.error_not_supported);
                 break;
+
             // invalid API key
             case 401:
-                Toast.makeText(this,
-                        getString(R.string.error_invalid_key),
-                        Toast.LENGTH_SHORT).show();
+                message = getString(R.string.error_invalid_key);
                 break;
+
             // API key is blocked
             case 402:
-                Toast.makeText(this,
-                        getString(R.string.error_blocked_key),
-                        Toast.LENGTH_SHORT).show();
+                message = getString(R.string.error_blocked_key);
                 break;
+
             // daily query limit reached
             case 403:
-                Toast.makeText(this,
-                        getString(R.string.error_daily_limit),
-                        Toast.LENGTH_SHORT).show();
+                message = getString(R.string.error_daily_limit);
                 break;
+
             // daily translation volume reached
             case 404:
-                Toast.makeText(this,
-                        getString(R.string.error_volume_limit),
-                        Toast.LENGTH_SHORT).show();
+                message = getString(R.string.error_volume_limit);
                 break;
+
             // query length is too big
             case 405:
-                Toast.makeText(this,
-                        getString(R.string.error_char_limit),
-                        Toast.LENGTH_SHORT).show();
+                message = getString(R.string.error_char_limit);
                 break;
+
             // server failed to translate text
             case 422:
-                Toast.makeText(this,
-                        getString(R.string.error_unprocessable),
-                        Toast.LENGTH_SHORT).show();
+                message = getString(R.string.error_unprocessable);
                 break;
+
             // language is not supported by server
             case 501:
-                Toast.makeText(this,
-                        getString(R.string.error_invalid_lang),
-                        Toast.LENGTH_SHORT).show();
+                message = getString(R.string.error_invalid_lang);
                 break;
+
             // ok behaviour
             default:
                 mOutput.setText(result.text);
@@ -513,6 +497,9 @@ public class TranslateActivity extends AppCompatActivity implements LanguagesTas
                 if (mAuto) {
                     mSourceLanguage.setText("(" + Utils.extractLangName(mLangFromLast) + ")");
                 }
+        }
+        if (message != null) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT);
         }
     }
 
