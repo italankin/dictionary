@@ -95,18 +95,18 @@ public class TranslateTask extends AsyncTask<String, Void, TranslateTask.Result>
         }
     }
 
-    public static class Result {
-        public int code;
-        public String text;
-        public String from;
-    }
-
     public interface Callbacks {
 
         void onTranslateTaskPre();
 
         void onTranslateTaskResult(Result result);
 
+    }
+
+    public static class Result {
+        public int code;
+        public String text;
+        public String from;
     }
 
 }
