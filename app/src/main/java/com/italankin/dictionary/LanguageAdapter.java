@@ -1,6 +1,5 @@
-package ga.italankin.translate;
+package com.italankin.dictionary;
 
-import android.animation.TimeInterpolator;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,14 +8,17 @@ import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.TextView;
 
+import com.italankin.dictionary.dto.Language;
+
 import java.util.ArrayList;
+import java.util.List;
 
 public class LanguageAdapter extends ArrayAdapter<Language> implements View.OnClickListener {
 
     private LayoutInflater inflater;
-    private ArrayList<Language> list;
+    private List<Language> list;
 
-    public LanguageAdapter(Context context, ArrayList<Language> list) {
+    public LanguageAdapter(Context context, List<Language> list) {
         super(context, 0, list);
         this.inflater = LayoutInflater.from(context);
         this.list = list;

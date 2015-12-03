@@ -1,4 +1,4 @@
-package ga.italankin.translate;
+package com.italankin.dictionary.dto;
 
 import android.support.annotation.NonNull;
 
@@ -44,4 +44,5 @@ public class Language implements Comparable<Language> {
         }
         return this.name.compareTo(another.name);
     }
+
 }

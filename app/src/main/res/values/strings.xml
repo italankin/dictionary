@@ -1,14 +1,13 @@
 <resources>
-    <string name="app_name">Translate</string>
+    <string name="app_name">Dictionary</string>
 
     <string name="source">Source language</string>
     <string name="destination">Destination language</string>
-    <string name="detect">Detect language</string>
     <string name="auto">Auto</string>
     <string name="loading">Loading</string>
 
     <string name="placeholder_input">Enter text here</string>
-    <string name="placeholder_output">Translation will appear here</string>
+    <string name="placeholder_output">Result will appear here</string>
     <string name="placeholder_lang">Language</string>
     <string name="placeholder_lang2">(Language)</string>
 
@@ -35,4 +34,5 @@
     <string name="error_something_wrong">Error: something went wrong, check your query</string>
     <string name="error_not_supported">Error: the specified translation direction is not supported</string>
     <string name="error_unknown">Error: unknown error</string>
+    <string name="error_no_results">No results</string>
 </resources>
