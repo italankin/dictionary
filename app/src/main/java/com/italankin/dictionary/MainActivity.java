@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -17,6 +16,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,9 +29,9 @@ public class MainActivity extends AppCompatActivity {
     private MainPresenter mPresenter;
 
     private EditText mInput;
-    private CardView mInputCard;
     private TextView mTextDest;
     private TextView mTextSource;
+    private ImageView mArrow;
 
     private LanguageAdapter mLangsSourceAdapter;
     private LanguageAdapter mLangsDestAdapter;
@@ -63,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mInputCard = (CardView) findViewById(R.id.input_card);
         mTextDest.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -77,20 +76,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        findViewById(R.id.tvArrow).setOnClickListener(new View.OnClickListener() {
+        mArrow = (ImageView) findViewById(R.id.ivArrow);
+        mArrow.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                float rotation = 180f;
-                if (v.getRotation() > 0) {
-                    rotation *= -1;
-                }
-                v.setRotation(0);
-                v.animate()
-                        .rotationBy(rotation)
-                        .setDuration(300)
-                        .start();
-                mPresenter.swapLangs();
-                updateView(true);
+                swapLangs();
             }
         });
 
@@ -101,6 +91,32 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setLayoutManager(layoutManager);
 
         mPresenter.getLangs();
+    }
+
+    private void swapLangs() {
+        int duration = 450;
+
+        float rotation = 180f;
+        if (mArrow.getRotation() > 0) {
+            rotation *= -1;
+        }
+        mArrow.setRotation(0);
+        mArrow.animate()
+                .rotationBy(rotation)
+                .setDuration(300)
+                .start();
+
+        SwitchAnimation anim = new SwitchAnimation(mTextSource, mTextSource.getHeight(), 0, duration,
+                new SwitchAnimation.OnSwitchListener() {
+                    @Override
+                    public void onSwitch() {
+                        mPresenter.swapLangs();
+                        updateView(false);
+                    }
+                });
+        anim.start();
+        anim = new SwitchAnimation(mTextDest, -mTextDest.getHeight(), 0, duration, null);
+        anim.start();
     }
 
     private void startLookup() {
