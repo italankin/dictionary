@@ -1,23 +1,26 @@
 package com.italankin.dictionary;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
-import android.support.v4.view.MotionEventCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.italankin.dictionary.dto.Definition;
+import com.italankin.dictionary.dto.Translation;
 
 import java.util.List;
 
@@ -26,17 +29,14 @@ public class MainActivity extends AppCompatActivity {
     private MainPresenter mPresenter;
 
     private EditText mInput;
-    private TextView mOutput;
+    private CardView mInputCard;
     private TextView mTextDest;
     private TextView mTextSource;
 
     private LanguageAdapter mLangsSourceAdapter;
     private LanguageAdapter mLangsDestAdapter;
 
-    // for touch events handling
-    private float x;
-    private float y;
-    private Toolbar mToolbar;
+    private RecyclerView mRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,14 +46,12 @@ public class MainActivity extends AppCompatActivity {
         mPresenter = MainPresenter.getInstance(this);
         mPresenter.attach(this);
 
-        mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(mToolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
-        mOutput = (TextView) findViewById(R.id.tvOutput);
         mTextDest = (TextView) findViewById(R.id.tvDirectionTo);
         mTextSource = (TextView) findViewById(R.id.tvDirectionFrom);
         mInput = (EditText) findViewById(R.id.etInput);
-
         mInput.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
@@ -65,19 +63,42 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mInputCard = (CardView) findViewById(R.id.input_card);
         mTextDest.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 showDestDialog();
             }
         });
-
         mTextSource.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 showSourceDialog();
             }
         });
+
+        findViewById(R.id.tvArrow).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                float rotation = 180f;
+                if (v.getRotation() > 0) {
+                    rotation *= -1;
+                }
+                v.setRotation(0);
+                v.animate()
+                        .rotationBy(rotation)
+                        .setDuration(300)
+                        .start();
+                mPresenter.swapLangs();
+                updateView(true);
+            }
+        });
+
+        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        mRecyclerView.setHasFixedSize(true);
+
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(layoutManager);
 
         mPresenter.getLangs();
     }
@@ -87,6 +108,9 @@ public class MainActivity extends AppCompatActivity {
         if (TextUtils.isEmpty(input)) {
             return;
         }
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(mInput.getWindowToken(), 0);
+        mInput.clearFocus();
         mPresenter.lookup(input);
     }
 
@@ -119,54 +143,9 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_copy:
                 // TODO
                 break;
-
-            case R.id.action_switch:
-                mPresenter.swapLangs();
-                updateView(true);
-                break;
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-
-        int action = MotionEventCompat.getActionMasked(event);
-
-        switch (action) {
-            case MotionEvent.ACTION_DOWN:
-                x = event.getX();
-                y = event.getY();
-                return true;
-
-            case MotionEvent.ACTION_UP:
-                x = event.getX() - x;
-                y = event.getY() - y;
-                // gesture length >= 50 px
-                if (Math.abs(x) < 50 && Math.abs(y) < 50) {
-                    return true;
-                }
-                // if true, direction is horizontal
-                if (Math.abs(x) > Math.abs(y)) {
-                    mPresenter.swapLangs();
-                    updateView(true);
-                } else {
-                    if (y < 0) {
-                        // move up - translate text
-                        startLookup();
-                    } else {
-                        // move down - copy translation to input box
-                        CharSequence text = mOutput.getText();
-                        if (text.length() > 0) {
-                            mInput.setText(text);
-                            mInput.setSelection(text.length());
-                        }
-                    }
-                }
-                return true;
-        }
-        return super.onTouchEvent(event);
     }
 
     private void updateView(boolean notify) {
@@ -220,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
         updateView(false);
     }
 
-    public void onLookupResult(List<Definition> list) {
+    public void onLookupResult(List<Translation> list) {
         if (list == null || list.isEmpty()) {
             Snackbar snackbar = Snackbar.make(mInput, R.string.error_no_results, Snackbar.LENGTH_LONG);
             snackbar.setAction(android.R.string.ok, new View.OnClickListener() {
@@ -232,7 +211,13 @@ public class MainActivity extends AppCompatActivity {
             snackbar.show();
             return;
         }
-        // TODO
-        mOutput.setText(list.get(0).tr[0].text);
+        RecyclerView.Adapter adapter = new DefinitionAdapter(list);
+        mRecyclerView.setAdapter(adapter);
+        mRecyclerView.addOnItemTouchListener(new RecyclerViewItemClickListener(mRecyclerView) {
+            @Override
+            public void onItemClick(View view, int position, boolean isLongClick) {
+                // TODO
+            }
+        });
     }
 }

@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.italankin.dictionary.dto.Definition;
 import com.italankin.dictionary.dto.DicResult;
 import com.italankin.dictionary.dto.Language;
+import com.italankin.dictionary.utils.LoggingInterceptor;
 import com.squareup.okhttp.Cache;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;

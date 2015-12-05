@@ -1,8 +1,9 @@
-package com.italankin.dictionary;
+package com.italankin.dictionary.utils;
 
 import android.content.Context;
 import android.util.Log;
 
+import com.italankin.dictionary.R;
 import com.italankin.dictionary.dto.Language;
 
 import org.json.JSONArray;

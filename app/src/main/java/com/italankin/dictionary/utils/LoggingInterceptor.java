@@ -1,4 +1,4 @@
-package com.italankin.dictionary;
+package com.italankin.dictionary.utils;
 
 import android.util.Log;
 

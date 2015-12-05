@@ -1,4 +1,4 @@
-package com.italankin.dictionary;
+package com.italankin.dictionary.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -13,7 +13,6 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.List;
 
 public class SharedPrefs {

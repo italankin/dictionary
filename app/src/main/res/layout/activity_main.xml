@@ -1,76 +1,51 @@
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout
+    android:id="@+id/ra"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/ra"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
     <LinearLayout
+        android:id="@+id/layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="?attr/actionBarSize"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="vertical">
 
-        <LinearLayout
-            android:id="@+id/lDirection"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="top"
-            android:orientation="horizontal"
-            android:paddingBottom="12dp">
-
-            <TextView
-                android:id="@+id/tvDirectionFrom"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/direction_text_color"
-                android:textSize="@dimen/hint_text_size"
-                android:typeface="monospace"
-                tools:text="@string/placeholder_lang" />
-
-            <TextView
-                android:id="@+id/tvArrow"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="5dp"
-                android:text="@string/arrow"
-                android:textColor="#aaa"
-                android:textSize="20sp"
-                android:typeface="monospace" />
-
-            <TextView
-                android:id="@+id/tvDirectionTo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/direction_text_color"
-                android:textSize="@dimen/hint_text_size"
-                android:typeface="monospace"
-                tools:text="@string/placeholder_lang" />
-
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/tvOutput"
+        <android.support.v7.widget.CardView
+            android:id="@+id/input_card"
+            android:layout_marginTop="?attr/actionBarSize"
+            app:layout_scrollFlags="scroll"
             android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_behavior=".CustomBehavior">
+
+            <EditText
+                android:id="@+id/etInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/white"
+                android:gravity="top"
+                android:hint="@string/placeholder_input"
+                android:inputType="text"
+                android:maxLength="80"
+                android:maxLines="1"
+                android:selectAllOnFocus="true"
+                android:padding="10dp"
+                android:textColor="#000"
+                android:textSize="@dimen/input_text_size"/>
+
+        </android.support.v7.widget.CardView>
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:scrollbars="vertical"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:hint="@string/placeholder_output"
-            android:textSize="@dimen/output_text_size"
-            android:typeface="monospace" />
-
-        <EditText
-            android:id="@+id/etInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="bottom"
-            android:hint="@string/placeholder_input"
-            android:inputType="text"
-            android:maxLength="80"
-            android:maxLines="1"
-            android:textSize="@dimen/input_text_size"
-            android:typeface="monospace" />
+            android:paddingBottom="2dp"
+            android:paddingTop="2dp"/>
 
     </LinearLayout>
 
@@ -82,8 +57,55 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:layout_scrollFlags="scroll|enterAlways"
+            app:contentInsetEnd="16dp"
+            app:contentInsetStart="16dp"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/tvDirectionFrom"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/selector_rect"
+                    android:drawablePadding="8dp"
+                    android:drawableRight="@drawable/ic_expand_more_white_18dp"
+                    android:padding="6dp"
+                    android:textColor="@android:color/white"
+                    android:textSize="@dimen/hint_text_size"
+                    tools:text="@string/placeholder_lang"/>
+
+                <ImageView
+                    android:id="@+id/tvArrow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:background="@drawable/selector_circle"
+                    android:padding="8dp"
+                    android:scaleType="center"
+                    android:src="@drawable/ic_swap_horiz_white_24dp"/>
+
+                <TextView
+                    android:id="@+id/tvDirectionTo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/selector_rect"
+                    android:drawablePadding="8dp"
+                    android:drawableRight="@drawable/ic_expand_more_white_18dp"
+                    android:padding="6dp"
+                    android:textColor="@android:color/white"
+                    android:textSize="@dimen/hint_text_size"
+                    tools:text="@string/placeholder_lang"/>
+
+            </RelativeLayout>
 
         </android.support.v7.widget.Toolbar>
 

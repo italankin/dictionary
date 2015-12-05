@@ -5,9 +5,12 @@ import android.util.Log;
 
 import com.italankin.dictionary.dto.Definition;
 import com.italankin.dictionary.dto.Language;
+import com.italankin.dictionary.dto.Translation;
+import com.italankin.dictionary.utils.SharedPrefs;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -37,6 +40,8 @@ public class MainPresenter {
 
     private final ApiClient mClient;
     private final SharedPrefs mPrefs;
+    private final String mUiLanguage;
+
     private boolean mAttached = false;
 
     private List<Language> mLangs;
@@ -53,6 +58,7 @@ public class MainPresenter {
         mPrefs = SharedPrefs.getInstance(context);
         mClient = ApiClient.getInstance();
         mClient.setCacheDirectory(context.getCacheDir());
+        mUiLanguage = Locale.getDefault().getLanguage();
     }
 
     public void attach(MainActivity activity) {
@@ -143,17 +149,26 @@ public class MainPresenter {
             mSubLookup.unsubscribe();
         }
 
-        mSubLookup = mClient.lookup(BuildConfig.API_KEY, getLangParam(), text,
-                Locale.getDefault().getLanguage(), 0)
+        mSubLookup = mClient.lookup(BuildConfig.API_KEY, getLangParam(), text, mUiLanguage, 0)
+                .map(new Func1<List<Definition>, List<Translation>>() {
+                    @Override
+                    public List<Translation> call(List<Definition> definitions) {
+                        mLastLookup = definitions;
+                        List<Translation> list = new ArrayList<>(0);
+                        for (Definition d : definitions) {
+                            Collections.addAll(list, d.tr);
+                        }
+                        return list;
+                    }
+                })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        new Action1<List<Definition>>() {
+                        new Action1<List<Translation>>() {
                             @Override
-                            public void call(List<Definition> list) {
-                                mLastLookup = list;
+                            public void call(List<Translation> list) {
                                 MainActivity a = mRef.get();
                                 if (a != null) {
-                                    a.onLookupResult(mLastLookup);
+                                    a.onLookupResult(list);
                                 }
                                 if (mSubLookup != null && !mSubLookup.isUnsubscribed()) {
                                     mSubLookup.unsubscribe();
