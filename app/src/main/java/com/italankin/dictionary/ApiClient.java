@@ -46,6 +46,7 @@ public class ApiClient {
 
     public void setCacheDirectory(File dir) {
         Cache cache = new Cache(dir, 5 * 1024 * 1024);
+        mOkHttp.setCache(cache);
     }
 
     public Observable<List<Language>> getLangs(final String key) {

@@ -290,7 +290,9 @@ public class MainPresenter {
         if (!TextUtils.equals(mSource.getCode(), mDest.getCode())) {
             Language tmp = mSource;
             mSource = mDest;
+            mPrefs.setSourceLang(mSource);
             mDest = tmp;
+            mPrefs.setDestLang(mDest);
             return true;
         }
         return false;

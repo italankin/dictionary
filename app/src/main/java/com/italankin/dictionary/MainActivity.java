@@ -19,7 +19,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.italankin.dictionary.dto.Translation;
 
@@ -154,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
                 new SwitchAnimation.OnSwitchListener() {
                     @Override
                     public void onSwitch() {
-                        updateView(false);
+                        updateView();
                     }
                 });
         anim.start();
@@ -233,15 +232,11 @@ public class MainActivity extends AppCompatActivity {
         super.onBackPressed();
     }
 
-    private void updateView(boolean notify) {
+    private void updateView() {
         String source = mPresenter.getSource().getName();
         mTextSource.setText(source);
         String dest = mPresenter.getDest().getName();
         mTextDest.setText(dest);
-        if (notify) {
-            String message = getString(R.string.toast_switch, source, dest);
-            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-        }
     }
 
     public void showSourceDialog() {
@@ -256,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 mPresenter.setSourceLang(which);
-                updateView(true);
+                updateView();
             }
         });
         builder.show();
@@ -274,7 +269,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 mPresenter.setDestLang(which);
-                updateView(true);
+                updateView();
             }
         });
         builder.show();
@@ -296,7 +291,7 @@ public class MainActivity extends AppCompatActivity {
                 .setDuration(600)
                 .setInterpolator(new OvershootInterpolator())
                 .start();
-        updateView(false);
+        updateView();
     }
 
     public void onLookupResult(List<Translation> list, String transcription) {
