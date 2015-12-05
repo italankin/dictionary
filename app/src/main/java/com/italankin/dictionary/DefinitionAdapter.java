@@ -31,12 +31,22 @@ public class DefinitionAdapter extends RecyclerView.Adapter<DefinitionAdapter.Vi
     public void onBindViewHolder(ViewHolder holder, int position) {
         Translation item = mDataset.get(position);
         holder.text.setText(item.text);
-//        holder.sub.setText(String.format(Locale.getDefault(), "[%s]", item.));
+        if (item.mean != null) {
+            String means = "";
+            for (Translation.Mean m : item.mean) {
+                if (means.length() > 0) {
+                    means += ", " + m.text;
+                } else {
+                    means = m.text;
+                }
+            }
+            holder.sub.setText(means);
+        }
         if (!mStates[position]) {
             holder.itemView.setAlpha(0);
             holder.itemView.setTranslationY(100);
             holder.itemView.animate()
-                    .setStartDelay(50)
+                    .setStartDelay(100)
                     .alpha(1)
                     .translationY(0)
                     .setInterpolator(new DecelerateInterpolator(3f))

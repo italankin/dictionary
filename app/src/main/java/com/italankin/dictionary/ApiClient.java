@@ -3,6 +3,7 @@ package com.italankin.dictionary;
 import com.google.gson.Gson;
 import com.italankin.dictionary.dto.Definition;
 import com.italankin.dictionary.dto.DicResult;
+import com.italankin.dictionary.dto.Error;
 import com.italankin.dictionary.dto.Language;
 import com.italankin.dictionary.utils.LoggingInterceptor;
 import com.squareup.okhttp.Cache;
@@ -155,6 +156,12 @@ public class ApiClient {
                             }
 
                             String body = response.body().string();
+
+                            if (!response.isSuccessful()) {
+                                Error error = mGson.fromJson(body, Error.class);
+                                throw new Exception(error.message);
+                            }
+
                             DicResult result = mGson.fromJson(body, DicResult.class);
 
                             subscriber.onNext(result);

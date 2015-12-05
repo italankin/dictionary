@@ -1,6 +1,7 @@
 package com.italankin.dictionary;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.italankin.dictionary.dto.Definition;
@@ -50,6 +51,7 @@ public class MainPresenter {
     private Language mDest;
 
     private List<Definition> mLastLookup;
+    private String mTranscription;
 
     private Subscription mSubLangs;
     private Subscription mSubLookup;
@@ -144,19 +146,33 @@ public class MainPresenter {
         }
     };
 
-    public void lookup(String text) {
+    public void lookup(final String text) {
         if (mSubLookup != null && !mSubLookup.isUnsubscribed()) {
             mSubLookup.unsubscribe();
         }
 
-        mSubLookup = mClient.lookup(BuildConfig.API_KEY, getLangParam(), text, mUiLanguage, 0)
+        mSubLookup = mClient.lookup(BuildConfig.API_KEY, getLangParam(false), text, mUiLanguage, 0)
+                .flatMap(new Func1<List<Definition>, Observable<List<Definition>>>() {
+                    @Override
+                    public Observable<List<Definition>> call(List<Definition> definitions) {
+                        if (definitions == null || definitions.isEmpty()) {
+                            return mClient.lookup(BuildConfig.API_KEY, getLangParam(true), text,
+                                    mUiLanguage, 0);
+                        }
+                        return Observable.just(definitions);
+                    }
+                })
                 .map(new Func1<List<Definition>, List<Translation>>() {
                     @Override
                     public List<Translation> call(List<Definition> definitions) {
                         mLastLookup = definitions;
+                        mTranscription = "";
                         List<Translation> list = new ArrayList<>(0);
                         for (Definition d : definitions) {
                             Collections.addAll(list, d.tr);
+                            if (d.ts != null && mTranscription.length() == 0) {
+                                mTranscription = String.format("[%s]", d.ts);
+                            }
                         }
                         return list;
                     }
@@ -168,7 +184,7 @@ public class MainPresenter {
                             public void call(List<Translation> list) {
                                 MainActivity a = mRef.get();
                                 if (a != null) {
-                                    a.onLookupResult(list);
+                                    a.onLookupResult(list, mTranscription);
                                 }
                                 if (mSubLookup != null && !mSubLookup.isUnsubscribed()) {
                                     mSubLookup.unsubscribe();
@@ -270,20 +286,32 @@ public class MainPresenter {
         return mDest;
     }
 
-    public void swapLangs() {
-        Language tmp = mSource;
-        mSource = mDest;
-        mDest = tmp;
+    public boolean swapLangs() {
+        if (!TextUtils.equals(mSource.getCode(), mDest.getCode())) {
+            Language tmp = mSource;
+            mSource = mDest;
+            mDest = tmp;
+            return true;
+        }
+        return false;
     }
 
-    private String getLangParam() {
-        return mSource.getCode() + "-" + mDest.getCode();
+    private String getLangParam(boolean reverse) {
+        if (reverse) {
+            return mDest.getCode() + "-" + mSource.getCode();
+        } else {
+            return mSource.getCode() + "-" + mDest.getCode();
+        }
     }
 
     private Action1<Throwable> mErrorHandler = new Action1<Throwable>() {
         @Override
         public void call(Throwable throwable) {
-            log(throwable.getMessage());
+            throwable.printStackTrace();
+            MainActivity a = mRef.get();
+            if (a != null) {
+                a.onError(throwable.getMessage());
+            }
         }
     };
 

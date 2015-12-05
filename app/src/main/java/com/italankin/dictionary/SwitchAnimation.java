@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
 
 public class SwitchAnimation {
 
@@ -15,6 +16,8 @@ public class SwitchAnimation {
     private OnSwitchListener mListener;
     private AnimatorSet mAnimation;
 
+    private boolean mState = false;
+
     public SwitchAnimation(View v, float translationX, float translationY, long duration, OnSwitchListener listener) {
         mView = v;
         mListener = listener;
@@ -25,7 +28,11 @@ public class SwitchAnimation {
     }
 
     public void start() {
+        if (mState) {
+            throw new IllegalStateException();
+        }
         mAnimation.start();
+        mState = true;
     }
 
     public void cancel() {
@@ -64,6 +71,7 @@ public class SwitchAnimation {
             }
         });
 
+        set.setInterpolator(new DecelerateInterpolator(3f));
         set.playTogether(translateX, translateY, alpha);
         set.setDuration(mDuration);
 
@@ -99,6 +107,7 @@ public class SwitchAnimation {
             }
         });
 
+        set.setInterpolator(new DecelerateInterpolator(3f));
         set.playTogether(translateX, translateY, alpha);
         set.setDuration(mDuration);
 

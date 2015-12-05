@@ -4,5 +4,5 @@
     <color name="primary">#689ec9</color>
     <color name="primaryDark">#3c607c</color>
     <color name="accent_material_light">#689ec9</color>
-    <color name="selector">#20eeeeee</color>
+    <color name="selector">#30dddddd</color>
 </resources>

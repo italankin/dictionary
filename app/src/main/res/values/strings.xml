@@ -35,4 +35,6 @@
     <string name="error_not_supported">Error: the specified translation direction is not supported</string>
     <string name="error_unknown">Error: unknown error</string>
     <string name="error_no_results">No results</string>
+    <string name="lookup">Lookup</string>
+    <string name="error_query">Error occurred</string>
 </resources>

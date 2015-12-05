@@ -14,6 +14,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.OvershootInterpolator;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -23,6 +24,14 @@ import android.widget.Toast;
 import com.italankin.dictionary.dto.Translation;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
+import rx.subjects.PublishSubject;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -32,16 +41,26 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTextDest;
     private TextView mTextSource;
     private ImageView mArrow;
+    private View mLoad;
+    private TextView mTranscription;
+    private View mToolbarInner;
 
     private LanguageAdapter mLangsSourceAdapter;
     private LanguageAdapter mLangsDestAdapter;
 
     private RecyclerView mRecyclerView;
+    private List<Translation> mList;
+
+    private PublishSubject<String> mLookup = PublishSubject.create();
+    private Subscription mLookupSub;
+    private InputMethodManager mInputManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mInputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 
         mPresenter = MainPresenter.getInstance(this);
         mPresenter.attach(this);
@@ -49,17 +68,28 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        mToolbarInner = findViewById(R.id.toolbar_inner_layout);
         mTextDest = (TextView) findViewById(R.id.tvDirectionTo);
         mTextSource = (TextView) findViewById(R.id.tvDirectionFrom);
+
         mInput = (EditText) findViewById(R.id.etInput);
         mInput.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (keyCode == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN) {
-                    startLookup();
+                    mLookup.onNext(mInput.getText().toString());
                     return true;
                 }
                 return false;
+            }
+        });
+        mTranscription = (TextView) findViewById(R.id.tvTranscription);
+
+        mLoad = findViewById(R.id.tvLoad);
+        mLoad.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mLookup.onNext(mInput.getText().toString());
             }
         });
 
@@ -86,6 +116,15 @@ public class MainActivity extends AppCompatActivity {
 
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.addOnItemTouchListener(new RecyclerViewItemClickListener(mRecyclerView) {
+            @Override
+            public void onItemClick(View view, int position, boolean isLongClick) {
+                if (!isLongClick) {
+                    Translation item = mList.get(position);
+                    mLookup.onNext(item.text);
+                }
+            }
+        });
 
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(layoutManager);
@@ -94,6 +133,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void swapLangs() {
+        if (!mPresenter.swapLangs()) {
+            return;
+        }
+        mLookup.onNext(mInput.getText().toString());
+
         int duration = 450;
 
         float rotation = 180f;
@@ -110,7 +154,6 @@ public class MainActivity extends AppCompatActivity {
                 new SwitchAnimation.OnSwitchListener() {
                     @Override
                     public void onSwitch() {
-                        mPresenter.swapLangs();
                         updateView(false);
                     }
                 });
@@ -119,15 +162,10 @@ public class MainActivity extends AppCompatActivity {
         anim.start();
     }
 
-    private void startLookup() {
-        String input = mInput.getText().toString();
-        if (TextUtils.isEmpty(input)) {
-            return;
-        }
-        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(mInput.getWindowToken(), 0);
+    private void startLookup(String text) {
+        mPresenter.lookup(text);
+        mInputManager.hideSoftInputFromWindow(mInput.getWindowToken(), 0);
         mInput.clearFocus();
-        mPresenter.lookup(input);
     }
 
     @Override
@@ -136,6 +174,23 @@ public class MainActivity extends AppCompatActivity {
         if (!mPresenter.isAttached()) {
             mPresenter.attach(this);
         }
+        mLookupSub = mLookup
+                .filter(new Func1<String, Boolean>() {
+                    @Override
+                    public Boolean call(String s) {
+                        return !TextUtils.isEmpty(s);
+                    }
+                })
+                .debounce(400, TimeUnit.MILLISECONDS)
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<String>() {
+                    @Override
+                    public void call(String s) {
+                        mInput.setText(s);
+                        startLookup(s);
+                    }
+                });
     }
 
     @Override
@@ -143,6 +198,9 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
         mPresenter.saveLangs();
         mPresenter.detach();
+        if (mLookupSub != null && !mLookupSub.isUnsubscribed()) {
+            mLookupSub.unsubscribe();
+        }
     }
 
     @Override
@@ -162,6 +220,17 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (mInput.getText().length() > 0) {
+            mInput.setText("");
+            mInput.requestFocus();
+            mInputManager.showSoftInput(mInput, 0);
+            return;
+        }
+        super.onBackPressed();
     }
 
     private void updateView(boolean notify) {
@@ -212,28 +281,46 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onLangsResult() {
+        mToolbarInner.setVisibility(View.VISIBLE);
+        mToolbarInner.setAlpha(0);
+        mToolbarInner.animate()
+                .alpha(1)
+                .setDuration(600)
+                .start();
+        mLoad.setVisibility(View.VISIBLE);
+        mLoad.setScaleX(0);
+        mLoad.setScaleY(0);
+        mLoad.animate()
+                .scaleX(1)
+                .scaleY(1)
+                .setDuration(600)
+                .setInterpolator(new OvershootInterpolator())
+                .start();
         updateView(false);
     }
 
-    public void onLookupResult(List<Translation> list) {
+    public void onLookupResult(List<Translation> list, String transcription) {
         if (list == null || list.isEmpty()) {
-            Snackbar snackbar = Snackbar.make(mInput, R.string.error_no_results, Snackbar.LENGTH_LONG);
-            snackbar.setAction(android.R.string.ok, new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    //
-                }
-            });
-            snackbar.show();
+            onError(getString(R.string.error_no_results));
             return;
         }
+        mList = list;
+        mTranscription.setText(transcription);
         RecyclerView.Adapter adapter = new DefinitionAdapter(list);
         mRecyclerView.setAdapter(adapter);
-        mRecyclerView.addOnItemTouchListener(new RecyclerViewItemClickListener(mRecyclerView) {
+    }
+
+    public void onError(String messaage) {
+        if (messaage == null) {
+            messaage = getString(R.string.error_query);
+        }
+        Snackbar snackbar = Snackbar.make(mInput, messaage, Snackbar.LENGTH_LONG);
+        snackbar.setAction(android.R.string.ok, new View.OnClickListener() {
             @Override
-            public void onItemClick(View view, int position, boolean isLongClick) {
-                // TODO
+            public void onClick(View v) {
+                //
             }
         });
+        snackbar.show();
     }
 }
