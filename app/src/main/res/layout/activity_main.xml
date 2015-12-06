@@ -1,90 +1,80 @@
-<android.support.design.widget.CoordinatorLayout
-    android:id="@+id/ra"
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/ra"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <RelativeLayout
-        android:id="@+id/layout"
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:paddingBottom="3dp" />
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/recycler_view"
+    <android.support.v7.widget.CardView
+        android:id="@+id/input_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="?attr/actionBarSize"
+        app:cardCornerRadius="0dp">
+
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/input_card"
-            android:paddingBottom="3dp"
-            android:scrollbars="vertical"/>
+            android:layout_height="140dp"
+            android:background="@android:color/white"
+            android:clickable="true"
+            android:orientation="vertical">
 
-        <android.support.v7.widget.CardView
-            android:id="@+id/input_card"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="?attr/actionBarSize"
-            app:cardCornerRadius="0dp">
-
-            <RelativeLayout
+            <EditText
+                android:id="@+id/etInput"
                 android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:background="@android:color/white"
-                android:orientation="vertical">
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/tvTranscription"
+                android:layout_alignParentTop="true"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
+                android:layout_marginTop="20dp"
+                android:background="@android:color/transparent"
+                android:gravity="top"
+                android:hint="@string/placeholder_input"
+                android:inputType="text"
+                android:maxLength="80"
+                android:maxLines="1"
+                android:selectAllOnFocus="true"
+                android:textColor="#000"
+                android:textSize="@dimen/input_text_size" />
 
-                <EditText
-                    android:id="@+id/etInput"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_above="@+id/tvTranscription"
-                    android:layout_alignParentTop="true"
-                    android:layout_marginLeft="20dp"
-                    android:layout_marginRight="20dp"
-                    android:layout_marginTop="20dp"
-                    android:background="@android:color/transparent"
-                    android:gravity="top"
-                    android:hint="@string/placeholder_input"
-                    android:inputType="text"
-                    android:maxLength="80"
-                    android:maxLines="1"
-                    android:selectAllOnFocus="true"
-                    android:textColor="#000"
-                    android:textSize="@dimen/input_text_size"/>
+            <TextView
+                android:id="@+id/tvTranscription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="20dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
+                android:textColor="#a0a0a0"
+                android:textSize="18sp"
+                tools:text="[transcription]" />
 
-                <TextView
-                    android:id="@+id/tvTranscription"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentBottom="true"
-                    android:layout_marginBottom="20dp"
-                    android:layout_marginLeft="20dp"
-                    android:layout_marginRight="20dp"
-                    android:textColor="#a0a0a0"
-                    android:textSize="18sp"
-                    tools:text="[transcription]"/>
+            <TextView
+                android:id="@+id/tvLoad"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentRight="true"
+                android:layout_margin="8dp"
+                android:background="@drawable/selector_rect"
+                android:padding="8dp"
+                android:text="@string/action_lookup"
+                android:textAllCaps="true"
+                android:textColor="@color/primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/tvLoad"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentBottom="true"
-                    android:layout_alignParentRight="true"
-                    android:layout_margin="8dp"
-                    android:background="@drawable/selector_rect"
-                    android:padding="8dp"
-                    android:text="@string/lookup"
-                    android:textAllCaps="true"
-                    android:textColor="@color/primary"
-                    android:textSize="18sp"
-                    android:textStyle="bold"/>
+        </RelativeLayout>
 
-            </RelativeLayout>
-
-        </android.support.v7.widget.CardView>
-
-    </RelativeLayout>
+    </android.support.v7.widget.CardView>
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -97,7 +87,7 @@
             app:contentInsetEnd="16dp"
             app:contentInsetStart="16dp"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-            app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
             <RelativeLayout
                 android:id="@+id/toolbar_inner_layout"
@@ -115,11 +105,11 @@
                     android:layout_centerVertical="true"
                     android:background="@drawable/selector_rect"
                     android:drawablePadding="8dp"
-                    android:drawableRight="@drawable/ic_expand_more_white_18dp"
+                    android:drawableRight="@drawable/ic_expand_more"
                     android:padding="6dp"
                     android:textColor="@android:color/white"
                     android:textSize="@dimen/hint_text_size"
-                    tools:text="@string/placeholder_lang"/>
+                    tools:text="English" />
 
                 <ImageView
                     android:id="@+id/ivArrow"
@@ -129,7 +119,7 @@
                     android:background="@drawable/selector_circle"
                     android:padding="8dp"
                     android:scaleType="center"
-                    android:src="@drawable/ic_swap_horiz_white_24dp"/>
+                    android:src="@drawable/ic_swap_horiz" />
 
                 <TextView
                     android:id="@+id/tvDirectionTo"
@@ -139,11 +129,11 @@
                     android:layout_centerVertical="true"
                     android:background="@drawable/selector_rect"
                     android:drawablePadding="8dp"
-                    android:drawableRight="@drawable/ic_expand_more_white_18dp"
+                    android:drawableRight="@drawable/ic_expand_more"
                     android:padding="6dp"
                     android:textColor="@android:color/white"
                     android:textSize="@dimen/hint_text_size"
-                    tools:text="@string/placeholder_lang"/>
+                    tools:text="English" />
 
             </RelativeLayout>
 
@@ -151,4 +141,4 @@
 
     </android.support.design.widget.AppBarLayout>
 
-</android.support.design.widget.CoordinatorLayout>
+</RelativeLayout>

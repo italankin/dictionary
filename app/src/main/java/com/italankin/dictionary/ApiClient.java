@@ -65,6 +65,12 @@ public class ApiClient {
                             }
 
                             String body = response.body().string();
+
+                            if (!response.isSuccessful()) {
+                                Error error = mGson.fromJson(body, Error.class);
+                                throw new MyException(error.message, response.code());
+                            }
+
                             String[] entries = mGson.fromJson(body, String[].class);
 
                             subscriber.onNext(entries);
@@ -160,7 +166,7 @@ public class ApiClient {
 
                             if (!response.isSuccessful()) {
                                 Error error = mGson.fromJson(body, Error.class);
-                                throw new Exception(error.message);
+                                throw new MyException(error.message, response.code());
                             }
 
                             DicResult result = mGson.fromJson(body, DicResult.class);

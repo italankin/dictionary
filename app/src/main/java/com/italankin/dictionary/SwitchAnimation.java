@@ -24,7 +24,8 @@ public class SwitchAnimation {
         mTranslationX = translationX;
         mTranslationY = translationY;
         mDuration = duration / 2;
-        mAnimation = getAnimatorSet1();
+        mAnimation = new AnimatorSet();
+        mAnimation.playSequentially(getAnimatorSet1(), getAnimatorSet2());
     }
 
     public void start() {
@@ -58,8 +59,6 @@ public class SwitchAnimation {
                 if (mListener != null) {
                     mListener.onSwitch();
                 }
-                mAnimation = getAnimatorSet2();
-                mAnimation.start();
             }
 
             @Override

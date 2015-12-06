@@ -2,8 +2,10 @@ package com.italankin.dictionary;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ShareCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -19,8 +21,9 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.italankin.dictionary.dto.Translation;
+import com.italankin.dictionary.dto.TranslationEx;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -36,23 +39,30 @@ public class MainActivity extends AppCompatActivity {
 
     private MainPresenter mPresenter;
 
+    private Toolbar mToolbar;
     private EditText mInput;
+    private View mInputCard;
     private TextView mTextDest;
     private TextView mTextSource;
     private ImageView mArrow;
-    private View mLoad;
+    private View mLookup;
     private TextView mTranscription;
     private View mToolbarInner;
+
+    private RecyclerView mRecyclerView;
+    private DefinitionAdapter.OnAdapterItemClickListener mRecyclerViewListener;
+    private DefinitionAdapter mRecyclerViewAdapter;
+    private List<TranslationEx> mList;
 
     private LanguageAdapter mLangsSourceAdapter;
     private LanguageAdapter mLangsDestAdapter;
 
-    private RecyclerView mRecyclerView;
-    private List<Translation> mList;
-
-    private PublishSubject<String> mLookup = PublishSubject.create();
+    private PublishSubject<String> mLookupEvents = PublishSubject.create();
     private Subscription mLookupSub;
+
     private InputMethodManager mInputManager;
+
+    private int mScroll = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,31 +74,40 @@ public class MainActivity extends AppCompatActivity {
         mPresenter = MainPresenter.getInstance(this);
         mPresenter.attach(this);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
 
         mToolbarInner = findViewById(R.id.toolbar_inner_layout);
         mTextDest = (TextView) findViewById(R.id.tvDirectionTo);
         mTextSource = (TextView) findViewById(R.id.tvDirectionFrom);
 
+        mInputCard = findViewById(R.id.input_card);
         mInput = (EditText) findViewById(R.id.etInput);
         mInput.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (keyCode == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN) {
-                    mLookup.onNext(mInput.getText().toString());
+                    lookupNext(mInput.getText().toString());
                     return true;
                 }
                 return false;
             }
         });
+        mInput.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    mRecyclerView.smoothScrollToPosition(0);
+                }
+            }
+        });
         mTranscription = (TextView) findViewById(R.id.tvTranscription);
 
-        mLoad = findViewById(R.id.tvLoad);
-        mLoad.setOnClickListener(new View.OnClickListener() {
+        mLookup = findViewById(R.id.tvLoad);
+        mLookup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mLookup.onNext(mInput.getText().toString());
+                lookupNext(mInput.getText().toString());
             }
         });
 
@@ -115,56 +134,44 @@ public class MainActivity extends AppCompatActivity {
 
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         mRecyclerView.setHasFixedSize(true);
-        mRecyclerView.addOnItemTouchListener(new RecyclerViewItemClickListener(mRecyclerView) {
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
-            public void onItemClick(View view, int position, boolean isLongClick) {
-                if (!isLongClick) {
-                    Translation item = mList.get(position);
-                    mLookup.onNext(item.text);
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                mScroll += dy;
+                int factor = 3;
+                int max = mInputCard.getHeight() * factor + 5;
+                int value = max;
+                if (Math.abs(mScroll / factor) < max) {
+                    value = mScroll / factor;
                 }
+                mInputCard.setTranslationY(-value);
             }
         });
+        mRecyclerViewListener = new DefinitionAdapter.OnAdapterItemClickListener() {
+            @Override
+            public void onClick(int position) {
+                TranslationEx item = mList.get(position);
+                lookupNext(item.text);
+            }
 
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
-        mRecyclerView.setLayoutManager(layoutManager);
+            @Override
+            public void onMenuItemClick(int position, int menuItemId) {
+                switch (menuItemId) {
+                    case R.id.action_lookup_word:
+                        TranslationEx item = mList.get(position);
+                        lookupNext(item.text);
+                        break;
+                    case R.id.action_copy_mean:
+                    case R.id.action_copy_synonyms:
+                    case R.id.action_copy_translation:
+                        Toast.makeText(MainActivity.this, "Copied!", Toast.LENGTH_SHORT).show();
+                        break;
+                }
+            }
+        };
 
         mPresenter.getLangs();
-    }
-
-    private void swapLangs() {
-        if (!mPresenter.swapLangs()) {
-            return;
-        }
-        mLookup.onNext(mInput.getText().toString());
-
-        int duration = 450;
-
-        float rotation = 180f;
-        if (mArrow.getRotation() > 0) {
-            rotation *= -1;
-        }
-        mArrow.setRotation(0);
-        mArrow.animate()
-                .rotationBy(rotation)
-                .setDuration(300)
-                .start();
-
-        SwitchAnimation anim = new SwitchAnimation(mTextSource, mTextSource.getHeight(), 0, duration,
-                new SwitchAnimation.OnSwitchListener() {
-                    @Override
-                    public void onSwitch() {
-                        updateView();
-                    }
-                });
-        anim.start();
-        anim = new SwitchAnimation(mTextDest, -mTextDest.getHeight(), 0, duration, null);
-        anim.start();
-    }
-
-    private void startLookup(String text) {
-        mPresenter.lookup(text);
-        mInputManager.hideSoftInputFromWindow(mInput.getWindowToken(), 0);
-        mInput.clearFocus();
     }
 
     @Override
@@ -173,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
         if (!mPresenter.isAttached()) {
             mPresenter.attach(this);
         }
-        mLookupSub = mLookup
+        mLookupSub = mLookupEvents
                 .filter(new Func1<String, Boolean>() {
                     @Override
                     public Boolean call(String s) {
@@ -204,21 +211,31 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_translate, menu);
+        getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        switch (id) {
-            case R.id.action_copy:
-                // TODO
-                break;
+        switch (item.getItemId()) {
+            case R.id.action_share:
+                String result = mPresenter.getLastResult();
+                if (result != null) {
+                    Intent intent = ShareCompat.IntentBuilder.from(this)
+                            .setType("text/plain")
+                            .setText(mPresenter.getShareText())
+                            .setSubject(result)
+                            .getIntent();
+                    if (intent.resolveActivity(getPackageManager()) != null) {
+                        startActivity(intent);
+                    }
+                } else {
+                    Toast.makeText(MainActivity.this, R.string.error_share, Toast.LENGTH_SHORT).show();
+                }
+                return true;
         }
 
-        return super.onOptionsItemSelected(item);
+        return false;
     }
 
     @Override
@@ -230,6 +247,47 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         super.onBackPressed();
+    }
+
+    private void swapLangs() {
+        if (!mPresenter.swapLangs()) {
+            return;
+        }
+        lookupNext(mInput.getText().toString());
+
+        int duration = 450;
+
+        float rotation = 180f;
+        if (mArrow.getRotation() > 0) {
+            rotation *= -1;
+        }
+        mArrow.setRotation(0);
+        mArrow.animate()
+                .rotationBy(rotation)
+                .setDuration(300)
+                .start();
+
+        SwitchAnimation anim = new SwitchAnimation(mTextSource, mTextSource.getHeight(), 0, duration,
+                new SwitchAnimation.OnSwitchListener() {
+                    @Override
+                    public void onSwitch() {
+                        updateView();
+                    }
+                });
+        anim.start();
+        anim = new SwitchAnimation(mTextDest, -mTextDest.getHeight(), 0, duration, null);
+        anim.start();
+    }
+
+    private void lookupNext(String s) {
+        mLookupEvents.onNext(s);
+        mRecyclerView.smoothScrollToPosition(0);
+    }
+
+    private void startLookup(String text) {
+        mPresenter.lookup(text);
+        mInputManager.hideSoftInputFromWindow(mInput.getWindowToken(), 0);
+        mInput.clearFocus();
     }
 
     private void updateView() {
@@ -282,10 +340,10 @@ public class MainActivity extends AppCompatActivity {
                 .alpha(1)
                 .setDuration(600)
                 .start();
-        mLoad.setVisibility(View.VISIBLE);
-        mLoad.setScaleX(0);
-        mLoad.setScaleY(0);
-        mLoad.animate()
+        mLookup.setVisibility(View.VISIBLE);
+        mLookup.setScaleX(0);
+        mLookup.setScaleY(0);
+        mLookup.animate()
                 .scaleX(1)
                 .scaleY(1)
                 .setDuration(600)
@@ -294,20 +352,24 @@ public class MainActivity extends AppCompatActivity {
         updateView();
     }
 
-    public void onLookupResult(List<Translation> list, String transcription) {
+    public void onLookupResult(List<TranslationEx> list, String transcription) {
         if (list == null || list.isEmpty()) {
             onError(getString(R.string.error_no_results));
             return;
         }
         mList = list;
         mTranscription.setText(transcription);
-        RecyclerView.Adapter adapter = new DefinitionAdapter(list);
-        mRecyclerView.setAdapter(adapter);
+        if (mRecyclerViewAdapter == null) {
+            mRecyclerViewAdapter = new DefinitionAdapter(mToolbar.getHeight() + mInputCard.getHeight(),
+                    mRecyclerViewListener);
+            mRecyclerView.setAdapter(mRecyclerViewAdapter);
+        }
+        mRecyclerViewAdapter.setItems(list);
     }
 
     public void onError(String messaage) {
         if (messaage == null) {
-            messaage = getString(R.string.error_query);
+            messaage = getString(R.string.error);
         }
         Snackbar snackbar = Snackbar.make(mInput, messaage, Snackbar.LENGTH_LONG);
         snackbar.setAction(android.R.string.ok, new View.OnClickListener() {
@@ -318,4 +380,5 @@ public class MainActivity extends AppCompatActivity {
         });
         snackbar.show();
     }
+
 }

@@ -7,10 +7,12 @@ import android.util.Log;
 import com.italankin.dictionary.dto.Definition;
 import com.italankin.dictionary.dto.Language;
 import com.italankin.dictionary.dto.Translation;
+import com.italankin.dictionary.dto.TranslationEx;
 import com.italankin.dictionary.utils.SharedPrefs;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -51,7 +53,7 @@ public class MainPresenter {
     private Language mDest;
 
     private List<Definition> mLastLookup;
-    private String mTranscription;
+    private String mTranscription = "";
 
     private Subscription mSubLangs;
     private Subscription mSubLookup;
@@ -61,6 +63,7 @@ public class MainPresenter {
         mClient = ApiClient.getInstance();
         mClient.setCacheDirectory(context.getCacheDir());
         mUiLanguage = Locale.getDefault().getLanguage();
+        Log.v("MainPresenter", "create new instance");
     }
 
     public void attach(MainActivity activity) {
@@ -79,7 +82,8 @@ public class MainPresenter {
 
     public void getLangs() {
         if (mDest != null && mSource != null) {
-            mRef.get().onLangsResult();
+            MainActivity a = mRef.get();
+            a.onLangsResult();
             return;
         }
 
@@ -113,6 +117,9 @@ public class MainPresenter {
                         @Override
                         public Object call(List<Language> list) {
                             try {
+                                if (list == null || list.isEmpty()) {
+                                    throw new NullPointerException();
+                                }
                                 mPrefs.putLangs(list);
                             } catch (IOException e) {
                                 throw new RuntimeException(e.getMessage());
@@ -162,26 +169,17 @@ public class MainPresenter {
                         return Observable.just(definitions);
                     }
                 })
-                .map(new Func1<List<Definition>, List<Translation>>() {
+                .map(new Func1<List<Definition>, List<TranslationEx>>() {
                     @Override
-                    public List<Translation> call(List<Definition> definitions) {
-                        mLastLookup = definitions;
-                        mTranscription = "";
-                        List<Translation> list = new ArrayList<>(0);
-                        for (Definition d : definitions) {
-                            Collections.addAll(list, d.tr);
-                            if (d.ts != null && mTranscription.length() == 0) {
-                                mTranscription = String.format("[%s]", d.ts);
-                            }
-                        }
-                        return list;
+                    public List<TranslationEx> call(List<Definition> definitions) {
+                        return resultFromDefinitions(definitions);
                     }
                 })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        new Action1<List<Translation>>() {
+                        new Action1<List<TranslationEx>>() {
                             @Override
-                            public void call(List<Translation> list) {
+                            public void call(List<TranslationEx> list) {
                                 MainActivity a = mRef.get();
                                 if (a != null) {
                                     a.onLookupResult(list, mTranscription);
@@ -196,46 +194,62 @@ public class MainPresenter {
                 );
     }
 
-    public void saveLangs() {
-        if (mSubLangs != null && !mSubLangs.isUnsubscribed()) {
-            mSubLangs.unsubscribe();
+    private String getLangParam(boolean reverse) {
+        if (reverse) {
+            return mDest.getCode() + "-" + mSource.getCode();
+        } else {
+            return mSource.getCode() + "-" + mDest.getCode();
         }
+    }
 
-        mSubLangs = Observable
-                .create(new Observable.OnSubscribe<Object>() {
-                    @Override
-                    public void call(Subscriber<? super Object> subscriber) {
-                        try {
-                            mPrefs.putLangs(mLangs);
-                            if (!subscriber.isUnsubscribed()) {
-                                subscriber.onNext(null);
-                            }
-                        } catch (Exception e) {
-                            if (!subscriber.isUnsubscribed()) {
-                                subscriber.onError(e);
-                            }
+    public String getLastResult() {
+        if (mLastLookup != null && !mLastLookup.isEmpty()) {
+            return mLastLookup.get(0).text;
+        }
+        return null;
+    }
+
+    public String getShareText() {
+        String text = mTranscription;
+        for (Definition d : mLastLookup) {
+            Translation[] tr = d.tr;
+            for (int i1 = 0; i1 < tr.length; i1++) {
+                if (i1 > 0 || mTranscription.length() > 0) {
+                    text += "\n";
+                }
+                Translation t = tr[i1];
+                text += t.text;
+                if (t.mean != null) {
+                    text += " (";
+                    Translation.Mean[] mean = t.mean;
+                    for (int i = 0, meanLength = mean.length; i < meanLength; i++) {
+                        Translation.Mean m = mean[i];
+                        if (i == 0) {
+                            text += m.text;
+                        } else {
+                            text += ", " + m.text;
                         }
                     }
-                })
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                        new Action1<Object>() {
-                            @Override
-                            public void call(Object o) {
-                                log("saveLangs: success");
-                                if (mSubLangs != null && !mSubLangs.isUnsubscribed()) {
-                                    mSubLangs.unsubscribe();
-                                    mSubLangs = null;
-                                }
-                            }
-                        },
-                        new Action1<Throwable>() {
-                            @Override
-                            public void call(Throwable throwable) {
-                                log("saveLangs: " + throwable.toString());
-                            }
-                        }
-                );
+                    text += ")";
+                }
+            }
+        }
+        return text;
+    }
+
+    private List<TranslationEx> resultFromDefinitions(List<Definition> definitions) {
+        mLastLookup = definitions;
+        mTranscription = "";
+        List<TranslationEx> list = new ArrayList<>(0);
+        for (Definition d : definitions) {
+            for (Translation t : d.tr) {
+                list.add(new TranslationEx(t));
+            }
+            if (d.ts != null && mTranscription.length() == 0) {
+                mTranscription = String.format("[%s]", d.ts);
+            }
+        }
+        return list;
     }
 
     public void setSourceLang(int position) {
@@ -298,12 +312,46 @@ public class MainPresenter {
         return false;
     }
 
-    private String getLangParam(boolean reverse) {
-        if (reverse) {
-            return mDest.getCode() + "-" + mSource.getCode();
-        } else {
-            return mSource.getCode() + "-" + mDest.getCode();
+    public void saveLangs() {
+        if (mSubLangs != null && !mSubLangs.isUnsubscribed()) {
+            mSubLangs.unsubscribe();
         }
+
+        mSubLangs = Observable
+                .create(new Observable.OnSubscribe<Object>() {
+                    @Override
+                    public void call(Subscriber<? super Object> subscriber) {
+                        try {
+                            mPrefs.putLangs(mLangs);
+                            if (!subscriber.isUnsubscribed()) {
+                                subscriber.onNext(null);
+                            }
+                        } catch (Exception e) {
+                            if (!subscriber.isUnsubscribed()) {
+                                subscriber.onError(e);
+                            }
+                        }
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        new Action1<Object>() {
+                            @Override
+                            public void call(Object o) {
+                                log("saveLangs: success");
+                                if (mSubLangs != null && !mSubLangs.isUnsubscribed()) {
+                                    mSubLangs.unsubscribe();
+                                    mSubLangs = null;
+                                }
+                            }
+                        },
+                        new Action1<Throwable>() {
+                            @Override
+                            public void call(Throwable throwable) {
+                                log("saveLangs: " + throwable.toString());
+                            }
+                        }
+                );
     }
 
     private Action1<Throwable> mErrorHandler = new Action1<Throwable>() {
@@ -312,7 +360,15 @@ public class MainPresenter {
             throwable.printStackTrace();
             MainActivity a = mRef.get();
             if (a != null) {
-                a.onError(throwable.getMessage());
+                String message = a.getString(R.string.error);
+                if (throwable instanceof UnknownHostException) {
+                    message = a.getString(R.string.error_no_connection);
+                }
+                if (throwable instanceof MyException) {
+                    MyException e = (MyException) throwable;
+                    message = e.getMessage();
+                }
+                a.onError(message);
             }
         }
     };

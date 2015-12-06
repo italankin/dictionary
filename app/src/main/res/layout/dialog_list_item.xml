@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingBottom="6dp"
-    android:paddingTop="6dp"
-    android:paddingLeft="15dp">
+    android:paddingLeft="15dp"
+    android:paddingTop="6dp">
 
     <TextView
         android:id="@+id/tvLangName"
@@ -16,9 +17,9 @@
         android:layout_toLeftOf="@+id/cbFavorite"
         android:layout_toStartOf="@+id/cbFavorite"
         android:ellipsize="end"
-        android:text="@string/placeholder_lang"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="@android:color/black" />
+        android:textColor="@android:color/black"
+        tools:text="English" />
 
     <CheckBox
         android:id="@+id/cbFavorite"
@@ -29,7 +30,7 @@
         android:background="@drawable/selector_circle"
         android:button="@drawable/background_fav"
         android:checked="false"
-        android:padding="10dp"
-        android:focusable="false" />
+        android:focusable="false"
+        android:padding="10dp" />
 
 </RelativeLayout>
