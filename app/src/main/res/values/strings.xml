@@ -4,18 +4,25 @@
     <string name="source">Original language</string>
     <string name="destination">Translation language</string>
 
-    <string name="placeholder_input">Enter word or phrase</string>
+    <string name="input_hint">Enter word or phrase</string>
+    <string name="lookup">Lookup</string>
 
     <string name="action_copy">Copy</string>
-    <string name="action_lookup">Lookup</string>
-
-    <string name="error">Error</string>
-    <string name="error_no_connection">No connection</string>
-    <string name="error_no_results">No results</string>
     <string name="action_lookup_word">Lookup word</string>
     <string name="action_copy_translation">Copy translation</string>
     <string name="action_copy_meanings">Copy meanings</string>
     <string name="action_copy_synonyms">Copy synonyms</string>
     <string name="action_share">Share</string>
+
     <string name="error_share">Nothing to share</string>
+
+    <string name="error">Error</string>
+    <string name="error_no_connection">No connection</string>
+    <string name="error_no_results">No results</string>
+
+    <string name="msg_transcription_copied">Transcription copied</string>
+    <string name="error_langs">Cannot retrieve languages</string>
+    <string name="retry">Retry</string>
+    <string name="msg_copied">Copied</string>
+
 </resources>

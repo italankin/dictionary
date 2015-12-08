@@ -27,10 +27,13 @@
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
+        android:layout_marginBottom="5dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="5dp"
         android:background="@drawable/selector_circle"
         android:button="@drawable/background_fav"
         android:checked="false"
-        android:focusable="false"
-        android:padding="10dp" />
+        android:focusable="false" />
 
 </RelativeLayout>

@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -110,7 +111,7 @@ public class MainPresenter {
                     })
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(onGetLangsResult, mErrorHandler);
+                    .subscribe(onGetLangsResult, mGetLangsErrorHandler);
         } else {
             mSubLangs = mClient.getLangs(BuildConfig.API_KEY)
                     .map(new Func1<List<Language>, Object>() {
@@ -129,7 +130,7 @@ public class MainPresenter {
                         }
                     })
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(onGetLangsResult, mErrorHandler);
+                    .subscribe(onGetLangsResult, mGetLangsErrorHandler);
         }
     }
 
@@ -209,35 +210,46 @@ public class MainPresenter {
         return null;
     }
 
-    public String getShareText() {
-        String text = mTranscription;
-        for (Definition d : mLastLookup) {
-            Translation[] tr = d.tr;
-            for (int i1 = 0; i1 < tr.length; i1++) {
-                if (i1 > 0 || mTranscription.length() > 0) {
-                    text += "\n";
-                }
-                Translation t = tr[i1];
-                text += t.text;
-                if (t.mean != null) {
-                    text += " (";
-                    Translation.Mean[] mean = t.mean;
-                    for (int i = 0, meanLength = mean.length; i < meanLength; i++) {
-                        Translation.Mean m = mean[i];
-                        if (i == 0) {
-                            text += m.text;
-                        } else {
-                            text += ", " + m.text;
+    public void getLastResultAsync() {
+        mSubLookup = Observable.timer(300, TimeUnit.MILLISECONDS)
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<Long>() {
+                    @Override
+                    public void call(Long aLong) {
+                        MainActivity a = mRef.get();
+                        if (a != null) {
+                            if (mLastLookup != null) {
+                                a.onLookupResult(resultFromDefinitions(mLastLookup), mTranscription);
+                            }
+                        }
+                        if (mSubLookup != null && !mSubLookup.isUnsubscribed()) {
+                            mSubLookup.unsubscribe();
+                            mSubLookup = null;
                         }
                     }
-                    text += ")";
-                }
+                });
+    }
+
+    public String getShareText(List<TranslationEx> tr) {
+        String text = mTranscription;
+        for (int i1 = 0; i1 < tr.size(); i1++) {
+            if (i1 > 0 || mTranscription.length() > 0) {
+                text += "\n";
+            }
+            TranslationEx t = tr.get(i1);
+            text += t.text;
+            if (!TextUtils.isEmpty(t.means)) {
+                text += " (" + t.means + ")";
             }
         }
         return text;
     }
 
     private List<TranslationEx> resultFromDefinitions(List<Definition> definitions) {
+        if (definitions == null || definitions.isEmpty()) {
+            return null;
+        }
         mLastLookup = definitions;
         mTranscription = "";
         List<TranslationEx> list = new ArrayList<>(0);
@@ -364,11 +376,22 @@ public class MainPresenter {
                 if (throwable instanceof UnknownHostException) {
                     message = a.getString(R.string.error_no_connection);
                 }
-                if (throwable instanceof MyException) {
-                    MyException e = (MyException) throwable;
+                if (throwable instanceof ServerException) {
+                    ServerException e = (ServerException) throwable;
                     message = e.getMessage();
                 }
                 a.onError(message);
+            }
+        }
+    };
+
+    private Action1<Throwable> mGetLangsErrorHandler = new Action1<Throwable>() {
+        @Override
+        public void call(Throwable throwable) {
+            throwable.printStackTrace();
+            MainActivity a = mRef.get();
+            if (a != null) {
+                a.onLangsError();
             }
         }
     };

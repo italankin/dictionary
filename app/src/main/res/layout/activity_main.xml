@@ -1,4 +1,4 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/ra"
@@ -6,75 +6,81 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycler_view"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:paddingBottom="3dp" />
+        android:layout_height="match_parent">
 
-    <android.support.v7.widget.CardView
-        android:id="@+id/input_card"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="?attr/actionBarSize"
-        app:cardCornerRadius="0dp">
-
-        <RelativeLayout
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler_view"
             android:layout_width="match_parent"
-            android:layout_height="140dp"
-            android:background="@android:color/white"
+            android:layout_height="match_parent" />
+
+        <android.support.v7.widget.CardView
+            android:id="@+id/input_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:clickable="true"
-            android:orientation="vertical">
+            android:layout_marginTop="?attr/actionBarSize"
+            app:cardCornerRadius="0dp">
 
-            <EditText
-                android:id="@+id/etInput"
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_above="@+id/tvTranscription"
-                android:layout_alignParentTop="true"
-                android:layout_marginLeft="20dp"
-                android:layout_marginRight="20dp"
-                android:layout_marginTop="20dp"
-                android:background="@android:color/transparent"
-                android:gravity="top"
-                android:hint="@string/placeholder_input"
-                android:inputType="text"
-                android:maxLength="80"
-                android:maxLines="1"
-                android:selectAllOnFocus="true"
-                android:textColor="#000"
-                android:textSize="@dimen/input_text_size" />
+                android:layout_height="140dp"
+                android:background="@android:color/white"
+                android:clickable="true"
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/tvTranscription"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_marginBottom="20dp"
-                android:layout_marginLeft="20dp"
-                android:layout_marginRight="20dp"
-                android:textColor="#a0a0a0"
-                android:textSize="18sp"
-                tools:text="[transcription]" />
+                <EditText
+                    android:id="@+id/etInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_above="@+id/tvTranscription"
+                    android:layout_alignParentTop="true"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginRight="20dp"
+                    android:layout_marginTop="20dp"
+                    android:background="@android:color/transparent"
+                    android:gravity="top"
+                    android:hint="@string/input_hint"
+                    android:inputType="text"
+                    android:maxLength="80"
+                    android:maxLines="1"
+                    android:selectAllOnFocus="true"
+                    android:textColor="#000"
+                    android:textSize="@dimen/input_text_size" />
 
-            <TextView
-                android:id="@+id/tvLoad"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_alignParentRight="true"
-                android:layout_margin="8dp"
-                android:background="@drawable/selector_rect"
-                android:padding="8dp"
-                android:text="@string/action_lookup"
-                android:textAllCaps="true"
-                android:textColor="@color/primary"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/tvTranscription"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginBottom="20dp"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginRight="20dp"
+                    android:textColor="#a0a0a0"
+                    android:textSize="18sp"
+                    tools:text="[transcription]" />
 
-        </RelativeLayout>
+                <TextView
+                    android:id="@+id/tvLoad"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentRight="true"
+                    android:layout_margin="8dp"
+                    android:background="@drawable/selector_rect"
+                    android:padding="8dp"
+                    android:text="@string/lookup"
+                    android:textAllCaps="true"
+                    android:textColor="@color/button_lookup"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
 
-    </android.support.v7.widget.CardView>
+            </RelativeLayout>
+
+        </android.support.v7.widget.CardView>
+
+    </RelativeLayout>
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -84,10 +90,10 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             app:contentInsetEnd="16dp"
             app:contentInsetStart="16dp"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
 
             <RelativeLayout
                 android:id="@+id/toolbar_inner_layout"
@@ -141,4 +147,4 @@
 
     </android.support.design.widget.AppBarLayout>
 
-</RelativeLayout>
+</android.support.design.widget.CoordinatorLayout>

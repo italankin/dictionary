@@ -1,10 +1,10 @@
 package com.italankin.dictionary;
 
-public class MyException extends RuntimeException {
+public class ServerException extends RuntimeException {
 
     private final int mCode;
 
-    public MyException(String message, int code) {
+    public ServerException(String message, int code) {
         super(message);
         mCode = code;
     }

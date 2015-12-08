@@ -10,7 +10,6 @@ import android.widget.TextView;
 
 import com.italankin.dictionary.dto.Language;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class LanguageAdapter extends ArrayAdapter<Language> implements View.OnClickListener {
@@ -30,7 +29,7 @@ public class LanguageAdapter extends ArrayAdapter<Language> implements View.OnCl
         Language item = getItem(position);
 
         if (convertView == null) {
-            convertView = inflater.inflate(R.layout.dialog_list_item, parent, false);
+            convertView = inflater.inflate(R.layout.item_language, parent, false);
             holder = new ViewHolder();
             holder.name = (TextView) convertView.findViewById(R.id.tvLangName);
             holder.fav = (CheckBox) convertView.findViewById(R.id.cbFavorite);

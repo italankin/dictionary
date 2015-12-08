@@ -2,7 +2,6 @@ package com.italankin.dictionary;
 
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,14 +31,14 @@ public class DefinitionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
     public void setItems(List<TranslationEx> list) {
         mDataset = list;
-        mStates = new boolean[list.size()];
+        mStates = new boolean[list == null ? 0 : list.size()];
         notifyDataSetChanged();
     }
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         if (viewType == TYPE_HEADER) {
-            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.header, parent, false);
+            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.dummy_header, parent, false);
             return new HeaderViewHolder(v, mHeaderSize);
         } else if (viewType == TYPE_ITEM) {
             View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_attribute, parent, false);
@@ -83,10 +82,17 @@ public class DefinitionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
     @Override
     public int getItemViewType(int position) {
-        if (position == 0)
+        if (position == 0) {
             return TYPE_HEADER;
+        }
 
         return TYPE_ITEM;
+    }
+
+    public void remove(int position) {
+        mDataset.remove(position);
+        notifyItemRemoved(position + 1);
+        notifyItemRangeChanged(position + 1, mDataset.size());
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -113,7 +119,7 @@ public class DefinitionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
             menu.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    PopupMenu pm = new PopupMenu(v.getContext(), v, Gravity.BOTTOM);
+                    PopupMenu pm = new PopupMenu(v.getContext(), v);
                     pm.inflate(R.menu.menu_item);
                     pm.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                         @Override
