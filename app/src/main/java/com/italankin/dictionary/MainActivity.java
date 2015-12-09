@@ -14,6 +14,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -278,7 +279,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (mInput.getText().length() > 0) {
+        if (mInput.getText().length() > 0 && !mInput.isFocused()) {
             mInput.requestFocus();
             mInputManager.showSoftInput(mInput, 0);
             return;
@@ -399,7 +400,18 @@ public class MainActivity extends AppCompatActivity {
     ///////////////////////////////////////////////////////////////////////////
 
     public void onLangsResult() {
-        mPresenter.getLastResultAsync();
+        Intent intent = getIntent();
+        if (intent != null && intent.getType() != null) {
+            String type = intent.getType();
+            String text = intent.getStringExtra(Intent.EXTRA_TEXT);
+            if (type != null && !TextUtils.isEmpty(text) && "text/plain".equals(type)) {
+                intent.setType(null);
+                mInput.setText(text);
+                startLookup(text);
+            }
+        } else {
+            mPresenter.getLastResultAsync();
+        }
         mToolbarInner.setVisibility(View.VISIBLE);
         mToolbarInner.setTranslationY(-mToolbarInner.getHeight());
         mToolbarInner.setAlpha(0);

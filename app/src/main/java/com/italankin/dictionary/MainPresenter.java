@@ -210,25 +210,28 @@ public class MainPresenter {
         return null;
     }
 
-    public void getLastResultAsync() {
-        mSubLookup = Observable.timer(300, TimeUnit.MILLISECONDS)
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<Long>() {
-                    @Override
-                    public void call(Long aLong) {
-                        MainActivity a = mRef.get();
-                        if (a != null) {
-                            if (mLastLookup != null) {
+    public boolean getLastResultAsync() {
+        if (mLastLookup != null) {
+            mSubLookup = Observable.timer(300, TimeUnit.MILLISECONDS)
+                    .subscribeOn(Schedulers.newThread())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Action1<Long>() {
+                        @Override
+                        public void call(Long aLong) {
+                            MainActivity a = mRef.get();
+                            if (a != null) {
                                 a.onLookupResult(resultFromDefinitions(mLastLookup), mTranscription);
                             }
+                            if (mSubLookup != null && !mSubLookup.isUnsubscribed()) {
+                                mSubLookup.unsubscribe();
+                                mSubLookup = null;
+                            }
                         }
-                        if (mSubLookup != null && !mSubLookup.isUnsubscribed()) {
-                            mSubLookup.unsubscribe();
-                            mSubLookup = null;
-                        }
-                    }
-                });
+                    });
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public String getShareText(List<TranslationEx> tr) {
