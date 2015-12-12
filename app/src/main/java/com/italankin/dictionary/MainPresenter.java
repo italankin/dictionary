@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.italankin.dictionary.dto.Definition;
 import com.italankin.dictionary.dto.Language;
+import com.italankin.dictionary.dto.Result;
 import com.italankin.dictionary.dto.Translation;
 import com.italankin.dictionary.dto.TranslationEx;
 import com.italankin.dictionary.utils.SharedPrefs;
@@ -46,42 +47,38 @@ public class MainPresenter {
     private final SharedPrefs mPrefs;
     private final String mUiLanguage;
 
-    private boolean mAttached = false;
-
     private List<Language> mLangs;
 
     private Language mSource;
     private Language mDest;
 
-    private List<Definition> mLastLookup;
-    private String mTranscription = "";
-
     private Subscription mSubLangs;
     private Subscription mSubLookup;
+
+    private Result mLastResult;
 
     private MainPresenter(Context context) {
         mPrefs = SharedPrefs.getInstance(context);
         mClient = ApiClient.getInstance();
         mClient.setCacheDirectory(context.getCacheDir());
         mUiLanguage = Locale.getDefault().getLanguage();
-        Log.v("MainPresenter", "create new instance");
     }
 
     public void attach(MainActivity activity) {
         mRef = new WeakReference<>(activity);
-        mAttached = true;
     }
 
     public void detach() {
         mRef = NULL_REF;
-        mAttached = false;
+        if (mSubLangs != null && mSubLangs.isUnsubscribed()) {
+            mSubLangs.unsubscribe();
+        }
+        if (mSubLookup != null && mSubLookup.isUnsubscribed()) {
+            mSubLookup.unsubscribe();
+        }
     }
 
-    public boolean isAttached() {
-        return mAttached;
-    }
-
-    public void getLangs() {
+    public void loadLanguages() {
         if (mDest != null && mSource != null) {
             MainActivity a = mRef.get();
             a.onLangsResult();
@@ -98,7 +95,7 @@ public class MainPresenter {
                         @Override
                         public void call(Subscriber<? super Object> subscriber) {
                             try {
-                                updateData(mPrefs.getLangs());
+                                updateLanguages(mPrefs.getLangs());
                                 if (!subscriber.isUnsubscribed()) {
                                     subscriber.onNext(null);
                                 }
@@ -125,7 +122,7 @@ public class MainPresenter {
                             } catch (IOException e) {
                                 throw new RuntimeException(e.getMessage());
                             }
-                            updateData(list);
+                            updateLanguages(list);
                             return null;
                         }
                     })
@@ -134,12 +131,12 @@ public class MainPresenter {
         }
     }
 
-    private void updateData(List<Language> list) {
+    private void updateLanguages(List<Language> list) {
         mLangs = list;
         if (!list.isEmpty()) {
-            setSourceLangByCode(mPrefs.getSourceLang());
-            setDestLangByCode(mPrefs.getDestLang());
-            sortLangsList();
+            setSourceLanguageByCode(mPrefs.getSourceLang());
+            setDestLanguageByCode(mPrefs.getDestLang());
+            sortLanguagesList();
         }
     }
 
@@ -170,20 +167,24 @@ public class MainPresenter {
                         return Observable.just(definitions);
                     }
                 })
-                .map(new Func1<List<Definition>, List<TranslationEx>>() {
+                .map(new Func1<List<Definition>, Result>() {
                     @Override
-                    public List<TranslationEx> call(List<Definition> definitions) {
-                        return resultFromDefinitions(definitions);
+                    public Result call(List<Definition> definitions) {
+                        if (definitions == null || definitions.isEmpty()) {
+                            return null;
+                        }
+                        return new Result(definitions);
                     }
                 })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        new Action1<List<TranslationEx>>() {
+                        new Action1<Result>() {
                             @Override
-                            public void call(List<TranslationEx> list) {
+                            public void call(Result result) {
+                                mLastResult = result;
                                 MainActivity a = mRef.get();
                                 if (a != null) {
-                                    a.onLookupResult(list, mTranscription);
+                                    a.onLookupResult(mLastResult);
                                 }
                                 if (mSubLookup != null && !mSubLookup.isUnsubscribed()) {
                                     mSubLookup.unsubscribe();
@@ -203,15 +204,12 @@ public class MainPresenter {
         }
     }
 
-    public String getLastResult() {
-        if (mLastLookup != null && !mLastLookup.isEmpty()) {
-            return mLastLookup.get(0).text;
-        }
-        return null;
+    public Result getLastResult() {
+        return mLastResult;
     }
 
     public boolean getLastResultAsync() {
-        if (mLastLookup != null) {
+        if (mLastResult != null) {
             mSubLookup = Observable.timer(300, TimeUnit.MILLISECONDS)
                     .subscribeOn(Schedulers.newThread())
                     .observeOn(AndroidSchedulers.mainThread())
@@ -220,7 +218,7 @@ public class MainPresenter {
                         public void call(Long aLong) {
                             MainActivity a = mRef.get();
                             if (a != null) {
-                                a.onLookupResult(resultFromDefinitions(mLastLookup), mTranscription);
+                                a.onLookupResult(mLastResult);
                             }
                             if (mSubLookup != null && !mSubLookup.isUnsubscribed()) {
                                 mSubLookup.unsubscribe();
@@ -234,50 +232,21 @@ public class MainPresenter {
         }
     }
 
-    public String getShareText(List<TranslationEx> tr) {
-        String text = mTranscription;
-        for (int i1 = 0; i1 < tr.size(); i1++) {
-            if (i1 > 0 || mTranscription.length() > 0) {
-                text += "\n";
-            }
-            TranslationEx t = tr.get(i1);
-            text += t.text;
-            if (!TextUtils.isEmpty(t.means)) {
-                text += " (" + t.means + ")";
-            }
-        }
-        return text;
-    }
+    ///////////////////////////////////////////////////////////////////////////
+    // Languages
+    ///////////////////////////////////////////////////////////////////////////
 
-    private List<TranslationEx> resultFromDefinitions(List<Definition> definitions) {
-        if (definitions == null || definitions.isEmpty()) {
-            return null;
-        }
-        mLastLookup = definitions;
-        mTranscription = "";
-        List<TranslationEx> list = new ArrayList<>(0);
-        for (Definition d : definitions) {
-            for (Translation t : d.tr) {
-                list.add(new TranslationEx(t));
-            }
-            if (d.ts != null && mTranscription.length() == 0) {
-                mTranscription = String.format("[%s]", d.ts);
-            }
-        }
-        return list;
-    }
-
-    public void setSourceLang(int position) {
+    public void setSourceLanguage(int position) {
         mSource = mLangs.get(position);
         mPrefs.setSourceLang(mSource);
     }
 
-    public void setDestLang(int position) {
+    public void setDestLanguage(int position) {
         mDest = mLangs.get(position);
         mPrefs.setDestLang(mDest);
     }
 
-    public void setSourceLangByCode(String code) {
+    public void setSourceLanguageByCode(String code) {
         mSource = mLangs.get(0);
         for (Language l : mLangs) {
             if (l.getCode().equals(code)) {
@@ -288,7 +257,7 @@ public class MainPresenter {
         mPrefs.setSourceLang(mSource);
     }
 
-    public void setDestLangByCode(String code) {
+    public void setDestLanguageByCode(String code) {
         mDest = mLangs.get(0);
         for (Language l : mLangs) {
             if (l.getCode().equals(code)) {
@@ -299,23 +268,23 @@ public class MainPresenter {
         mPrefs.setDestLang(mDest);
     }
 
-    public List<Language> getLangsList() {
+    public List<Language> getLanguagesList() {
         return mLangs;
     }
 
-    public void sortLangsList() {
+    public void sortLanguagesList() {
         Collections.sort(mLangs);
     }
 
-    public Language getSource() {
+    public Language getSourceLanguage() {
         return mSource;
     }
 
-    public Language getDest() {
+    public Language getDestLanguage() {
         return mDest;
     }
 
-    public boolean swapLangs() {
+    public boolean swapLanguages() {
         if (!TextUtils.equals(mSource.getCode(), mDest.getCode())) {
             Language tmp = mSource;
             mSource = mDest;
@@ -327,7 +296,7 @@ public class MainPresenter {
         return false;
     }
 
-    public void saveLangs() {
+    public void saveLanguages() {
         if (mSubLangs != null && !mSubLangs.isUnsubscribed()) {
             mSubLangs.unsubscribe();
         }
@@ -353,7 +322,7 @@ public class MainPresenter {
                         new Action1<Object>() {
                             @Override
                             public void call(Object o) {
-                                log("saveLangs: success");
+                                log("saveLanguages: success");
                                 if (mSubLangs != null && !mSubLangs.isUnsubscribed()) {
                                     mSubLangs.unsubscribe();
                                     mSubLangs = null;
@@ -363,11 +332,15 @@ public class MainPresenter {
                         new Action1<Throwable>() {
                             @Override
                             public void call(Throwable throwable) {
-                                log("saveLangs: " + throwable.toString());
+                                log("saveLanguages: " + throwable.toString());
                             }
                         }
                 );
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Error handlers
+    ///////////////////////////////////////////////////////////////////////////
 
     private Action1<Throwable> mErrorHandler = new Action1<Throwable>() {
         @Override
@@ -398,6 +371,10 @@ public class MainPresenter {
             }
         }
     };
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Logging
+    ///////////////////////////////////////////////////////////////////////////
 
     private void log(String format, Object... args) {
         log(String.format(format, args));

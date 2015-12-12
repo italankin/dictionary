@@ -14,7 +14,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,6 +26,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.italankin.dictionary.dto.Result;
 import com.italankin.dictionary.dto.TranslationEx;
 
 import java.util.List;
@@ -67,7 +67,11 @@ public class MainActivity extends AppCompatActivity {
     private InputMethodManager mInputManager;
     private ClipboardManager mClipboardManager;
 
-    private int mScroll = 0;
+    private int mRecyclerViewScroll = 0;
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Activity callbacks
+    ///////////////////////////////////////////////////////////////////////////
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -160,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                mScroll += dy;
+                mRecyclerViewScroll += dy;
                 updateTopView();
             }
         });
@@ -198,7 +202,7 @@ public class MainActivity extends AppCompatActivity {
 
         setControlsState(false);
 
-        mPresenter.getLangs();
+        mPresenter.loadLanguages();
     }
 
     @Override
@@ -223,10 +227,6 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    private void lookupNext(String s) {
-        mLookupEvents.onNext(s);
-    }
-
     @Override
     protected void onPause() {
         super.onPause();
@@ -241,7 +241,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        mPresenter.saveLangs();
+        mPresenter.saveLanguages();
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -258,12 +258,12 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_share:
-                String result = mPresenter.getLastResult();
-                if (result != null) {
+                Result result = mPresenter.getLastResult();
+                if (result != null && !result.isEmpty()) {
                     Intent intent = ShareCompat.IntentBuilder.from(this)
                             .setType("text/plain")
-                            .setText(mPresenter.getShareText(mTranslations))
-                            .setSubject(result)
+                            .setText(result.toString())
+                            .setSubject(result.text)
                             .getIntent();
                     if (intent.resolveActivity(getPackageManager()) != null) {
                         startActivity(intent);
@@ -277,64 +277,14 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-    @Override
-    public void onBackPressed() {
-        if (mInput.getText().length() > 0 && !mInput.isFocused()) {
-            mInput.requestFocus();
-            mInputManager.showSoftInput(mInput, 0);
-            return;
-        }
-        super.onBackPressed();
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Languages
-    ///////////////////////////////////////////////////////////////////////////
-
-    private void swapLangs() {
-        if (!mPresenter.swapLangs()) {
-            return;
-        }
-        lookupNext(mInput.getText().toString());
-
-        int duration = 450;
-
-        float rotation = 180f;
-        if (mArrow.getRotation() > 0) {
-            rotation *= -1;
-        }
-        mArrow.setRotation(0);
-        mArrow.animate()
-                .rotationBy(rotation)
-                .setDuration(300)
-                .start();
-
-        SwitchAnimation anim = new SwitchAnimation(mTextSource, mTextSource.getHeight(), 0, duration,
-                new SwitchAnimation.OnSwitchListener() {
-                    @Override
-                    public void onSwitch() {
-                        updateTextViews();
-                    }
-                });
-        anim.start();
-        anim = new SwitchAnimation(mTextDest, -mTextDest.getHeight(), 0, duration, null);
-        anim.start();
-    }
-
-    private void startLookup(String text) {
-        mPresenter.lookup(text);
-        mInputManager.hideSoftInputFromWindow(mInput.getWindowToken(), 0);
-        mInput.clearFocus();
-    }
-
     ///////////////////////////////////////////////////////////////////////////
     // Views update
     ///////////////////////////////////////////////////////////////////////////
 
     private void updateTextViews() {
-        String source = mPresenter.getSource().getName();
+        String source = mPresenter.getSourceLanguage().getName();
         mTextSource.setText(source);
-        String dest = mPresenter.getDest().getName();
+        String dest = mPresenter.getDestLanguage().getName();
         mTextDest.setText(dest);
     }
 
@@ -342,7 +292,7 @@ public class MainActivity extends AppCompatActivity {
         float factor = 2;
         float max = mInputCard.getHeight() * factor + mInputCard.getHeight() / 10f;
         float value = max;
-        float abs = Math.abs(mScroll / factor);
+        float abs = Math.abs(mRecyclerViewScroll / factor);
         if (abs < max) {
             value = abs;
         }
@@ -363,14 +313,14 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.source);
         if (mLangsSourceAdapter == null) {
-            mLangsSourceAdapter = new LanguageAdapter(this, mPresenter.getLangsList());
+            mLangsSourceAdapter = new LanguageAdapter(this, mPresenter.getLanguagesList());
         }
-        mPresenter.sortLangsList();
+        mPresenter.sortLanguagesList();
         mLangsSourceAdapter.notifyDataSetChanged();
         builder.setAdapter(mLangsSourceAdapter, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                mPresenter.setSourceLang(which);
+                mPresenter.setSourceLanguage(which);
                 updateTextViews();
             }
         });
@@ -381,14 +331,14 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.destination);
         if (mLangsDestAdapter == null) {
-            mLangsDestAdapter = new LanguageAdapter(this, mPresenter.getLangsList());
+            mLangsDestAdapter = new LanguageAdapter(this, mPresenter.getLanguagesList());
         }
-        mPresenter.sortLangsList();
+        mPresenter.sortLanguagesList();
         mLangsDestAdapter.notifyDataSetChanged();
         builder.setAdapter(mLangsDestAdapter, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                mPresenter.setDestLang(which);
+                mPresenter.setDestLanguage(which);
                 updateTextViews();
             }
         });
@@ -396,8 +346,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // Results
+    // Main
     ///////////////////////////////////////////////////////////////////////////
+
+    private void startLookup(String text) {
+        mPresenter.lookup(text);
+        mInputManager.hideSoftInputFromWindow(mInput.getWindowToken(), 0);
+        mInput.clearFocus();
+    }
+
+    private void lookupNext(String s) {
+        mLookupEvents.onNext(s);
+    }
 
     public void onLangsResult() {
         Intent intent = getIntent();
@@ -431,24 +391,55 @@ public class MainActivity extends AppCompatActivity {
                 .setInterpolator(new OvershootInterpolator())
                 .start();
         setControlsState(true);
+        mInput.requestFocus();
+        mInputManager.showSoftInput(mInput, 0);
         updateTextViews();
     }
 
-    public void onLookupResult(List<TranslationEx> list, String transcription) {
-        if (list == null || list.isEmpty()) {
+    private void swapLangs() {
+        if (!mPresenter.swapLanguages()) {
+            return;
+        }
+        lookupNext(mInput.getText().toString());
+
+        int duration = 450;
+
+        float rotation = 180f;
+        if (mArrow.getRotation() > 0) {
+            rotation *= -1;
+        }
+        mArrow.setRotation(0);
+        mArrow.animate()
+                .rotationBy(rotation)
+                .setDuration(300)
+                .start();
+
+        SwitchAnimation anim = new SwitchAnimation(mTextSource, mTextSource.getHeight(), 0, duration,
+                new SwitchAnimation.OnSwitchListener() {
+                    @Override
+                    public void onSwitch() {
+                        updateTextViews();
+                    }
+                });
+        anim.start();
+        anim = new SwitchAnimation(mTextDest, -mTextDest.getHeight(), 0, duration, null);
+        anim.start();
+    }
+
+    public void onLookupResult(Result result) {
+        if (result == null || result.isEmpty()) {
             onError(getString(R.string.error_no_results));
             return;
         }
-        mTranslations = list;
-        mTranscription.setText(transcription);
+        mTranslations = result.translations;
+        mTranscription.setText(String.format("[%s]", result.transcription));
         if (mRecyclerViewAdapter == null) {
             mRecyclerViewAdapter = new DefinitionAdapter(mToolbar.getHeight() + mInputCard.getHeight(),
                     mRecyclerViewListener);
             mRecyclerView.setAdapter(mRecyclerViewAdapter);
         }
-        mRecyclerViewAdapter.setItems(null);
-        mRecyclerViewAdapter.setItems(list);
-        mScroll = 0;
+        mRecyclerViewAdapter.setItems(mTranslations);
+        mRecyclerViewScroll = 0;
         updateTopView();
         mRecyclerView.scrollToPosition(0);
     }
@@ -477,7 +468,7 @@ public class MainActivity extends AppCompatActivity {
         snackbar.setAction(R.string.retry, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPresenter.getLangs();
+                mPresenter.loadLanguages();
             }
         });
         snackbar.show();

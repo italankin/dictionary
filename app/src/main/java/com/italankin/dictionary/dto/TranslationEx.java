@@ -5,7 +5,6 @@ public class TranslationEx extends Translation {
     public String means = "";
     public String examples = "";
     public String synonyms = "";
-    public String transcription = "";
 
     public TranslationEx(Translation t) {
         this.mean = t.mean;

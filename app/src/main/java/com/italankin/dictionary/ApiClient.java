@@ -5,6 +5,7 @@ import com.italankin.dictionary.dto.Definition;
 import com.italankin.dictionary.dto.DicResult;
 import com.italankin.dictionary.dto.Error;
 import com.italankin.dictionary.dto.Language;
+import com.italankin.dictionary.utils.CacheInterceptor;
 import com.italankin.dictionary.utils.LoggingInterceptor;
 import com.squareup.okhttp.Cache;
 import com.squareup.okhttp.OkHttpClient;
@@ -42,6 +43,7 @@ public class ApiClient {
         mGson = new Gson();
         mOkHttp = new OkHttpClient();
         mOkHttp.interceptors().add(new LoggingInterceptor());
+        mOkHttp.networkInterceptors().add(new CacheInterceptor(60 * 60 * 24 * 7)); // 7 weaks
     }
 
     public void setCacheDirectory(File dir) {
