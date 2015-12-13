@@ -431,7 +431,8 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = getIntent();
         if (intent != null && intent.getType() != null) {
             String type = intent.getType();
-            String text = intent.getStringExtra(Intent.EXTRA_TEXT).substring(0, 80);
+            String text = intent.getStringExtra(Intent.EXTRA_TEXT);
+            text = text.substring(0, Math.min(text.length(), 80));
             if (type != null && !TextUtils.isEmpty(text) && "text/plain".equals(type)) {
                 intent.setType(null);
                 mInput.setText(text);
