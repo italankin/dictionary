@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_lookup_word"
+        android:orderInCategory="100"
+        android:title="@string/action_lookup_word" />
+    <item
+        android:id="@+id/action_copy_translation"
+        android:orderInCategory="200"
+        android:title="@string/action_copy_translation" />
+    <item
+        android:id="@+id/action_copy_mean"
+        android:orderInCategory="300"
+        android:title="@string/action_copy_meanings" />
+    <item
+        android:id="@+id/action_copy_synonyms"
+        android:orderInCategory="400"
+        android:title="@string/action_copy_synonyms" />
+    <item
+        android:id="@+id/action_copy_examples"
+        android:orderInCategory="500"
+        android:title="@string/action_copy_examples" />
+</menu>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="2dp"
+    android:layout_marginLeft="6dp"
+    android:layout_marginRight="6dp"
+    android:layout_marginTop="2dp"
+    android:foreground="?android:attr/selectableItemBackground">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/background_list_item"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <TextView
+            android:id="@+id/text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:shadowColor="#20000000"
+            android:shadowDx="3"
+            android:shadowDy="3"
+            android:shadowRadius="3"
+            android:textColor="@android:color/white"
+            android:textSize="20sp"
+            tools:text="Text" />
+
+        <TextView
+            android:id="@+id/pos"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:layout_toLeftOf="@+id/overflow"
+            android:layout_toRightOf="@+id/text"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:shadowColor="#20000000"
+            android:shadowDx="3"
+            android:shadowDy="3"
+            android:shadowRadius="3"
+            android:textColor="#50ffffff"
+            android:textSize="20sp"
+            tools:text="Text" />
+
+        <TextView
+            android:id="@+id/means"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/text"
+            android:layout_toLeftOf="@+id/overflow"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:shadowColor="#20000000"
+            android:shadowDx="3"
+            android:shadowDy="3"
+            android:shadowRadius="3"
+            android:textColor="#fefefe"
+            android:textSize="14sp"
+            tools:text="Sub" />
+
+        <TextView
+            android:id="@+id/synonyms"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/means"
+            android:layout_toLeftOf="@+id/overflow"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:shadowColor="#20000000"
+            android:shadowDx="3"
+            android:shadowDy="3"
+            android:shadowRadius="3"
+            android:textColor="#b0fefefe"
+            android:textSize="14sp"
+            tools:text="Sub" />
+
+        <ImageView
+            android:id="@+id/overflow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:background="@drawable/selector_circle"
+            android:padding="4dp"
+            android:src="@drawable/ic_more" />
+
+    </RelativeLayout>
+
+</android.support.v7.widget.CardView>
