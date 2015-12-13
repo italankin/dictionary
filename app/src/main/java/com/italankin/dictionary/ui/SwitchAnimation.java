@@ -1,4 +1,4 @@
-package com.italankin.dictionary;
+package com.italankin.dictionary.ui;
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;
@@ -16,9 +16,19 @@ public class SwitchAnimation {
     private OnSwitchListener mListener;
     private AnimatorSet mAnimation;
 
-    private boolean mState = false;
+    private boolean mStateFired = false;
 
-    public SwitchAnimation(View v, float translationX, float translationY, long duration, OnSwitchListener listener) {
+    /**
+     * Specific switch animation.
+     *
+     * @param v            view object to animate
+     * @param translationX x amplitude
+     * @param translationY y amplitude
+     * @param duration     duration of the animation
+     * @param listener     switch listener
+     */
+    public SwitchAnimation(View v, float translationX, float translationY, long duration,
+                           OnSwitchListener listener) {
         mView = v;
         mListener = listener;
         mTranslationX = translationX;
@@ -28,14 +38,20 @@ public class SwitchAnimation {
         mAnimation.playSequentially(getAnimatorSet1(), getAnimatorSet2());
     }
 
+    /**
+     * Starts the animation.
+     */
     public void start() {
-        if (mState) {
+        if (mStateFired) {
             throw new IllegalStateException();
         }
         mAnimation.start();
-        mState = true;
+        mStateFired = true;
     }
 
+    /**
+     * Cancels the animation.
+     */
     public void cancel() {
         if (mAnimation != null && mAnimation.isRunning()) {
             mAnimation.cancel();
@@ -45,9 +61,9 @@ public class SwitchAnimation {
     private AnimatorSet getAnimatorSet1() {
         AnimatorSet set = new AnimatorSet();
 
-        ObjectAnimator translateX = ObjectAnimator.ofFloat(mView, "translationX", 0, mTranslationX);
-        ObjectAnimator translateY = ObjectAnimator.ofFloat(mView, "translationY", 0, mTranslationY);
-        ObjectAnimator alpha = ObjectAnimator.ofFloat(mView, "alpha", 1, 0);
+        ObjectAnimator translateX = ObjectAnimator.ofFloat(mView, "translationX", 0f, mTranslationX);
+        ObjectAnimator translateY = ObjectAnimator.ofFloat(mView, "translationY", 0f, mTranslationY);
+        ObjectAnimator alpha = ObjectAnimator.ofFloat(mView, "alpha", 1f, 0f);
 
         set.addListener(new Animator.AnimatorListener() {
             @Override
@@ -80,10 +96,9 @@ public class SwitchAnimation {
     private AnimatorSet getAnimatorSet2() {
         AnimatorSet set = new AnimatorSet();
 
-        ObjectAnimator translateX = ObjectAnimator.ofFloat(mView, "translationX", mTranslationX, 0);
-        ObjectAnimator translateY = ObjectAnimator.ofFloat(mView, "translationY", mTranslationY, 0);
-
-        ObjectAnimator alpha = ObjectAnimator.ofFloat(mView, "alpha", 0, 1);
+        ObjectAnimator translateX = ObjectAnimator.ofFloat(mView, "translationX", mTranslationX, 0f);
+        ObjectAnimator translateY = ObjectAnimator.ofFloat(mView, "translationY", mTranslationY, 0f);
+        ObjectAnimator alpha = ObjectAnimator.ofFloat(mView, "alpha", 0f, 1f);
 
         set.addListener(new Animator.AnimatorListener() {
             @Override

@@ -16,4 +16,8 @@
         android:id="@+id/action_copy_synonyms"
         android:orderInCategory="400"
         android:title="@string/action_copy_synonyms" />
+    <item
+        android:id="@+id/action_copy_examples"
+        android:orderInCategory="500"
+        android:title="@string/action_copy_examples" />
 </menu>

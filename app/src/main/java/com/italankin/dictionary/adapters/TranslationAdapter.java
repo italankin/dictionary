@@ -1,7 +1,8 @@
-package com.italankin.dictionary;
+package com.italankin.dictionary.adapters;
 
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -10,11 +11,12 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.italankin.dictionary.R;
 import com.italankin.dictionary.dto.TranslationEx;
 
 import java.util.List;
 
-public class DefinitionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class TranslationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final int TYPE_HEADER = 0;
     private static final int TYPE_ITEM = 1;
@@ -24,7 +26,7 @@ public class DefinitionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     private boolean[] mStates;
     private OnAdapterItemClickListener mListener;
 
-    public DefinitionAdapter(int headerSize, OnAdapterItemClickListener listener) {
+    public TranslationAdapter(int headerSize, OnAdapterItemClickListener listener) {
         mHeaderSize = headerSize;
         mListener = listener;
     }
@@ -33,6 +35,12 @@ public class DefinitionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         mDataset = list;
         mStates = new boolean[list == null ? 0 : list.size()];
         notifyDataSetChanged();
+    }
+
+    public void remove(int position) {
+        mDataset.remove(position);
+        notifyItemRemoved(position + 1);
+        notifyItemRangeChanged(position + 1, mDataset.size());
     }
 
     @Override
@@ -51,14 +59,20 @@ public class DefinitionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
         if (viewHolder instanceof ViewHolder) {
             final ViewHolder holder = (ViewHolder) viewHolder;
-            position = position - 1;
+            position = position - 1; // 1st item is header
 
             TranslationEx item = mDataset.get(position);
 
             holder.position = position;
             holder.text.setText(item.text);
-            holder.sub.setText(item.means);
-            holder.sub2.setText(item.synonyms);
+            if (TextUtils.isEmpty(item.pos)) {
+                holder.pos.setVisibility(View.GONE);
+            } else {
+                holder.pos.setText(String.format("(%s)", item.pos));
+                holder.pos.setVisibility(View.VISIBLE);
+            }
+            holder.means.setText(item.means);
+            holder.syns.setText(item.synonyms);
 
             if (!mStates[position]) {
                 holder.itemView.setAlpha(0);
@@ -89,16 +103,11 @@ public class DefinitionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         return TYPE_ITEM;
     }
 
-    public void remove(int position) {
-        mDataset.remove(position);
-        notifyItemRemoved(position + 1);
-        notifyItemRangeChanged(position + 1, mDataset.size());
-    }
-
     public class ViewHolder extends RecyclerView.ViewHolder {
         public TextView text;
-        public TextView sub;
-        public TextView sub2;
+        public TextView means;
+        public TextView syns;
+        public TextView pos;
         public ImageView menu;
         public int position;
 
@@ -108,24 +117,25 @@ public class DefinitionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                 @Override
                 public void onClick(View v) {
                     if (mListener != null) {
-                        mListener.onClick(position);
+                        mListener.onItemClick(position);
                     }
                 }
             });
-            text = (TextView) v.findViewById(R.id.text1);
-            sub = (TextView) v.findViewById(R.id.text2);
-            sub2 = (TextView) v.findViewById(R.id.text3);
+            text = (TextView) v.findViewById(R.id.text);
+            means = (TextView) v.findViewById(R.id.means);
+            syns = (TextView) v.findViewById(R.id.synonyms);
+            pos = (TextView) v.findViewById(R.id.pos);
             menu = (ImageView) v.findViewById(R.id.overflow);
             menu.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     PopupMenu pm = new PopupMenu(v.getContext(), v);
-                    pm.inflate(R.menu.menu_item);
+                    pm.inflate(R.menu.menu_translation);
                     pm.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                         @Override
                         public boolean onMenuItemClick(MenuItem item) {
                             if (mListener != null) {
-                                mListener.onMenuItemClick(position, item.getItemId());
+                                mListener.onItemMenuClick(position, item.getItemId());
                             }
                             return true;
                         }
@@ -146,9 +156,9 @@ public class DefinitionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     }
 
     public interface OnAdapterItemClickListener {
-        void onClick(int position);
+        void onItemClick(int position);
 
-        void onMenuItemClick(int position, int menuItemId);
+        void onItemMenuClick(int position, int menuItemId);
     }
 
 }

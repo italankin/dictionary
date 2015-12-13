@@ -4,7 +4,7 @@
     android:id="@+id/ra"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".ui.MainActivity">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -19,15 +19,14 @@
             android:id="@+id/input_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:clickable="true"
             android:layout_marginTop="?attr/actionBarSize"
+            android:clickable="true"
             app:cardCornerRadius="0dp">
 
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="140dp"
                 android:background="@android:color/white"
-                android:clickable="true"
                 android:orientation="vertical">
 
                 <EditText
@@ -47,7 +46,7 @@
                     android:maxLines="1"
                     android:selectAllOnFocus="true"
                     android:textColor="#000"
-                    android:textSize="@dimen/input_text_size" />
+                    android:textSize="24sp" />
 
                 <TextView
                     android:id="@+id/tvTranscription"
@@ -109,12 +108,15 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentLeft="true"
                     android:layout_centerVertical="true"
+                    android:layout_toLeftOf="@+id/ivArrow"
                     android:background="@drawable/selector_rect"
                     android:drawablePadding="8dp"
                     android:drawableRight="@drawable/ic_expand_more"
+                    android:ellipsize="end"
+                    android:maxLines="1"
                     android:padding="6dp"
                     android:textColor="@android:color/white"
-                    android:textSize="@dimen/hint_text_size"
+                    android:textSize="18sp"
                     tools:text="English" />
 
                 <ImageView
@@ -133,12 +135,16 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentRight="true"
                     android:layout_centerVertical="true"
+                    android:layout_toRightOf="@+id/ivArrow"
                     android:background="@drawable/selector_rect"
                     android:drawablePadding="8dp"
                     android:drawableRight="@drawable/ic_expand_more"
+                    android:ellipsize="end"
+                    android:gravity="right"
+                    android:maxLines="1"
                     android:padding="6dp"
                     android:textColor="@android:color/white"
-                    android:textSize="@dimen/hint_text_size"
+                    android:textSize="18sp"
                     tools:text="English" />
 
             </RelativeLayout>

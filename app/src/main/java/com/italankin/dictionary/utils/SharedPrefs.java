@@ -2,6 +2,7 @@ package com.italankin.dictionary.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 
 import com.google.gson.Gson;
@@ -18,8 +19,17 @@ import java.util.List;
 public class SharedPrefs {
 
     private static final String LANGS = "langs.json";
+    private static final int DEFAULT_CACHE_SIZE = 5 * 1024 * 1024; // 5 MB
+    private static final int DEFAULT_CACHE_AGE = 60 * 60 * 24 * 30; // 30 days
+
     public static final String PREF_SOURCE = "source";
     public static final String PREF_DEST = "dest";
+    public static final String PREF_LOOKUP_REVERSE = "lookup_reverse";
+    public static final String PREF_YANDEX_DICT = "yandex_dict";
+    public static final String PREF_CACHE_RESULTS = "cache_results";
+    public static final String PREF_CACHE_CLEAR = "cache_clear";
+    public static final String PREF_CACHE_SIZE = "cache_size";
+    public static final String PREF_CACHE_AGE = "cache_age";
 
     private static SharedPrefs INSTANCE;
 
@@ -36,9 +46,13 @@ public class SharedPrefs {
 
     private SharedPrefs(Context context) {
         mContext = context;
-        mPreferences = context.getSharedPreferences("prefs", Context.MODE_PRIVATE);
+        mPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         mGson = new Gson();
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Destination language
+    ///////////////////////////////////////////////////////////////////////////
 
     public void setDestLang(String code) {
         SharedPreferences.Editor editor = mPreferences.edit();
@@ -54,6 +68,10 @@ public class SharedPrefs {
         return mPreferences.getString(PREF_DEST, null);
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Source language
+    ///////////////////////////////////////////////////////////////////////////
+
     public void setSourceLang(String code) {
         SharedPreferences.Editor editor = mPreferences.edit();
         editor.putString(PREF_SOURCE, code);
@@ -67,6 +85,10 @@ public class SharedPrefs {
     public String getSourceLang() {
         return mPreferences.getString(PREF_SOURCE, null);
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Languages list
+    ///////////////////////////////////////////////////////////////////////////
 
     public void putLangs(List<Language> list) throws IOException {
         File file = getLangsFile();
@@ -92,6 +114,30 @@ public class SharedPrefs {
     private File getLangsFile() {
         File dir = mContext.getFilesDir();
         return new File(dir, LANGS);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Other
+    ///////////////////////////////////////////////////////////////////////////
+
+    public boolean lookupReverse() {
+        return mPreferences.getBoolean(PREF_LOOKUP_REVERSE, true);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Cache
+    ///////////////////////////////////////////////////////////////////////////
+
+    public boolean cacheResults() {
+        return mPreferences.getBoolean(PREF_CACHE_RESULTS, true);
+    }
+
+    public int getCacheSize() {
+        return mPreferences.getInt(PREF_CACHE_SIZE, DEFAULT_CACHE_SIZE);
+    }
+
+    public int getCacheAge() {
+        return mPreferences.getInt(PREF_CACHE_AGE, DEFAULT_CACHE_AGE);
     }
 
 }

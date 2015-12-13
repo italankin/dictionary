@@ -1,21 +1,22 @@
-package com.italankin.dictionary;
+package com.italankin.dictionary.ui;
 
 import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.italankin.dictionary.BuildConfig;
+import com.italankin.dictionary.R;
+import com.italankin.dictionary.api.ApiClient;
+import com.italankin.dictionary.api.ServerException;
 import com.italankin.dictionary.dto.Definition;
 import com.italankin.dictionary.dto.Language;
 import com.italankin.dictionary.dto.Result;
-import com.italankin.dictionary.dto.Translation;
-import com.italankin.dictionary.dto.TranslationEx;
 import com.italankin.dictionary.utils.SharedPrefs;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -57,35 +58,53 @@ public class MainPresenter {
 
     private Result mLastResult;
 
+    private LinkedHashSet<String> mLastQueries = new LinkedHashSet<>(0);
+
     private MainPresenter(Context context) {
         mPrefs = SharedPrefs.getInstance(context);
         mClient = ApiClient.getInstance();
-        mClient.setCacheDirectory(context.getCacheDir());
+        if (mPrefs.cacheResults()) {
+            int size = mPrefs.getCacheSize();
+            int age = mPrefs.getCacheAge();
+            mClient.setCacheDirectory(context.getCacheDir(), size, age);
+        }
         mUiLanguage = Locale.getDefault().getLanguage();
     }
 
+    /**
+     * @param activity activity for attaching presenter to
+     */
     public void attach(MainActivity activity) {
         mRef = new WeakReference<>(activity);
     }
 
+    /**
+     * Called when activity is finishing.
+     */
     public void detach() {
         mRef = NULL_REF;
         if (mSubLangs != null && mSubLangs.isUnsubscribed()) {
             mSubLangs.unsubscribe();
+            mSubLangs = null;
         }
         if (mSubLookup != null && mSubLookup.isUnsubscribed()) {
             mSubLookup.unsubscribe();
+            mSubLookup = null;
         }
     }
 
+    /**
+     * Load languages list. They will be loaded from net, if there are no cached files.
+     */
     public void loadLanguages() {
         if (mDest != null && mSource != null) {
             MainActivity a = mRef.get();
-            a.onLangsResult();
+            a.onLanguagesResult();
             return;
         }
 
         if (mSubLangs != null && !mSubLangs.isUnsubscribed()) {
+            // wait for request to finish
             return;
         }
 
@@ -131,6 +150,11 @@ public class MainPresenter {
         }
     }
 
+    /**
+     * Setup presenter fields for manipulating with languages.
+     *
+     * @param list list of the languages
+     */
     private void updateLanguages(List<Language> list) {
         mLangs = list;
         if (!list.isEmpty()) {
@@ -140,19 +164,28 @@ public class MainPresenter {
         }
     }
 
+    /**
+     * Callback function called when receiving languages list.
+     */
     private Action1<Object> onGetLangsResult = new Action1<Object>() {
         @Override
         public void call(Object o) {
             MainActivity a = mRef.get();
             if (a != null) {
-                a.onLangsResult();
+                a.onLanguagesResult();
             }
             mSubLangs.unsubscribe();
         }
     };
 
+    /**
+     * Lookup text.
+     *
+     * @param text string to lookup
+     */
     public void lookup(final String text) {
         if (mSubLookup != null && !mSubLookup.isUnsubscribed()) {
+            // cancel existing sent request
             mSubLookup.unsubscribe();
         }
 
@@ -160,7 +193,8 @@ public class MainPresenter {
                 .flatMap(new Func1<List<Definition>, Observable<List<Definition>>>() {
                     @Override
                     public Observable<List<Definition>> call(List<Definition> definitions) {
-                        if (definitions == null || definitions.isEmpty()) {
+                        if ((definitions == null || definitions.isEmpty()) && mPrefs.lookupReverse()) {
+                            // if we got no result, attempt to lookup in reverse direction
                             return mClient.lookup(BuildConfig.API_KEY, getLangParam(true), text,
                                     mUiLanguage, 0);
                         }
@@ -181,10 +215,13 @@ public class MainPresenter {
                         new Action1<Result>() {
                             @Override
                             public void call(Result result) {
-                                mLastResult = result;
+                                if (result != null) {
+                                    mLastResult = result;
+                                    mLastQueries.add(result.text);
+                                }
                                 MainActivity a = mRef.get();
                                 if (a != null) {
-                                    a.onLookupResult(mLastResult);
+                                    a.onLookupResult(result);
                                 }
                                 if (mSubLookup != null && !mSubLookup.isUnsubscribed()) {
                                     mSubLookup.unsubscribe();
@@ -196,6 +233,12 @@ public class MainPresenter {
                 );
     }
 
+    /**
+     * Concat languages codes for sending request to server.
+     *
+     * @param reverse false: SOURCE-DEST, true: DEST-SOURCE
+     * @return language parameter
+     */
     private String getLangParam(boolean reverse) {
         if (reverse) {
             return mDest.getCode() + "-" + mSource.getCode();
@@ -204,11 +247,19 @@ public class MainPresenter {
         }
     }
 
+    /**
+     * Return last successfull result
+     *
+     * @return {@link Result} object
+     */
     public Result getLastResult() {
         return mLastResult;
     }
 
-    public boolean getLastResultAsync() {
+    /**
+     * Dispatch last result to activity. Used when configuration changes.
+     */
+    public void getLastResultAsync() {
         if (mLastResult != null) {
             mSubLookup = Observable.timer(300, TimeUnit.MILLISECONDS)
                     .subscribeOn(Schedulers.newThread())
@@ -226,26 +277,48 @@ public class MainPresenter {
                             }
                         }
                     });
-            return true;
-        } else {
-            return false;
         }
+    }
+
+    public String[] getLastQueries() {
+        String[] result = new String[mLastQueries.size()];
+        mLastQueries.toArray(result);
+        return result;
+    }
+
+    public void clearLastQueries() {
+        mLastQueries.clear();
     }
 
     ///////////////////////////////////////////////////////////////////////////
     // Languages
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Set source language by its position in languages list.
+     *
+     * @param position language index
+     */
     public void setSourceLanguage(int position) {
         mSource = mLangs.get(position);
         mPrefs.setSourceLang(mSource);
     }
 
+    /**
+     * Set destination language by its position in languages list.
+     *
+     * @param position language index
+     */
     public void setDestLanguage(int position) {
         mDest = mLangs.get(position);
         mPrefs.setDestLang(mDest);
     }
 
+    /**
+     * Set source language by its code.
+     *
+     * @param code language code
+     */
     public void setSourceLanguageByCode(String code) {
         mSource = mLangs.get(0);
         for (Language l : mLangs) {
@@ -257,6 +330,12 @@ public class MainPresenter {
         mPrefs.setSourceLang(mSource);
     }
 
+
+    /**
+     * Set dest language by its code.
+     *
+     * @param code language code
+     */
     public void setDestLanguageByCode(String code) {
         mDest = mLangs.get(0);
         for (Language l : mLangs) {
@@ -268,22 +347,42 @@ public class MainPresenter {
         mPrefs.setDestLang(mDest);
     }
 
+    /**
+     * @return list of the available languages.
+     */
     public List<Language> getLanguagesList() {
         return mLangs;
     }
 
+    /**
+     * Sort language list.
+     *
+     * @see Language#compareTo(Language)
+     */
     public void sortLanguagesList() {
         Collections.sort(mLangs);
     }
 
+    /**
+     * @return currently set source language
+     */
     public Language getSourceLanguage() {
         return mSource;
     }
 
+    /**
+     * @return currently set destination language
+     */
     public Language getDestLanguage() {
         return mDest;
     }
 
+    /**
+     * Swap languages.
+     *
+     * @return <b>true</b>, if languages were swapped, <b>false</b> otherwise (ex. {@link #mSource}
+     * == {@link #mDest})
+     */
     public boolean swapLanguages() {
         if (!TextUtils.equals(mSource.getCode(), mDest.getCode())) {
             Language tmp = mSource;
@@ -296,6 +395,9 @@ public class MainPresenter {
         return false;
     }
 
+    /**
+     * Save language list on the disk.
+     */
     public void saveLanguages() {
         if (mSubLangs != null && !mSubLangs.isUnsubscribed()) {
             mSubLangs.unsubscribe();
@@ -342,6 +444,9 @@ public class MainPresenter {
     // Error handlers
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Generic error handler.
+     */
     private Action1<Throwable> mErrorHandler = new Action1<Throwable>() {
         @Override
         public void call(Throwable throwable) {
@@ -349,25 +454,44 @@ public class MainPresenter {
             MainActivity a = mRef.get();
             if (a != null) {
                 String message = a.getString(R.string.error);
-                if (throwable instanceof UnknownHostException) {
+                if (throwable instanceof IOException) {
                     message = a.getString(R.string.error_no_connection);
                 }
                 if (throwable instanceof ServerException) {
                     ServerException e = (ServerException) throwable;
-                    message = e.getMessage();
+                    switch (e.getCode()) {
+
+                        case 501:
+                            message = a.getString(R.string.error_lang_not_supported);
+                            break;
+                        case 401:
+                        case 402:
+                        case 403:
+                        case 502:
+                            message = a.getString(R.string.error);
+                            break;
+                        case 413:
+                            message = a.getString(R.string.error_long_request);
+                            break;
+                        default:
+                            message = e.getMessage();
+                    }
                 }
                 a.onError(message);
             }
         }
     };
 
+    /**
+     * Handling languages fetching errors.
+     */
     private Action1<Throwable> mGetLangsErrorHandler = new Action1<Throwable>() {
         @Override
         public void call(Throwable throwable) {
             throwable.printStackTrace();
             MainActivity a = mRef.get();
             if (a != null) {
-                a.onLangsError();
+                a.onLanguagesError();
             }
         }
     };
@@ -389,4 +513,5 @@ public class MainPresenter {
             Log.println(priority, getClass().getSimpleName(), message);
         }
     }
+
 }

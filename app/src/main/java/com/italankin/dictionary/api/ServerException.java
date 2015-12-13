@@ -1,4 +1,4 @@
-package com.italankin.dictionary;
+package com.italankin.dictionary.api;
 
 public class ServerException extends RuntimeException {
 

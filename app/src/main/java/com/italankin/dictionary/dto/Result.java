@@ -10,9 +10,6 @@ public class Result {
     public List<TranslationEx> translations;
     public String transcription;
 
-    public Result() {
-    }
-
     public Result(List<Definition> definitions) {
         this.rawResult = definitions;
         this.transcription = "";
@@ -49,7 +46,7 @@ public class Result {
     }
 
     public boolean isEmpty() {
-        return rawResult != null && !rawResult.isEmpty();
+        return rawResult == null || rawResult.isEmpty();
     }
 
 }

@@ -10,13 +10,7 @@ public class Language implements Comparable<Language> {
 
     public Language(String code, String name) {
         this.code = code;
-        this.name = name;
-    }
-
-    public Language(String code, String name, boolean fav) {
-        this.code = code;
-        this.name = name;
-        this.favorite = fav;
+        this.name = name.substring(0, 1).toUpperCase() + name.substring(1);
     }
 
     public boolean isFavorite() {

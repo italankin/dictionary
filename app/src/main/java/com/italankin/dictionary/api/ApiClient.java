@@ -1,6 +1,7 @@
-package com.italankin.dictionary;
+package com.italankin.dictionary.api;
 
 import com.google.gson.Gson;
+import com.italankin.dictionary.BuildConfig;
 import com.italankin.dictionary.dto.Definition;
 import com.italankin.dictionary.dto.DicResult;
 import com.italankin.dictionary.dto.Error;
@@ -29,8 +30,8 @@ public class ApiClient {
 
     private static ApiClient INSTANCE;
 
-    private Gson mGson;
-    private OkHttpClient mOkHttp;
+    private final Gson mGson;
+    private final OkHttpClient mOkHttp;
 
     public static ApiClient getInstance() {
         if (INSTANCE == null) {
@@ -43,14 +44,26 @@ public class ApiClient {
         mGson = new Gson();
         mOkHttp = new OkHttpClient();
         mOkHttp.interceptors().add(new LoggingInterceptor());
-        mOkHttp.networkInterceptors().add(new CacheInterceptor(60 * 60 * 24 * 7)); // 7 weaks
     }
 
-    public void setCacheDirectory(File dir) {
-        Cache cache = new Cache(dir, 5 * 1024 * 1024);
+    /**
+     * Set cache directory.
+     *
+     * @param dir directory, where cache will be stored.
+     */
+    public void setCacheDirectory(File dir, int size, int age) {
+        Cache cache = new Cache(dir, size);
         mOkHttp.setCache(cache);
+        CacheInterceptor cacheInterceptor = new CacheInterceptor(age);
+        mOkHttp.networkInterceptors().add(cacheInterceptor);
     }
 
+    /**
+     * Fetch language list from the server.
+     *
+     * @param key API key
+     * @return list of available languages
+     */
     public Observable<List<Language>> getLangs(final String key) {
         return Observable
                 .create(new Observable.OnSubscribe<String[]>() {

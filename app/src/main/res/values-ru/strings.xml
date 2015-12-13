@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Словарь</string>
+    <string name="about">О программе</string>
+    <string name="action_copy">Копировать</string>
+    <string name="action_copy_examples">Копировать примеры</string>
+    <string name="action_copy_meanings">Копировать значения</string>
+    <string name="action_copy_synonyms">Копировать синонимы</string>
+    <string name="action_copy_translation">Копировать перевод</string>
+    <string name="action_history">История</string>
+    <string name="action_lookup_word">Поиск</string>
+    <string name="action_settings">Настройки</string>
+    <string name="action_share">Поделиться</string>
+    <string name="clear_history">Очистить</string>
+    <string name="destination">Язык перевода</string>
+    <string name="error">Ошибка</string>
+    <string name="error_lang_not_supported">Направление перевода не поддерживается</string>
+    <string name="error_long_request">Превышена длина текста запроса</string>
+    <string name="error_no_app">Нет подходящих приложений</string>
+    <string name="error_no_connection">Нет соединения</string>
+    <string name="error_no_results">Нет результатов</string>
+    <string name="error_share">Нечем делиться</string>
+    <string name="input_hint">Введите слово или фразу</string>
+    <string name="lookup">Поиск</string>
+    <string name="msg_copied">Скопировано</string>
+    <string name="msg_history_empty">История пуста</string>
+    <string name="msg_transcription_copied">Транскрипция скопирована в буфер обмена</string>
+    <string name="open_link">Открыть ссылку</string>
+    <string name="pref_about">О программе</string>
+    <string name="pref_cat_other">Прочие</string>
+    <string name="pref_cat_general">Общие</string>
+    <string name="pref_lookup_both">Поиск в обоих направлениях</string>
+    <string name="pref_yandex_dictionary">Yandex.Dictionary</string>
+    <string name="retry">Повтор</string>
+    <string name="settings">Настройки</string>
+    <string name="source">Язык оригинала</string>
+    <string name="error_langs">Ошибка при получении списка языков</string>
+</resources>

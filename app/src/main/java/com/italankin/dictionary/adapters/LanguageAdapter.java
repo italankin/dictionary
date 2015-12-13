@@ -1,4 +1,4 @@
-package com.italankin.dictionary;
+package com.italankin.dictionary.adapters;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -8,6 +8,7 @@ import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.TextView;
 
+import com.italankin.dictionary.R;
 import com.italankin.dictionary.dto.Language;
 
 import java.util.List;
