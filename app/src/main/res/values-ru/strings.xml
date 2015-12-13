@@ -35,4 +35,8 @@
     <string name="settings">Настройки</string>
     <string name="source">Язык оригинала</string>
     <string name="error_langs">Ошибка при получении списка языков</string>
+    <string name="pref_cache">Кэшировать результаты</string>
+    <string name="pref_cache_clear">Очистить кэш</string>
+    <string name="pref_cat_cache">Кэширование</string>
+    <string name="msg_cache_cleared">Кэш очищен</string>
 </resources>

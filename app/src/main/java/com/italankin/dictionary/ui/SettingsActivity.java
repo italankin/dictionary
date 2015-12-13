@@ -1,6 +1,7 @@
 package com.italankin.dictionary.ui;
 
 
+import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.ActivityNotFoundException;
@@ -48,7 +49,11 @@ public class SettingsActivity extends AppCompatActivity {
 
         FragmentManager fragmentManager = getFragmentManager();
         FragmentTransaction t = fragmentManager.beginTransaction();
-        t.add(R.id.container, new RootFragment());
+        Fragment f = fragmentManager.findFragmentByTag("root");
+        if (f == null) {
+            f = new RootFragment();
+        }
+        t.replace(R.id.container, f, "root");
         t.commit();
     }
 
@@ -59,6 +64,8 @@ public class SettingsActivity extends AppCompatActivity {
         @Override
         public void onCreate(final Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
+
+            setRetainInstance(true);
 
             mPrefs = SharedPrefs.getInstance(getActivity());
 
@@ -77,11 +84,6 @@ public class SettingsActivity extends AppCompatActivity {
         @Override
         public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
             switch (preference.getKey()) {
-
-                case SharedPrefs.PREF_YANDEX_DICT:
-                    openYandexUrl();
-                    return true;
-
                 case SharedPrefs.PREF_CACHE_CLEAR:
                     clearCache();
                     return true;
