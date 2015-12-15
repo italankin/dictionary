@@ -31,16 +31,28 @@ public class Result {
 
     @Override
     public String toString() {
-        String s = transcription;
-        for (int i1 = 0; i1 < translations.size(); i1++) {
-            if (i1 > 0 || transcription.length() > 0) {
-                s += "\n";
+        String s = "";
+        try {
+            if (transcription != null && transcription.length() > 0) {
+                s = String.format("[%s]\n", transcription);
             }
-            TranslationEx t = translations.get(i1);
-            s += t.text;
-            if (t.means != null && t.means.length() > 0) {
-                s += " (" + t.means + ")";
+
+            if (translations != null && !translations.isEmpty()) {
+                TranslationEx t = translations.get(0);
+                s += t.text;
+                if (t.means != null && t.means.length() > 0) {
+                    s += " (" + t.means + ")";
+                }
+                for (int i = 1; i < translations.size(); i++) {
+                    t = translations.get(i);
+                    s += "\n" + t.text;
+                    if (t.means != null && t.means.length() > 0) {
+                        s += " (" + t.means + ")";
+                    }
+                }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return s;
     }

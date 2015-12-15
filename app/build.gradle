@@ -22,16 +22,15 @@ android {
     }
 
     buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
         debug {
-            debuggable true
             signingConfig signingConfigs.debug
 
             buildConfigField("String", "API_KEY", '"dict.1.1.20151203T152803Z.913bd29b7eccf0e5.839c08e3ae32241ef3cf607d3187eefb7616e9a2"')
             buildConfigField("String", "BASE_URL", '"https://dictionary.yandex.net/api/v1/dicservice.json/"')
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
 }
