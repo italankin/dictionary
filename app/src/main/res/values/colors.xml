@@ -7,4 +7,6 @@
     <color name="selector">#30dddddd</color>
     <color name="green">#43a94a</color>
     <color name="greenDark">#398f3e</color>
+    <color name="cyan">#43a990</color>
+    <color name="transcription">#a0a0a0</color>
 </resources>

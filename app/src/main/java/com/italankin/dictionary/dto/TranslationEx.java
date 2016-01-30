@@ -1,5 +1,7 @@
 package com.italankin.dictionary.dto;
 
+import android.os.Parcel;
+
 public class TranslationEx extends Translation {
 
     public String means = "";
@@ -49,5 +51,21 @@ public class TranslationEx extends Translation {
             }
         }
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Parcelable
+    ///////////////////////////////////////////////////////////////////////////
+
+    public static final Creator<TranslationEx> CREATOR = new Creator<TranslationEx>() {
+        @Override
+        public TranslationEx createFromParcel(Parcel source) {
+            return new TranslationEx(new Translation(source));
+        }
+
+        @Override
+        public TranslationEx[] newArray(int size) {
+            return new TranslationEx[size];
+        }
+    };
 
 }

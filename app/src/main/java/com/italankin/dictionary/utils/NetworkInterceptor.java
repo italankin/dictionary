@@ -9,7 +9,7 @@ import com.squareup.okhttp.ResponseBody;
 
 import java.io.IOException;
 
-public class LoggingInterceptor implements Interceptor {
+public class NetworkInterceptor implements Interceptor {
 
     public static final String TAG = "LoggingInterceptor";
 

@@ -179,7 +179,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(int position) {
                 TranslationEx item = mTranslations.get(position);
-                lookupNext(item.text);
+                startActivity(TranslationActivity.getStartIntent(getApplicationContext(), item,
+                        mPresenter.getLastResult().transcription));
             }
 
             @Override
@@ -244,14 +245,9 @@ public class MainActivity extends AppCompatActivity {
             mLookupSub = null;
         }
         if (isFinishing()) {
+            mPresenter.saveLanguages();
             mPresenter.detach();
         }
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        mPresenter.saveLanguages();
     }
 
     ///////////////////////////////////////////////////////////////////////////

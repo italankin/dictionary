@@ -51,6 +51,11 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.TranslationActivity"
+            android:label="@string/translaton">
+        </activity>
+
     </application>
 
 </manifest>

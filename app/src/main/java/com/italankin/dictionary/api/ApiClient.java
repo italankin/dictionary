@@ -7,7 +7,7 @@ import com.italankin.dictionary.dto.DicResult;
 import com.italankin.dictionary.dto.Error;
 import com.italankin.dictionary.dto.Language;
 import com.italankin.dictionary.utils.CacheInterceptor;
-import com.italankin.dictionary.utils.LoggingInterceptor;
+import com.italankin.dictionary.utils.NetworkInterceptor;
 import com.squareup.okhttp.Cache;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -43,7 +43,7 @@ public class ApiClient {
     public ApiClient() {
         mGson = new Gson();
         mOkHttp = new OkHttpClient();
-        mOkHttp.interceptors().add(new LoggingInterceptor());
+        mOkHttp.interceptors().add(new NetworkInterceptor());
     }
 
     /**

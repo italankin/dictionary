@@ -1,7 +1,8 @@
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout
+    android:id="@+id/ra"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/ra"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.MainActivity">
@@ -13,7 +14,7 @@
         <android.support.v7.widget.RecyclerView
             android:id="@+id/recycler_view"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"/>
 
         <android.support.v7.widget.CardView
             android:id="@+id/input_card"
@@ -46,7 +47,7 @@
                     android:maxLines="1"
                     android:selectAllOnFocus="true"
                     android:textColor="#000"
-                    android:textSize="24sp" />
+                    android:textSize="24sp"/>
 
                 <TextView
                     android:id="@+id/tvTranscription"
@@ -56,9 +57,9 @@
                     android:layout_marginBottom="20dp"
                     android:layout_marginLeft="20dp"
                     android:layout_marginRight="20dp"
-                    android:textColor="#a0a0a0"
+                    android:textColor="@color/transcription"
                     android:textSize="18sp"
-                    tools:text="[transcription]" />
+                    tools:text="[transcription]"/>
 
                 <TextView
                     android:id="@+id/tvLoad"
@@ -73,7 +74,7 @@
                     android:textAllCaps="true"
                     android:textColor="@color/button_lookup"
                     android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"/>
 
             </RelativeLayout>
 
@@ -117,7 +118,7 @@
                     android:padding="6dp"
                     android:textColor="@android:color/white"
                     android:textSize="18sp"
-                    tools:text="English" />
+                    tools:text="English"/>
 
                 <ImageView
                     android:id="@+id/ivArrow"
@@ -127,7 +128,7 @@
                     android:background="@drawable/selector_circle"
                     android:padding="8dp"
                     android:scaleType="center"
-                    android:src="@drawable/ic_swap_horiz" />
+                    android:src="@drawable/ic_swap_horiz"/>
 
                 <TextView
                     android:id="@+id/tvDirectionTo"
@@ -145,7 +146,7 @@
                     android:padding="6dp"
                     android:textColor="@android:color/white"
                     android:textSize="18sp"
-                    tools:text="English" />
+                    tools:text="English"/>
 
             </RelativeLayout>
 
