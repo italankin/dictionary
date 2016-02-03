@@ -179,8 +179,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(int position) {
                 TranslationEx item = mTranslations.get(position);
-                startActivity(TranslationActivity.getStartIntent(getApplicationContext(), item,
-                        mPresenter.getLastResult().transcription));
+                startActivity(TranslationActivity.getStartIntent(getApplicationContext(), item));
             }
 
             @Override
@@ -248,6 +247,27 @@ public class MainActivity extends AppCompatActivity {
             mPresenter.saveLanguages();
             mPresenter.detach();
         }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        handleIntent(intent);
+    }
+
+    private boolean handleIntent(Intent intent) {
+        if (intent != null && intent.getType() != null) {
+            String type = intent.getType();
+            String text = intent.getStringExtra(Intent.EXTRA_TEXT);
+            text = text.substring(0, Math.min(text.length(), 80));
+            if (type != null && !TextUtils.isEmpty(text) && "text/plain".equals(type)) {
+                intent.setType(null);
+                mInput.setText(text);
+                mInput.selectAll();
+                startLookup(text);
+            }
+            return true;
+        }
+        return false;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -424,17 +444,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public void onLanguagesResult() {
         // if we got share intent from other application
-        Intent intent = getIntent();
-        if (intent != null && intent.getType() != null) {
-            String type = intent.getType();
-            String text = intent.getStringExtra(Intent.EXTRA_TEXT);
-            text = text.substring(0, Math.min(text.length(), 80));
-            if (type != null && !TextUtils.isEmpty(text) && "text/plain".equals(type)) {
-                intent.setType(null);
-                mInput.setText(text);
-                startLookup(text);
-            }
-        } else {
+        if (!handleIntent(getIntent())) {
             mPresenter.getLastResultAsync();
         }
         mToolbarInnerLayout.setVisibility(View.VISIBLE);

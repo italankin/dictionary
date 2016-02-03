@@ -5,16 +5,13 @@
         <item name="colorPrimaryDark">@color/primaryDark</item>
     </style>
 
-    <style name="TextMean">
-        <item name="android:background">@drawable/bg_mean</item>
-        <item name="android:textColor">#fff</item>
+    <style name="TranslationTextItem">
+        <item name="android:textColor">#cfff</item>
         <item name="android:textSize">16sp</item>
-        <item name="android:padding">8dp</item>
-        <item name="android:gravity">center</item>
-    </style>
-
-    <style name="TextSyn" parent="TextMean">
-        <item name="android:background">@drawable/bg_syn</item>
+        <item name="android:paddingRight">10dp</item>
+        <item name="android:paddingLeft">10dp</item>
+        <item name="android:paddingTop">5dp</item>
+        <item name="android:paddingBottom">5dp</item>
     </style>
 
 </resources>
