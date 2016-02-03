@@ -102,6 +102,7 @@ public class Translation extends Attribute implements Parcelable {
             num = source.readString();
             gen = source.readString();
             asp = source.readString();
+            tr = source.createTypedArray(Translation.CREATOR);
         }
 
         @Override
@@ -116,7 +117,7 @@ public class Translation extends Attribute implements Parcelable {
             dest.writeString(num);
             dest.writeString(gen);
             dest.writeString(asp);
-            dest.writeParcelableArray(tr, 0);
+            dest.writeTypedArray(tr, 0);
         }
 
         public static final Parcelable.Creator<Example> CREATOR = new Creator<Example>() {
