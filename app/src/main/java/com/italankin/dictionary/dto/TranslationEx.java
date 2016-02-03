@@ -9,44 +9,44 @@ public class TranslationEx extends Translation {
     public String synonyms = "";
 
     public TranslationEx(Translation t) {
-        this.mean = t.mean;
-        this.ex = t.ex;
-        this.syn = t.syn;
-        this.text = t.text;
-        this.pos = t.pos;
-        this.num = t.num;
-        this.gen = t.gen;
-        this.asp = t.asp;
+        mean = t.mean;
+        ex = t.ex;
+        syn = t.syn;
+        text = t.text;
+        pos = t.pos;
+        num = t.num;
+        gen = t.gen;
+        asp = t.asp;
 
-        if (this.mean != null) {
-            this.means = "";
-            for (Mean m : this.mean) {
-                if (this.means.length() > 0) {
-                    this.means += ", " + m.text;
+        if (mean != null) {
+            means = "";
+            for (Mean m : mean) {
+                if (means.length() > 0) {
+                    means += ", " + m.text;
                 } else {
-                    this.means = m.text;
+                    means = m.text;
                 }
             }
         }
 
-        if (this.ex != null) {
-            this.examples = "";
-            for (Example e : this.ex) {
-                if (this.examples.length() > 0) {
-                    this.examples += ", " + e.text;
+        if (ex != null) {
+            examples = "";
+            for (Example e : ex) {
+                if (examples.length() > 0) {
+                    examples += ", " + e.text;
                 } else {
-                    this.examples = e.text;
+                    examples = e.text;
                 }
             }
         }
 
-        if (this.syn != null) {
-            this.synonyms = "";
-            for (Synonym s : this.syn) {
-                if (this.synonyms.length() > 0) {
-                    this.synonyms += ", " + s.text;
+        if (syn != null) {
+            synonyms = "";
+            for (Synonym s : syn) {
+                if (synonyms.length() > 0) {
+                    synonyms += ", " + s.text;
                 } else {
-                    this.synonyms = s.text;
+                    synonyms = s.text;
                 }
             }
         }
