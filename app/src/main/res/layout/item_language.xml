@@ -33,7 +33,7 @@
         android:layout_marginRight="10dp"
         android:layout_marginTop="5dp"
         android:background="@drawable/selector_circle"
-        android:button="@drawable/background_fav"
+        android:button="@drawable/bg_fav"
         android:checked="false"
         android:focusable="false" />
 

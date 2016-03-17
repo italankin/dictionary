@@ -4,19 +4,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="2dp"
-    android:layout_marginLeft="6dp"
-    android:layout_marginRight="6dp"
-    android:layout_marginTop="2dp"
     android:foreground="?android:attr/selectableItemBackground">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/background_list_item"
+        android:background="@drawable/bg_list_item"
         android:gravity="center_vertical"
         android:orientation="vertical"
-        android:padding="10dp">
+        android:padding="8dp">
 
         <TextView
             android:id="@+id/text"
@@ -72,8 +68,8 @@
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_alignParentTop="true"
-            android:background="@drawable/selector_circle"
             android:padding="4dp"
+            android:scaleType="center"
             android:src="@drawable/ic_more" />
 
     </RelativeLayout>

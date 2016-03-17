@@ -16,20 +16,16 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
 
+/**
+ * Wrapper around {@link SharedPreferences} for this application purposes.
+ */
 public class SharedPrefs {
 
     private static final String LANGS = "langs.json";
-    private static final int DEFAULT_CACHE_SIZE = 5 * 1024 * 1024; // 5 MB
-    private static final int DEFAULT_CACHE_AGE = 60 * 60 * 24 * 30; // 30 days
 
     public static final String PREF_SOURCE = "source";
     public static final String PREF_DEST = "dest";
     public static final String PREF_LOOKUP_REVERSE = "lookup_reverse";
-    public static final String PREF_YANDEX_DICT = "yandex_dict";
-    public static final String PREF_CACHE_RESULTS = "cache_results";
-    public static final String PREF_CACHE_CLEAR = "cache_clear";
-    public static final String PREF_CACHE_SIZE = "cache_size";
-    public static final String PREF_CACHE_AGE = "cache_age";
 
     private static SharedPrefs INSTANCE;
 
@@ -37,7 +33,7 @@ public class SharedPrefs {
     private Context mContext;
     private Gson mGson;
 
-    public static SharedPrefs getInstance(Context context) {
+    public static synchronized SharedPrefs getInstance(Context context) {
         if (INSTANCE == null) {
             INSTANCE = new SharedPrefs(context);
         }
@@ -122,22 +118,6 @@ public class SharedPrefs {
 
     public boolean lookupReverse() {
         return mPreferences.getBoolean(PREF_LOOKUP_REVERSE, true);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Cache
-    ///////////////////////////////////////////////////////////////////////////
-
-    public boolean cacheResults() {
-        return mPreferences.getBoolean(PREF_CACHE_RESULTS, true);
-    }
-
-    public int getCacheSize() {
-        return mPreferences.getInt(PREF_CACHE_SIZE, DEFAULT_CACHE_SIZE);
-    }
-
-    public int getCacheAge() {
-        return mPreferences.getInt(PREF_CACHE_AGE, DEFAULT_CACHE_AGE);
     }
 
 }

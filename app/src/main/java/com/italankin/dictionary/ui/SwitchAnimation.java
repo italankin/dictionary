@@ -6,6 +6,9 @@ import android.animation.ObjectAnimator;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 
+/**
+ * Animation for creating a switch-like effect.
+ */
 public class SwitchAnimation {
 
     private View mView;
@@ -43,7 +46,7 @@ public class SwitchAnimation {
      */
     public void start() {
         if (mStateFired) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("Cannot start animation twice");
         }
         mAnimation.start();
         mStateFired = true;
@@ -128,7 +131,14 @@ public class SwitchAnimation {
         return set;
     }
 
+    /**
+     * Animation events listener.
+     */
     public interface OnSwitchListener {
+        /**
+         * Triggered when animation is mid-air (when view is actually invisible and ready to
+         * "switch" state.
+         */
         void onSwitch();
     }
 

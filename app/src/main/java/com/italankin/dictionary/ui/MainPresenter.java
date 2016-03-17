@@ -7,7 +7,6 @@ import android.util.Log;
 import com.italankin.dictionary.BuildConfig;
 import com.italankin.dictionary.R;
 import com.italankin.dictionary.api.ApiClient;
-import com.italankin.dictionary.api.ServerException;
 import com.italankin.dictionary.dto.Definition;
 import com.italankin.dictionary.dto.Language;
 import com.italankin.dictionary.dto.Result;
@@ -21,6 +20,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
+import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
@@ -29,23 +29,45 @@ import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
+/**
+ * Presenter for working with {@link MainActivity}.
+ */
 public class MainPresenter {
 
-    private static final WeakReference<MainActivity> NULL_REF = new WeakReference<>(null);
+    private static final String TAG = "[" + MainPresenter.class.getSimpleName() + "]";
 
     private static MainPresenter INSTANCE;
 
-    public static MainPresenter getInstance(Context context) {
+    /**
+     * Retrieve an singleton instance of this class.
+     *
+     * @param context used to obtain {@link SharedPrefs} instance
+     * @return instance of {@link MainPresenter}
+     */
+    public static synchronized MainPresenter getInstance(Context context) {
         if (INSTANCE == null) {
             INSTANCE = new MainPresenter(context);
         }
         return INSTANCE;
     }
 
+    /**
+     * Reference to attached activity
+     */
     private WeakReference<MainActivity> mRef;
 
+    /**
+     * Api client for making requests
+     */
     private final ApiClient mClient;
+    /**
+     * Application shared preferences
+     */
     private final SharedPrefs mPrefs;
+
+    /**
+     * UI language for receiving results for this locale (if available)
+     */
     private final String mUiLanguage;
 
     private List<Language> mLangs;
@@ -53,7 +75,14 @@ public class MainPresenter {
     private Language mSource;
     private Language mDest;
 
+    /**
+     * Languages load events.
+     */
     private Subscription mSubLangs;
+
+    /**
+     * Lookup events subscription
+     */
     private Subscription mSubLookup;
 
     private Result mLastResult;
@@ -63,11 +92,6 @@ public class MainPresenter {
     private MainPresenter(Context context) {
         mPrefs = SharedPrefs.getInstance(context);
         mClient = ApiClient.getInstance();
-        if (mPrefs.cacheResults()) {
-            int size = mPrefs.getCacheSize();
-            int age = mPrefs.getCacheAge();
-            mClient.setCacheDirectory(context.getCacheDir(), size, age);
-        }
         mUiLanguage = Locale.getDefault().getLanguage();
     }
 
@@ -75,14 +99,21 @@ public class MainPresenter {
      * @param activity activity for attaching presenter to
      */
     public void attach(MainActivity activity) {
+        if (mRef != null && activity == mRef.get()) {
+            log("already attached to %s", activity);
+            return;
+        }
         mRef = new WeakReference<>(activity);
     }
 
     /**
      * Called when activity is finishing.
      */
-    public void detach() {
-        mRef = NULL_REF;
+    public void detach(MainActivity activity) {
+        if (activity != mRef.get()) {
+            return;
+        }
+        mRef.clear();
         if (mSubLangs != null && mSubLangs.isUnsubscribed()) {
             mSubLangs.unsubscribe();
             mSubLangs = null;
@@ -221,7 +252,11 @@ public class MainPresenter {
                                 }
                                 MainActivity a = mRef.get();
                                 if (a != null) {
-                                    a.onLookupResult(result);
+                                    if (result != null) {
+                                        a.onLookupResult(result);
+                                    } else {
+                                        a.onNoResults();
+                                    }
                                 }
                                 if (mSubLookup != null && !mSubLookup.isUnsubscribed()) {
                                     mSubLookup.unsubscribe();
@@ -257,9 +292,9 @@ public class MainPresenter {
     }
 
     /**
-     * Dispatch last result to activity. Used when configuration changes.
+     * Dispatch last result to activity.
      */
-    public void getLastResultAsync() {
+    public void loadLastResult() {
         if (mLastResult != null) {
             mSubLookup = Observable.timer(300, TimeUnit.MILLISECONDS)
                     .subscribeOn(Schedulers.newThread())
@@ -269,7 +304,11 @@ public class MainPresenter {
                         public void call(Long aLong) {
                             MainActivity a = mRef.get();
                             if (a != null) {
-                                a.onLookupResult(mLastResult);
+                                if (mLastResult != null) {
+                                    a.onLookupResult(mLastResult);
+                                } else {
+                                    a.onNoResults();
+                                }
                             }
                             if (mSubLookup != null && !mSubLookup.isUnsubscribed()) {
                                 mSubLookup.unsubscribe();
@@ -280,6 +319,9 @@ public class MainPresenter {
         }
     }
 
+    /**
+     * @return list of last queries
+     */
     public String[] getLastQueries() {
         String[] result = new String[mLastQueries.size()];
         mLastQueries.toArray(result);
@@ -380,8 +422,8 @@ public class MainPresenter {
     /**
      * Swap languages.
      *
-     * @return <b>true</b>, if languages were swapped, <b>false</b> otherwise (ex. {@link #mSource}
-     * == {@link #mDest})
+     * @return {@code true}, if languages were swapped, {@code false} otherwise
+     * (ex. {@link #mSource} == {@link #mDest})
      */
     public boolean swapLanguages() {
         if (!TextUtils.equals(mSource.getCode(), mDest.getCode())) {
@@ -457,10 +499,9 @@ public class MainPresenter {
                 if (throwable instanceof IOException) {
                     message = a.getString(R.string.error_no_connection);
                 }
-                if (throwable instanceof ServerException) {
-                    ServerException e = (ServerException) throwable;
-                    switch (e.getCode()) {
-
+                if (throwable instanceof HttpException) {
+                    HttpException e = (HttpException) throwable;
+                    switch (e.code()) {
                         case 501:
                             message = a.getString(R.string.error_lang_not_supported);
                             break;
@@ -468,7 +509,7 @@ public class MainPresenter {
                         case 402:
                         case 403:
                         case 502:
-                            message = a.getString(R.string.error);
+                            // just error
                             break;
                         case 413:
                             message = a.getString(R.string.error_long_request);
@@ -510,8 +551,7 @@ public class MainPresenter {
 
     private void log(int priority, String message) {
         if (BuildConfig.DEBUG) {
-            Log.println(priority, getClass().getSimpleName(), message);
+            Log.println(priority, TAG, message);
         }
     }
-
 }

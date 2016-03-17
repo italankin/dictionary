@@ -3,6 +3,9 @@ package com.italankin.dictionary.dto;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+/**
+ * Class represents a single word definition (or translation).
+ */
 public class Translation extends Attribute implements Parcelable {
 
     public Synonym[] syn;
@@ -12,30 +15,12 @@ public class Translation extends Attribute implements Parcelable {
     public Translation() {
     }
 
+    /**
+     * Class for objects containing synonym data
+     */
     public static class Synonym extends Attribute implements Parcelable {
-        public Synonym() {
-        }
-
         public Synonym(Parcel source) {
-            text = source.readString();
-            pos = source.readString();
-            num = source.readString();
-            gen = source.readString();
-            asp = source.readString();
-        }
-
-        @Override
-        public int describeContents() {
-            return 0;
-        }
-
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {
-            dest.writeString(text);
-            dest.writeString(pos);
-            dest.writeString(num);
-            dest.writeString(gen);
-            dest.writeString(asp);
+            super(source);
         }
 
         public static final Parcelable.Creator<Synonym> CREATOR = new Creator<Synonym>() {
@@ -51,30 +36,12 @@ public class Translation extends Attribute implements Parcelable {
         };
     }
 
-    public static class Mean extends Attribute implements Parcelable {
-        public Mean() {
-        }
-
+    /**
+     * Class for objects presenting meaning of the word
+     */
+    public static class Mean extends Attribute {
         public Mean(Parcel source) {
-            text = source.readString();
-            pos = source.readString();
-            num = source.readString();
-            gen = source.readString();
-            asp = source.readString();
-        }
-
-        @Override
-        public int describeContents() {
-            return 0;
-        }
-
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {
-            dest.writeString(text);
-            dest.writeString(pos);
-            dest.writeString(num);
-            dest.writeString(gen);
-            dest.writeString(asp);
+            super(source);
         }
 
         public static final Parcelable.Creator<Mean> CREATOR = new Creator<Mean>() {
@@ -90,33 +57,20 @@ public class Translation extends Attribute implements Parcelable {
         };
     }
 
+    /**
+     * Class for presenting examples for translation
+     */
     public static class Example extends Attribute implements Parcelable {
         public Translation[] tr;
 
-        public Example() {
-        }
-
         public Example(Parcel source) {
-            text = source.readString();
-            pos = source.readString();
-            num = source.readString();
-            gen = source.readString();
-            asp = source.readString();
+            super(source);
             tr = source.createTypedArray(Translation.CREATOR);
         }
 
         @Override
-        public int describeContents() {
-            return 0;
-        }
-
-        @Override
         public void writeToParcel(Parcel dest, int flags) {
-            dest.writeString(text);
-            dest.writeString(pos);
-            dest.writeString(num);
-            dest.writeString(gen);
-            dest.writeString(asp);
+            super.writeToParcel(dest, flags);
             dest.writeTypedArray(tr, 0);
         }
 
@@ -138,28 +92,15 @@ public class Translation extends Attribute implements Parcelable {
     ///////////////////////////////////////////////////////////////////////////
 
     public Translation(Parcel source) {
-        text = source.readString();
-        pos = source.readString();
-        num = source.readString();
-        gen = source.readString();
-        asp = source.readString();
+        super(source);
         syn = source.createTypedArray(Synonym.CREATOR);
         mean = source.createTypedArray(Mean.CREATOR);
         ex = source.createTypedArray(Example.CREATOR);
     }
 
     @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(text);
-        dest.writeString(pos);
-        dest.writeString(num);
-        dest.writeString(gen);
-        dest.writeString(asp);
+        super.writeToParcel(dest, flags);
         dest.writeTypedArray(syn, 0);
         dest.writeTypedArray(mean, 0);
         dest.writeTypedArray(ex, 0);

@@ -9,19 +9,6 @@
 
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="@string/pref_cat_cache">
-
-        <SwitchPreference
-            android:key="cache_results"
-            android:title="@string/pref_cache" />
-
-        <Preference
-            android:enabled="false"
-            android:key="cache_clear"
-            android:title="@string/pref_cache_clear" />
-
-    </PreferenceCategory>
-
     <PreferenceCategory android:title="@string/pref_cat_other">
 
         <Preference
@@ -33,9 +20,8 @@
         </Preference>
 
         <Preference
-            android:key="about"
-            android:title="@string/pref_about">
-            <intent android:action="com.italankin.dictionary.ABOUT" />
+            android:key="open_source_libs"
+            android:title="@string/pref_open_source_libs">
         </Preference>
 
     </PreferenceCategory>

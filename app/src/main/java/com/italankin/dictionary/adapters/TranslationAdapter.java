@@ -1,5 +1,6 @@
 package com.italankin.dictionary.adapters;
 
+import android.content.Context;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -7,7 +8,6 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -16,91 +16,55 @@ import com.italankin.dictionary.dto.TranslationEx;
 
 import java.util.List;
 
-public class TranslationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+/**
+ * Adapter class for displaying translations in {@link com.italankin.dictionary.ui.MainActivity}
+ */
+public class TranslationAdapter extends RecyclerView.Adapter<TranslationAdapter.ViewHolder> {
 
-    private static final int TYPE_HEADER = 0;
-    private static final int TYPE_ITEM = 1;
+    private final LayoutInflater mInflater;
 
     private List<TranslationEx> mDataset;
-    private int mHeaderSize;
-    private boolean[] mStates;
+
     private OnAdapterItemClickListener mListener;
 
-    public TranslationAdapter(int headerSize, OnAdapterItemClickListener listener) {
-        mHeaderSize = headerSize;
+    public TranslationAdapter(Context context, List<TranslationEx> data) {
+        mInflater = LayoutInflater.from(context);
+        mDataset = data;
+    }
+
+    /**
+     * Set on click listener for items.
+     *
+     * @param listener listener
+     */
+    public void setListener(OnAdapterItemClickListener listener) {
         mListener = listener;
     }
 
-    public void setItems(List<TranslationEx> list) {
-        mDataset = list;
-        mStates = new boolean[list == null ? 0 : list.size()];
-        notifyDataSetChanged();
-    }
-
-    public void remove(int position) {
-        mDataset.remove(position);
-        notifyItemRemoved(position + 1);
-        notifyItemRangeChanged(position + 1, mDataset.size());
+    @Override
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View v = mInflater.inflate(R.layout.item_attribute, parent, false);
+        return new ViewHolder(v);
     }
 
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        if (viewType == TYPE_HEADER) {
-            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.dummy_header, parent, false);
-            return new HeaderViewHolder(v, mHeaderSize);
-        } else if (viewType == TYPE_ITEM) {
-            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_attribute, parent, false);
-            return new ViewHolder(v);
+    public void onBindViewHolder(ViewHolder holder, int position) {
+        TranslationEx item = mDataset.get(position);
+
+        holder.text.setText(item.text);
+        if (TextUtils.isEmpty(item.pos)) {
+            holder.pos.setVisibility(View.GONE);
+        } else {
+            holder.pos.setText(String.format("(%s)", item.pos));
+            holder.pos.setVisibility(View.VISIBLE);
         }
-        return null;
-    }
-
-    @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
-        if (viewHolder instanceof ViewHolder) {
-            final ViewHolder holder = (ViewHolder) viewHolder;
-            position = position - 1; // 1st item is header
-
-            TranslationEx item = mDataset.get(position);
-
-            holder.position = position;
-            holder.text.setText(item.text);
-            if (TextUtils.isEmpty(item.pos)) {
-                holder.pos.setVisibility(View.GONE);
-            } else {
-                holder.pos.setText(String.format("(%s)", item.pos));
-                holder.pos.setVisibility(View.VISIBLE);
-            }
-            holder.means.setText(item.means);
-            holder.syns.setText(item.synonyms);
-
-            if (!mStates[position]) {
-                holder.itemView.setAlpha(0);
-                holder.itemView.setTranslationY(100);
-                holder.itemView.animate()
-                        .setStartDelay(100)
-                        .alpha(1)
-                        .translationY(0)
-                        .setInterpolator(new DecelerateInterpolator(3f))
-                        .setDuration(600)
-                        .start();
-                mStates[position] = true;
-            }
-        }
+        holder.means.setText(item.means);
+        holder.syns.setText(item.synonyms);
     }
 
     @Override
     public int getItemCount() {
-        return ((mDataset == null) ? 0 : mDataset.size()) + 1;
-    }
-
-    @Override
-    public int getItemViewType(int position) {
-        if (position == 0) {
-            return TYPE_HEADER;
-        }
-
-        return TYPE_ITEM;
+        return (mDataset == null) ? 0 : mDataset.size();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -109,7 +73,6 @@ public class TranslationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         public TextView syns;
         public TextView pos;
         public ImageView menu;
-        public int position;
 
         public ViewHolder(View v) {
             super(v);
@@ -117,7 +80,7 @@ public class TranslationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 @Override
                 public void onClick(View v) {
                     if (mListener != null) {
-                        mListener.onItemClick(position);
+                        mListener.onItemClick(getAdapterPosition());
                     }
                 }
             });
@@ -135,7 +98,7 @@ public class TranslationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                         @Override
                         public boolean onMenuItemClick(MenuItem item) {
                             if (mListener != null) {
-                                mListener.onItemMenuClick(position, item.getItemId());
+                                mListener.onItemMenuClick(getAdapterPosition(), item.getItemId());
                             }
                             return true;
                         }
@@ -146,18 +109,23 @@ public class TranslationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         }
     }
 
-    public static class HeaderViewHolder extends RecyclerView.ViewHolder {
-
-        public HeaderViewHolder(View v, int height) {
-            super(v);
-            v.setMinimumHeight(height);
-        }
-
-    }
-
+    /**
+     * Listener interface for handling click events.
+     */
     public interface OnAdapterItemClickListener {
+        /**
+         * Triggered when user clicks on list item.
+         *
+         * @param position item position
+         */
         void onItemClick(int position);
 
+        /**
+         * Triggered when user clicks popup list item.
+         *
+         * @param position   item position
+         * @param menuItemId menu item id
+         */
         void onItemMenuClick(int position, int menuItemId);
     }
 

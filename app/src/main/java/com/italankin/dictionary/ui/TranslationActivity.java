@@ -1,24 +1,51 @@
 package com.italankin.dictionary.ui;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.ShareCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.italankin.dictionary.R;
-import com.italankin.dictionary.dto.Translation;
+import com.italankin.dictionary.dto.Attribute;
 import com.italankin.dictionary.dto.TranslationEx;
 
-public class TranslationActivity extends AppCompatActivity implements View.OnClickListener {
+import butterknife.Bind;
+import butterknife.ButterKnife;
+
+/**
+ * Activity is displaying single translation item in the more detailed form.
+ */
+public class TranslationActivity extends AppCompatActivity implements View.OnClickListener, View.OnLongClickListener {
 
     private static final String EXTRA_DATA = "data";
 
     private TranslationEx mData;
+
+    //region Views
+    @Bind(R.id.toolbar)
+    Toolbar toolbar;
+
+    @Bind(R.id.text_translation)
+    TextView textTrans;
+
+    @Bind(R.id.text_position)
+    TextView textPos;
+
+    @Bind(R.id.card_means)
+    View layoutMeans;
+
+    @Bind(R.id.card_synonyms)
+    View layoutSynonyms;
+    //endregion
 
     public static Intent getStartIntent(Context context, TranslationEx data) {
         Intent starter = new Intent(context, TranslationActivity.class);
@@ -37,8 +64,9 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
         }
 
         setContentView(R.layout.activity_translation);
+        ButterKnife.bind(this);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        // setup toolbar
         setSupportActionBar(toolbar);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
@@ -47,35 +75,43 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
             }
         });
 
-        TextView tvTranslation = (TextView) findViewById(R.id.translation);
-        tvTranslation.setText(mData.text);
-        TextView tvPosition = (TextView) findViewById(R.id.position);
-        tvPosition.setText(mData.pos);
+        // translation text
+        textTrans.setText(mData.text);
+        textTrans.setOnLongClickListener(this);
 
-        View layoutMeans = findViewById(R.id.card_means);
-        View layoutSynonyms = findViewById(R.id.card_synonyms);
+        // speech position text
+        textPos.setText(mData.pos);
 
-        TextView textView;
-        LayoutInflater inflater = getLayoutInflater();
-        if (mData.mean != null) {
-            LinearLayout listMeans = (LinearLayout) findViewById(R.id.list_means);
+        // process means array, if we got one
+        if (mData.mean != null && mData.mean.length > 0) {
             layoutMeans.setVisibility(View.VISIBLE);
-            for (Translation.Mean m : mData.mean) {
-                textView = (TextView) inflater.inflate(R.layout.item_translation_text, listMeans, false);
-                textView.setText(m.text);
-                textView.setOnClickListener(this);
-                listMeans.addView(textView);
-            }
+            LinearLayout listMeans = (LinearLayout) findViewById(R.id.layout_means);
+            addViewsForAttributes(listMeans, mData.mean);
         }
-        if (mData.syn != null) {
-            LinearLayout listSynonyms = (LinearLayout) findViewById(R.id.list_synonyms);
+
+        // process synonyms array
+        if (mData.syn != null && mData.syn.length > 0) {
             layoutSynonyms.setVisibility(View.VISIBLE);
-            for (Translation.Synonym s : mData.syn) {
-                textView = (TextView) inflater.inflate(R.layout.item_translation_text, listSynonyms, false);
-                textView.setText(s.text);
-                textView.setOnClickListener(this);
-                listSynonyms.addView(textView);
-            }
+            LinearLayout listSynonyms = (LinearLayout) findViewById(R.id.layout_synonyms);
+            addViewsForAttributes(listSynonyms, mData.syn);
+        }
+    }
+
+    /**
+     * Add separate view for every attribute in array.
+     *
+     * @param parent     a parent view group to which views will be added
+     * @param attributes array of attributes
+     */
+    private void addViewsForAttributes(ViewGroup parent, Attribute[] attributes) {
+        LayoutInflater inflater = getLayoutInflater();
+        TextView view;
+        for (Attribute a : attributes) {
+            view = (TextView) inflater.inflate(R.layout.item_translation_text, parent, false);
+            view.setText(a.text);
+            view.setOnClickListener(this);
+            view.setOnLongClickListener(this);
+            parent.addView(view);
         }
     }
 
@@ -87,12 +123,32 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
 
     @Override
     public void onClick(View v) {
+        // lookup word
         TextView textView = (TextView) v;
         Intent intent = new Intent(this, MainActivity.class);
         intent.setType("text/plain");
         intent.putExtra(Intent.EXTRA_TEXT, textView.getText().toString());
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
+    }
+
+    @Override
+    public boolean onLongClick(View v) {
+        // share text with another applications
+        String text = ((TextView) v).getText().toString();
+        Intent intent = ShareCompat.IntentBuilder.from(this)
+                .setText(text)
+                .setChooserTitle(getString(R.string.share_word, text))
+                .setType("text/plain")
+                .createChooserIntent();
+        try {
+            startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            // make a toast, if user has no available applications for handling text share events
+            // (unlikely to happen)
+            Toast.makeText(this, R.string.error_no_app, Toast.LENGTH_SHORT).show();
+        }
+        return true;
     }
 
 }

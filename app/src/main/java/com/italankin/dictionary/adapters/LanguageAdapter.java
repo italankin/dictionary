@@ -13,6 +13,9 @@ import com.italankin.dictionary.dto.Language;
 
 import java.util.List;
 
+/**
+ * Adapter for language list.
+ */
 public class LanguageAdapter extends ArrayAdapter<Language> implements View.OnClickListener {
 
     private LayoutInflater inflater;
@@ -53,7 +56,7 @@ public class LanguageAdapter extends ArrayAdapter<Language> implements View.OnCl
         item.setFavorite(!item.isFavorite());
     }
 
-    private class ViewHolder {
+    private static class ViewHolder {
         public TextView name;
         public CheckBox fav;
     }

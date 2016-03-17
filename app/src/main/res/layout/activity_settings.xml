@@ -15,7 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:navigationIcon="@drawable/abc_ic_ab_back_mtrl_am_alpha">
+            app:navigationIcon="@drawable/ic_back">
 
         </android.support.v7.widget.Toolbar>
 

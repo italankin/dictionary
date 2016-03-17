@@ -1,19 +1,12 @@
 package com.italankin.dictionary.api;
 
-import com.google.gson.Gson;
 import com.italankin.dictionary.BuildConfig;
 import com.italankin.dictionary.dto.Definition;
 import com.italankin.dictionary.dto.DicResult;
-import com.italankin.dictionary.dto.Error;
 import com.italankin.dictionary.dto.Language;
-import com.italankin.dictionary.utils.CacheInterceptor;
 import com.italankin.dictionary.utils.NetworkInterceptor;
-import com.squareup.okhttp.Cache;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
 
-import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -21,17 +14,22 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import okhttp3.OkHttpClient;
+import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
+import retrofit2.converter.gson.GsonConverterFactory;
 import rx.Observable;
-import rx.Subscriber;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
+/**
+ * Client class for API usage
+ */
 public class ApiClient {
 
     private static ApiClient INSTANCE;
 
-    private final Gson mGson;
-    private final OkHttpClient mOkHttp;
+    private final ApiService mService;
 
     public static ApiClient getInstance() {
         if (INSTANCE == null) {
@@ -40,67 +38,35 @@ public class ApiClient {
         return INSTANCE;
     }
 
-    public ApiClient() {
-        mGson = new Gson();
-        mOkHttp = new OkHttpClient();
-        mOkHttp.interceptors().add(new NetworkInterceptor());
+    private ApiClient() {
+        OkHttpClient okHttp = new OkHttpClient.Builder()
+                .addInterceptor(new NetworkInterceptor())
+                .build();
+
+        GsonConverterFactory converter = GsonConverterFactory.create();
+        RxJavaCallAdapterFactory adapter = RxJavaCallAdapterFactory.createWithScheduler(Schedulers.io());
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BuildConfig.BASE_URL)
+                .addCallAdapterFactory(adapter)
+                .addConverterFactory(converter)
+                .client(okHttp)
+                .build();
+        mService = retrofit.create(ApiService.class);
     }
 
     /**
-     * Set cache directory.
-     *
-     * @param dir directory, where cache will be stored.
-     */
-    public void setCacheDirectory(File dir, int size, int age) {
-        Cache cache = new Cache(dir, size);
-        mOkHttp.setCache(cache);
-        CacheInterceptor cacheInterceptor = new CacheInterceptor(age);
-        mOkHttp.networkInterceptors().add(cacheInterceptor);
-    }
-
-    /**
-     * Fetch language list from the server.
+     * Fetch languages list from the server.
      *
      * @param key API key
      * @return list of available languages
      */
-    public Observable<List<Language>> getLangs(final String key) {
-        return Observable
-                .create(new Observable.OnSubscribe<String[]>() {
-                    @Override
-                    public void call(Subscriber<? super String[]> subscriber) {
-                        try {
-                            String url = BuildConfig.BASE_URL + "getLangs?key=" + key;
-
-                            Request request = new Request.Builder().url(url).build();
-                            Response response = mOkHttp.newCall(request).execute();
-
-                            if (subscriber.isUnsubscribed()) {
-                                return;
-                            }
-
-                            String body = response.body().string();
-
-                            if (!response.isSuccessful()) {
-                                Error error = mGson.fromJson(body, Error.class);
-                                throw new ServerException(error.message, response.code());
-                            }
-
-                            String[] entries = mGson.fromJson(body, String[].class);
-
-                            subscriber.onNext(entries);
-                        } catch (Exception e) {
-                            if (!subscriber.isUnsubscribed()) {
-                                subscriber.onError(e);
-                            }
-                        }
-                    }
-                })
+    public Observable<List<Language>> getLangs(String key) {
+        return mService.getLangs(key)
                 .map(new Func1<String[], List<Language>>() {
                     @Override
                     public List<Language> call(String[] entries) {
-                        List<Language> list = new ArrayList<>(0);
-                        Set<String> set = new HashSet<>(0);
+                        List<Language> list = new ArrayList<>(entries.length);
+                        Set<String> set = new HashSet<>(entries.length);
                         String defaultCode = Locale.getDefault().getLanguage();
                         Locale locale;
                         String[] a;
@@ -131,8 +97,7 @@ public class ApiClient {
 
                         return list;
                     }
-                })
-                .subscribeOn(Schedulers.io());
+                });
     }
 
     /**
@@ -153,54 +118,20 @@ public class ApiClient {
      *              </ul>
      * @return {@link List} of {@link Definition}s
      */
-    public Observable<List<Definition>> lookup(final String key, final String lang, final String text,
-                                               final String ui, final int flags) {
-        return Observable
-                .create(new Observable.OnSubscribe<DicResult>() {
-                    @Override
-                    public void call(Subscriber<? super DicResult> subscriber) {
-                        try {
-                            String query = URLDecoder.decode(text, "UTF-8");
-                            String url = BuildConfig.BASE_URL + "lookup?key=" + key +
-                                    "&lang=" + lang + "&text=" + query;
-                            if (ui != null) {
-                                url += "&ui=" + ui;
-                            }
-                            if (flags > 0) {
-                                url += "&flags=" + flags;
-                            }
-
-                            Request request = new Request.Builder().url(url).build();
-                            Response response = mOkHttp.newCall(request).execute();
-
-                            if (subscriber.isUnsubscribed()) {
-                                return;
-                            }
-
-                            String body = response.body().string();
-
-                            if (!response.isSuccessful()) {
-                                Error error = mGson.fromJson(body, Error.class);
-                                throw new ServerException(error.message, response.code());
-                            }
-
-                            DicResult result = mGson.fromJson(body, DicResult.class);
-
-                            subscriber.onNext(result);
-                        } catch (Exception e) {
-                            if (!subscriber.isUnsubscribed()) {
-                                subscriber.onError(e);
-                            }
-                        }
-                    }
-                })
+    public Observable<List<Definition>> lookup(String key, String lang, String text,
+                                               String ui, int flags) {
+        try {
+            text = URLDecoder.decode(text, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            return Observable.error(e);
+        }
+        return mService.lookup(key, lang, text, ui, flags)
                 .map(new Func1<DicResult, List<Definition>>() {
                     @Override
                     public List<Definition> call(DicResult dicResult) {
                         return dicResult.def;
                     }
-                })
-                .subscribeOn(Schedulers.io());
+                });
     }
 
 }

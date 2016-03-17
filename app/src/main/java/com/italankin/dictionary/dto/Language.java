@@ -2,6 +2,9 @@ package com.italankin.dictionary.dto;
 
 import android.support.annotation.NonNull;
 
+/**
+ * Class for handling languages data.
+ */
 public class Language implements Comparable<Language> {
 
     private String code;
@@ -13,12 +16,12 @@ public class Language implements Comparable<Language> {
         this.name = name.substring(0, 1).toUpperCase() + name.substring(1);
     }
 
-    public boolean isFavorite() {
-        return favorite;
+    public void setFavorite(boolean favorite) {
+        this.favorite = favorite;
     }
 
-    public void setFavorite(boolean mFavorite) {
-        this.favorite = mFavorite;
+    public boolean isFavorite() {
+        return favorite;
     }
 
     public String getName() {

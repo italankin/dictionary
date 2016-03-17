@@ -1,9 +1,18 @@
 package com.italankin.dictionary.dto;
 
 import android.os.Parcel;
+import android.util.Log;
 
+/**
+ * Extended {@link Translation} class containing additional fields useful for UI.
+ */
 public class TranslationEx extends Translation {
 
+    public static final String DELIMITER = ", ";
+
+    /**
+     * Contains all means as a single string delimited by {@link #DELIMITER}
+     */
     public String means = "";
     public String examples = "";
     public String synonyms = "";
@@ -18,38 +27,23 @@ public class TranslationEx extends Translation {
         gen = t.gen;
         asp = t.asp;
 
-        if (mean != null) {
-            means = "";
-            for (Mean m : mean) {
-                if (means.length() > 0) {
-                    means += ", " + m.text;
-                } else {
-                    means = m.text;
-                }
-            }
-        }
+        examples = concatText(ex);
+        synonyms = concatText(syn);
+        means = concatText(mean);
+    }
 
-        if (ex != null) {
-            examples = "";
-            for (Example e : ex) {
-                if (examples.length() > 0) {
-                    examples += ", " + e.text;
-                } else {
-                    examples = e.text;
-                }
-            }
+    private String concatText(Attribute[] attrs) {
+        if (attrs == null || attrs.length == 0) {
+            return "";
         }
-
-        if (syn != null) {
-            synonyms = "";
-            for (Synonym s : syn) {
-                if (synonyms.length() > 0) {
-                    synonyms += ", " + s.text;
-                } else {
-                    synonyms = s.text;
-                }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0, s = attrs.length; i < s; i++) {
+            if (i > 0) {
+                sb.append(DELIMITER);
             }
+            sb.append(attrs[i].text);
         }
+        return sb.toString();
     }
 
     ///////////////////////////////////////////////////////////////////////////
