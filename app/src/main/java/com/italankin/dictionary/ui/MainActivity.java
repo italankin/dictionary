@@ -507,11 +507,13 @@ public class MainActivity extends AppCompatActivity {
      * @param text text to lookup
      */
     private void startLookup(String text) {
-        text = text.trim();
+        text = text.replaceAll("[^\\p{L}\\w ]","").trim();
         mInput.setText(text);
-        mPresenter.lookup(text);
-        mInputManager.hideSoftInputFromWindow(mInput.getWindowToken(), 0);
-        mInput.clearFocus();
+        if (text.length() > 0) {
+            mPresenter.lookup(text);
+            mInputManager.hideSoftInputFromWindow(mInput.getWindowToken(), 0);
+            mInput.clearFocus();
+        }
     }
 
     /**
