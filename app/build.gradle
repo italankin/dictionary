@@ -5,11 +5,11 @@ android {
     buildToolsVersion '23.0.2'
 
     defaultConfig {
-        applicationId "com.italankin.dictionary"
+        applicationId 'com.italankin.dictionary'
         minSdkVersion 14
         targetSdkVersion 23
         versionCode 1
-        versionName "1.0"
+        versionName '1.1'
         generatedDensities = []
     }
 
@@ -17,7 +17,7 @@ android {
         debug {
             storeFile file('keystore/debug.keystore')
             storePassword 'android'
-            keyAlias "debug"
+            keyAlias 'debug'
             keyPassword 'android'
         }
     }
@@ -26,8 +26,8 @@ android {
         debug {
             signingConfig signingConfigs.debug
 
-            buildConfigField("String", "API_KEY", '"dict.1.1.20151203T152803Z.913bd29b7eccf0e5.839c08e3ae32241ef3cf607d3187eefb7616e9a2"')
-            buildConfigField("String", "BASE_URL", '"https://dictionary.yandex.net/api/v1/dicservice.json/"')
+            buildConfigField('String', 'API_KEY', '"dict.1.1.20151203T152803Z.913bd29b7eccf0e5.839c08e3ae32241ef3cf607d3187eefb7616e9a2"')
+            buildConfigField('String', 'BASE_URL', '"https://dictionary.yandex.net/api/v1/dicservice.json/"')
         }
         release {
             minifyEnabled false
