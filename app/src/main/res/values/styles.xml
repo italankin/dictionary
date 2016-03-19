@@ -1,8 +1,10 @@
 <resources>
-
-    <style name="AppTheme" parent="@style/Theme.AppCompat.Light.NoActionBar">
+    <style name="BaseAppTheme" parent="@style/Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primaryDark</item>
+    </style>
+
+    <style name="AppTheme" parent="BaseAppTheme">
     </style>
 
     <style name="TranslationTextItem">
@@ -14,4 +16,14 @@
         <item name="android:paddingBottom">5dp</item>
     </style>
 
+    <style name="BaseToolbar">
+        <item name="android:background">@color/primary</item>
+        <item name="android:layout_height">?attr/actionBarSize</item>
+        <item name="android:theme">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
+        <item name="navigationIcon">@drawable/ic_back</item>
+        <item name="popupTheme">@style/ThemeOverlay.AppCompat.Light</item>
+    </style>
+
+    <style name="Toolbar" parent="@style/BaseToolbar">
+    </style>
 </resources>

@@ -86,12 +86,9 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/primary"
-        android:elevation="4dp"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        style="@style/Toolbar"
         app:contentInsetEnd="16dp"
-        app:contentInsetStart="16dp"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+        app:contentInsetStart="16dp">
 
         <RelativeLayout
             android:id="@+id/toolbar_inner_layout"

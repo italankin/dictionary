@@ -77,6 +77,7 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
 
         // translation text
         textTrans.setText(mData.text);
+        textTrans.setOnClickListener(this);
         textTrans.setOnLongClickListener(this);
 
         // speech position text
