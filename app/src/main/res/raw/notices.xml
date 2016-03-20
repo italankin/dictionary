@@ -1,0 +1,44 @@
+<notices>
+    <notice>
+        <name>Android Open Source Project</name>
+        <url>https://source.android.com/</url>
+        <copyright>Copyright (C) 2011 The Android Open Source Project</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>LicensesDialog</name>
+        <url>https://github.com/PSDev/LicensesDialog</url>
+        <copyright>Copyright 2013 Philip Schiffer</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>RxJava</name>
+        <url>https://github.com/ReactiveX/RxJava</url>
+        <copyright>Copyright 2013 Netflix, Inc.</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>RxAndroid</name>
+        <url>https://github.com/ReactiveX/RxAndroid</url>
+        <copyright>Copyright 2015 The RxAndroid authors</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>Retrofit</name>
+        <url>http://square.github.io/retrofit/</url>
+        <copyright>Copyright 2013 Square, Inc.</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>OkHttp</name>
+        <url>http://square.github.io/okhttp/</url>
+        <copyright>Copyright 2016 Square, Inc.</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>ButterKnife</name>
+        <url>http://jakewharton.github.io/butterknife/</url>
+        <copyright>Copyright 2013 Jake Wharton</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+</notices>
