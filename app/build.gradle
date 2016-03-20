@@ -4,6 +4,9 @@ android {
     compileSdkVersion 23
     buildToolsVersion '23.0.2'
 
+    def DEBUG = readProps('app/config/debug.properties')
+    def RELEASE = readProps('app/config/release.properties')
+
     defaultConfig {
         applicationId 'com.italankin.dictionary'
         minSdkVersion 14
@@ -15,10 +18,16 @@ android {
 
     signingConfigs {
         debug {
-            storeFile file('keystore/debug.keystore')
-            storePassword 'android'
-            keyAlias 'debug'
-            keyPassword 'android'
+            storeFile file(DEBUG['keystore'])
+            storePassword DEBUG['keystorePasswd']
+            keyAlias DEBUG['alias']
+            keyPassword DEBUG['aliasPasswd']
+        }
+        release {
+            storeFile file(RELEASE['keystore'])
+            storePassword RELEASE['keystorePasswd']
+            keyAlias RELEASE['alias']
+            keyPassword RELEASE['aliasPasswd']
         }
     }
 
@@ -26,12 +35,16 @@ android {
         debug {
             signingConfig signingConfigs.debug
 
-            buildConfigField('String', 'API_KEY', '"dict.1.1.20151203T152803Z.913bd29b7eccf0e5.839c08e3ae32241ef3cf607d3187eefb7616e9a2"')
-            buildConfigField('String', 'BASE_URL', '"https://dictionary.yandex.net/api/v1/dicservice.json/"')
+            buildConfigField('String', 'API_KEY', DEBUG['apiKey'])
+            buildConfigField('String', 'BASE_URL', DEBUG['baseUrl'])
         }
         release {
+            debuggable false
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+
+            buildConfigField('String', 'API_KEY', RELEASE['apiKey'])
+            buildConfigField('String', 'BASE_URL', RELEASE['baseUrl'])
         }
     }
 }
@@ -53,4 +66,10 @@ dependencies {
     compile 'com.android.support:cardview-v7:23.2.1'
     compile 'com.android.support:design:23.2.1'
     compile 'com.android.support:recyclerview-v7:23.2.1'
+}
+
+Properties readProps(String file) {
+    Properties props = new Properties()
+    props.load(new FileInputStream(file))
+    return props;
 }
