@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.v7.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:foreground="?android:attr/selectableItemBackground">
+    app:cardBackgroundColor="@color/green">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -23,7 +24,7 @@
             android:maxLines="1"
             android:textColor="#fff"
             android:textSize="20sp"
-            tools:text="Text" />
+            tools:text="Text"/>
 
         <TextView
             android:id="@+id/pos"
@@ -36,7 +37,7 @@
             android:maxLines="1"
             android:textColor="#50ffffff"
             android:textSize="20sp"
-            tools:text="Text" />
+            tools:text="Text"/>
 
         <TextView
             android:id="@+id/means"
@@ -48,7 +49,7 @@
             android:maxLines="1"
             android:textColor="#fefefe"
             android:textSize="14sp"
-            tools:text="Sub" />
+            tools:text="Sub"/>
 
         <TextView
             android:id="@+id/synonyms"
@@ -60,7 +61,7 @@
             android:maxLines="1"
             android:textColor="#b0fefefe"
             android:textSize="14sp"
-            tools:text="Sub" />
+            tools:text="Sub"/>
 
         <ImageView
             android:id="@+id/overflow"
@@ -68,9 +69,11 @@
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_alignParentTop="true"
+            android:background="@drawable/selector_circle"
+            android:contentDescription="@string/content_desc_more"
             android:padding="4dp"
             android:scaleType="center"
-            android:src="@drawable/ic_more" />
+            android:src="@drawable/ic_more"/>
 
     </RelativeLayout>
 

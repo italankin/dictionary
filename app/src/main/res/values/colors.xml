@@ -6,7 +6,9 @@
     <color name="primaryTrans">#80689ec9</color>
     <color name="accent_material_light" tools:override="true">#689ec9</color>
 
-    <color name="selector">#30dddddd</color>
+    <color name="selector">#40ffffff</color>
+    <color name="selector_dark">#40689ec9</color>
+
     <color name="green">#43a94a</color>
     <color name="green_light">#4caf50</color>
     <color name="cyan">#26a69a</color>

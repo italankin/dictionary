@@ -15,7 +15,7 @@ import com.italankin.dictionary.utils.SharedPrefs;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Collections;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -87,7 +87,7 @@ public class MainPresenter {
 
     private Result mLastResult;
 
-    private LinkedHashSet<String> mLastQueries = new LinkedHashSet<>(0);
+    private HashSet<String> mLastQueries = new HashSet<>(0);
 
     private MainPresenter(Context context) {
         mPrefs = SharedPrefs.getInstance(context);
@@ -362,6 +362,9 @@ public class MainPresenter {
      * @param code language code
      */
     public void setSourceLanguageByCode(String code) {
+        if (code == null) {
+            code = Locale.getDefault().getLanguage();
+        }
         mSource = mLangs.get(0);
         for (Language l : mLangs) {
             if (l.getCode().equals(code)) {
@@ -379,6 +382,9 @@ public class MainPresenter {
      * @param code language code
      */
     public void setDestLanguageByCode(String code) {
+        if (code == null) {
+            code = Locale.getDefault().getLanguage();
+        }
         mDest = mLangs.get(0);
         for (Language l : mLangs) {
             if (l.getCode().equals(code)) {

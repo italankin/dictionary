@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+        android:color="@color/selector">
+    <item
+        android:id="@android:id/mask">
+        <shape android:shape="oval">
+            <solid android:color="@android:color/white"/>
+            <size
+                android:width="@dimen/toolbar_button_selector_size"
+                android:height="@dimen/toolbar_button_selector_size"/>
+        </shape>
+    </item>
+</ripple>
