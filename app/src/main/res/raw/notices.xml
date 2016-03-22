@@ -6,12 +6,6 @@
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
-        <name>LicensesDialog</name>
-        <url>https://github.com/PSDev/LicensesDialog</url>
-        <copyright>Copyright 2013 Philip Schiffer</copyright>
-        <license>Apache Software License 2.0</license>
-    </notice>
-    <notice>
         <name>RxJava</name>
         <url>https://github.com/ReactiveX/RxJava</url>
         <copyright>Copyright 2013 Netflix, Inc.</copyright>
@@ -36,9 +30,21 @@
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
+        <name>google-gson</name>
+        <url>https://github.com/google/gson</url>
+        <copyright>Copyright 2008 Google Inc.</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
         <name>ButterKnife</name>
         <url>http://jakewharton.github.io/butterknife/</url>
         <copyright>Copyright 2013 Jake Wharton</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>LicensesDialog</name>
+        <url>https://github.com/PSDev/LicensesDialog</url>
+        <copyright>Copyright 2013 Philip Schiffer</copyright>
         <license>Apache Software License 2.0</license>
     </notice>
 </notices>
