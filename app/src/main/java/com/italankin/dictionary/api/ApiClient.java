@@ -44,7 +44,7 @@ public class ApiClient {
 
     private final ApiService mService;
 
-    public static ApiClient getInstance() {
+    public static synchronized ApiClient getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new ApiClient();
         }
