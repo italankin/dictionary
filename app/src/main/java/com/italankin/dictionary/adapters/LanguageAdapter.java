@@ -48,8 +48,8 @@ public class LanguageAdapter extends ArrayAdapter<Language> implements View.OnCl
         if (convertView == null) {
             convertView = inflater.inflate(R.layout.item_language, parent, false);
             holder = new ViewHolder();
-            holder.name = (TextView) convertView.findViewById(R.id.tvLangName);
-            holder.fav = (CheckBox) convertView.findViewById(R.id.cbFavorite);
+            holder.name = (TextView) convertView.findViewById(R.id.text_lang);
+            holder.fav = (CheckBox) convertView.findViewById(R.id.cb_fav);
             holder.fav.setOnClickListener(this);
             convertView.setTag(holder);
         } else {

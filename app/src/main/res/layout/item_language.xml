@@ -4,37 +4,34 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingBottom="6dp"
-    android:paddingLeft="15dp"
-    android:paddingTop="6dp">
+    android:paddingBottom="8dp"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp"
+    android:paddingTop="8dp">
 
     <TextView
-        android:id="@+id/tvLangName"
+        android:id="@+id/text_lang"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_centerVertical="true"
-        android:layout_toLeftOf="@+id/cbFavorite"
-        android:layout_toStartOf="@+id/cbFavorite"
+        android:layout_toLeftOf="@+id/cb_fav"
+        android:layout_toStartOf="@+id/cb_fav"
         android:ellipsize="end"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:textColor="@android:color/black"
-        tools:text="English" />
+        tools:text="English"/>
 
     <CheckBox
-        android:id="@+id/cbFavorite"
+        android:id="@+id/cb_fav"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
-        android:layout_marginBottom="5dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginTop="5dp"
-        android:background="@drawable/selector_circle"
+        android:background="@drawable/selector_circle_dark"
         android:button="@drawable/bg_fav"
         android:checked="false"
-        android:focusable="false" />
+        android:focusable="false"/>
 
 </RelativeLayout>
