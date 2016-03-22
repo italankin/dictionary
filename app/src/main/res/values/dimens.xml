@@ -3,6 +3,12 @@
     <dimen name="list_item_margin_top">4dp</dimen>
     <dimen name="list_item_margin_right">8dp</dimen>
     <dimen name="list_item_margin_bottom">4dp</dimen>
+
     <dimen name="list_top_offset">4dp</dimen>
+
     <dimen name="toolbar_button_selector_size">40dp</dimen>
+
+    <dimen name="text_size_medium">18sp</dimen>
+    <dimen name="text_size_large">24sp</dimen>
+    <dimen name="text_size_small">14sp</dimen>
 </resources>

@@ -5,7 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:cardBackgroundColor="@color/green">
+    app:cardBackgroundColor="@color/green"
+    tools:layout_margin="8dp">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -23,20 +24,20 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:textColor="#fff"
-            android:textSize="20sp"
+            android:textSize="@dimen/text_size_medium"
             tools:text="Text"/>
 
         <TextView
             android:id="@+id/pos"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="5dp"
+            android:layout_marginLeft="4dp"
             android:layout_toLeftOf="@+id/overflow"
             android:layout_toRightOf="@+id/text"
             android:ellipsize="end"
             android:maxLines="1"
             android:textColor="#50ffffff"
-            android:textSize="20sp"
+            android:textSize="@dimen/text_size_medium"
             tools:text="Text"/>
 
         <TextView
@@ -48,7 +49,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:textColor="#fefefe"
-            android:textSize="14sp"
+            android:textSize="@dimen/text_size_small"
             tools:text="Sub"/>
 
         <TextView
@@ -60,7 +61,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:textColor="#b0fefefe"
-            android:textSize="14sp"
+            android:textSize="@dimen/text_size_small"
             tools:text="Sub"/>
 
         <ImageView

@@ -19,8 +19,8 @@
         android:layout_toLeftOf="@+id/cb_fav"
         android:layout_toStartOf="@+id/cb_fav"
         android:ellipsize="end"
-        android:textAppearance="?android:attr/textAppearanceMedium"
         android:textColor="@android:color/black"
+        android:textSize="@dimen/text_size_medium"
         tools:text="English"/>
 
     <CheckBox

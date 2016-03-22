@@ -36,4 +36,7 @@
     <string name="means">Значения</string>
     <string name="dialog_history">История поиска</string>
     <string name="share_word">Поделиться: %s</string>
+    <string name="content_desc_more">Больше опций</string>
+    <string name="content_desc_swap_langs">Поменять языки местами</string>
+    <string name="toast_swap_langs">Поменять языки местами</string>
 </resources>

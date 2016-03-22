@@ -5,7 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    tools:context=".ui.TranslationActivity">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
@@ -42,7 +43,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
                         android:textColor="#000"
-                        android:textSize="24sp"
+                        android:textSize="@dimen/text_size_large"
                         tools:text="translation"/>
 
                     <TextView
@@ -50,7 +51,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:textColor="@color/grey_light"
-                        android:textSize="18sp"
+                        android:textSize="@dimen/text_size_medium"
                         tools:text="position"/>
 
                 </LinearLayout>
@@ -83,7 +84,7 @@
                         android:layout_marginBottom="4dp"
                         android:text="@string/means"
                         android:textColor="#fff"
-                        android:textSize="20sp"/>
+                        android:textSize="@dimen/text_size_medium"/>
 
                 </LinearLayout>
 
@@ -115,7 +116,7 @@
                         android:layout_marginBottom="4dp"
                         android:text="@string/synonyms"
                         android:textColor="#fff"
-                        android:textSize="20sp"/>
+                        android:textSize="@dimen/text_size_medium"/>
 
                 </LinearLayout>
 

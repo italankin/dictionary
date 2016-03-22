@@ -35,7 +35,7 @@
 
     <string name="msg_copied">Copied</string>
     <string name="msg_transcription_copied">Transcription copied</string>
-    <string name="msg_history_empty">Lookup history is empty</string>
+    <string name="msg_history_empty">History is empty</string>
 
     <string name="pref_cat_other">Other</string>
     <string name="pref_cat_general">General</string>
