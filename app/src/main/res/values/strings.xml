@@ -45,6 +45,8 @@
 
     <string name="dialog_history">Search history</string>
 
+    <string name="toast_swap_langs">Swap languages</string>
+
     <string name="content_desc_more">More options</string>
     <string name="content_desc_swap_langs">Swap languages</string>
 </resources>

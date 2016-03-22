@@ -355,6 +355,12 @@ public class MainActivity extends AppCompatActivity {
         swapLanguages();
     }
 
+    @OnLongClick(R.id.swap_langs)
+    boolean onSwapLangsLongClick() {
+        Toast.makeText(MainActivity.this, R.string.toast_swap_langs, Toast.LENGTH_SHORT).show();
+        return true;
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Options menu
     ///////////////////////////////////////////////////////////////////////////
