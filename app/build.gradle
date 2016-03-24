@@ -12,7 +12,7 @@ android {
         minSdkVersion 14
         targetSdkVersion 23
         versionCode 2
-        versionName '1.1'
+        versionName '1.1.0'
     }
 
     signingConfigs {
@@ -67,10 +67,4 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:23.2.1'
 
     compile 'de.psdev.licensesdialog:licensesdialog:1.8.0'
-}
-
-Properties readProps(String file) {
-    Properties props = new Properties()
-    props.load(new FileInputStream(file))
-    return props;
 }
