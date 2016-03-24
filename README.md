@@ -2,6 +2,10 @@
 
 Tiny Android application that allows you to translate and view information about words.
 
+![Screen 1](/art/scr01.jpg)
+![Screen 2](/art/scr02.jpg)
+![Screen 3](/art/scr03.jpg)
+
 ## Supported languages ##
 
 Everything is backed by [Yandex.Dictionary](https://tech.yandex.com/dictionary/). Check out their [page](https://tech.yandex.com/dictionary/doc/dg/concepts/api-overview-docpage/) to find more information about supported languages and features.
