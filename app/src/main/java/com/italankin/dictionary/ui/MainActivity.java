@@ -120,7 +120,13 @@ public class MainActivity extends AppCompatActivity {
 
     private TranslationAdapter.OnAdapterItemClickListener mRecyclerViewListener;
 
+    /**
+     * Adapter used to display source languages
+     */
     private LanguageAdapter mLangsSourceAdapter;
+    /**
+     * Adapter used to display destination languages
+     */
     private LanguageAdapter mLangsDestAdapter;
 
     /**
@@ -528,7 +534,7 @@ public class MainActivity extends AppCompatActivity {
      * @param text text to lookup
      */
     private void startLookup(String text) {
-        text = text.replaceAll("[^\\p{L}\\w ]","").trim();
+        text = text.replaceAll("[^\\p{L}\\w ]", "").trim();
         mInput.setText(text);
         if (text.length() > 0) {
             mPresenter.lookup(text);

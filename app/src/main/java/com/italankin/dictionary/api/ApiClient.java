@@ -53,6 +53,13 @@ public class ApiClient {
         return INSTANCE;
     }
 
+    private static Language languageFromCode(String code, String defaultCode) {
+        Locale locale = new Locale(code);
+        Language lang = new Language(code, locale.getDisplayName());
+        lang.setFavorite(defaultCode.equals(code));
+        return lang;
+    }
+
     private ApiClient() {
         OkHttpClient okHttp = new OkHttpClient.Builder()
                 .addInterceptor(new NetworkInterceptor())
@@ -83,30 +90,28 @@ public class ApiClient {
                         List<Language> list = new ArrayList<>(entries.length);
                         Set<String> set = new HashSet<>(entries.length);
                         String defaultCode = Locale.getDefault().getLanguage();
-                        Locale locale;
-                        String[] a;
+                        String l1, l2;
                         Language lang;
                         for (String s : entries) {
-                            a = s.toLowerCase().split("-");
+                            int i = s.indexOf("-");
+                            if (i == -1) {
+                                continue;
+                            }
+                            l1 = s.substring(0, i);
+                            l2 = s.substring(i + 1);
 
                             // source language
-                            String code = a[0];
-                            if (!set.contains(code)) {
-                                locale = new Locale(code);
-                                lang = new Language(code, locale.getDisplayName());
-                                lang.setFavorite(defaultCode.equals(code));
+                            if (!set.contains(l1)) {
+                                lang = languageFromCode(l1, defaultCode);
                                 list.add(lang);
-                                set.add(code);
+                                set.add(l1);
                             }
 
                             // destination language
-                            if (!set.contains(code)) {
-                                code = a[1];
-                                locale = new Locale(code);
-                                lang = new Language(code, locale.getDisplayName());
-                                lang.setFavorite(defaultCode.equals(code));
+                            if (!set.contains(l2)) {
+                                lang = languageFromCode(l2, defaultCode);
                                 list.add(lang);
-                                set.add(code);
+                                set.add(l2);
                             }
                         }
 
