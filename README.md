@@ -4,7 +4,6 @@ Tiny Android application that allows you to translate and view information about
 
 ![Screen 1](/art/scr01.jpg)
 ![Screen 2](/art/scr02.jpg)
-![Screen 3](/art/scr03.jpg)
 
 ## Supported languages ##
 
