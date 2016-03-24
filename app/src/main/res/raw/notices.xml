@@ -30,7 +30,7 @@
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
-        <name>google-gson</name>
+        <name>Gson</name>
         <url>https://github.com/google/gson</url>
         <copyright>Copyright 2008 Google Inc.</copyright>
         <license>Apache Software License 2.0</license>
