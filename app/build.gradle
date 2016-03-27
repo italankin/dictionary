@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion '23.0.2'
+    buildToolsVersion '23.0.3'
 
     def DEBUG = readProps('app/config/debug.properties')
     def RELEASE = readProps('app/config/release.properties')
