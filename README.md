@@ -5,6 +5,10 @@ Tiny Android application that allows you to translate and view information about
 ![Screen 1](/art/scr01.jpg)
 ![Screen 2](/art/scr02.jpg)
 
+## Build status ##
+
+[![Build Status](https://travis-ci.org/italankin/dictionary.svg?branch=master)](https://travis-ci.org/italankin/dictionary)
+
 ## Supported languages ##
 
 Everything is backed by [Yandex.Dictionary](https://tech.yandex.com/dictionary/). Check out their [page](https://tech.yandex.com/dictionary/doc/dg/concepts/api-overview-docpage/) to find more information about supported languages and features.
