@@ -12,6 +12,7 @@
     <string name="translaton">Translation</string>
     <string name="means">Means</string>
     <string name="synonyms">Synonyms</string>
+    <string name="examples">Examples</string>
 
     <string name="share_word">Share: %s</string>
 

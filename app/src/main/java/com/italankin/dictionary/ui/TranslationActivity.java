@@ -15,7 +15,6 @@
  */
 package com.italankin.dictionary.ui;
 
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -23,6 +22,8 @@ import android.support.v4.app.ShareCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -60,6 +61,9 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
 
     @Bind(R.id.card_synonyms)
     View layoutSynonyms;
+
+    @Bind(R.id.card_examples)
+    View layoutExamples;
     //endregion
 
     public static Intent getStartIntent(Context context, TranslationEx data) {
@@ -111,6 +115,13 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
             LinearLayout listSynonyms = (LinearLayout) findViewById(R.id.layout_synonyms);
             addViewsForAttributes(listSynonyms, mData.syn);
         }
+
+        // process examples array
+        if (mData.ex != null && mData.ex.length > 0) {
+            layoutExamples.setVisibility(View.VISIBLE);
+            LinearLayout listExamples = (LinearLayout) findViewById(R.id.layout_examples);
+            addViewsForAttributes(listExamples, mData.ex);
+        }
     }
 
     /**
@@ -138,6 +149,35 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.translation, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_share:
+                String text = mData.means + "\n" +
+                        mData.synonyms + "\n" +
+                        mData.examples;
+                Intent intent = ShareCompat.IntentBuilder
+                        .from(this)
+                        .setType("text/plain")
+                        .setText(text)
+                        .setSubject(mData.text)
+                        .getIntent();
+                if (intent.resolveActivity(getPackageManager()) != null) {
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(this, R.string.error_no_app, Toast.LENGTH_SHORT).show();
+                }
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     public void onClick(View v) {
         // lookup word
         TextView textView = (TextView) v;
@@ -157,13 +197,7 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
                 .setChooserTitle(getString(R.string.share_word, text))
                 .setType("text/plain")
                 .createChooserIntent();
-        try {
-            startActivity(intent);
-        } catch (ActivityNotFoundException e) {
-            // make a toast, if user has no available applications for handling text share events
-            // (unlikely to happen)
-            Toast.makeText(this, R.string.error_no_app, Toast.LENGTH_SHORT).show();
-        }
+        startActivity(intent);
         return true;
     }
 

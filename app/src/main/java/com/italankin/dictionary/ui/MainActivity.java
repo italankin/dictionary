@@ -375,7 +375,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
@@ -390,10 +390,8 @@ public class MainActivity extends AppCompatActivity {
                             .setType("text/plain")
                             .setText(result.toString())
                             .setSubject(result.text)
-                            .getIntent();
-                    if (intent.resolveActivity(getPackageManager()) != null) {
-                        startActivity(intent);
-                    }
+                            .createChooserIntent();
+                    startActivity(intent);
                 } else {
                     Toast.makeText(MainActivity.this, R.string.error_share, Toast.LENGTH_SHORT).show();
                 }

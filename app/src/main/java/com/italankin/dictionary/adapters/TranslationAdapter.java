@@ -108,7 +108,7 @@ public class TranslationAdapter extends RecyclerView.Adapter<TranslationAdapter.
                 @Override
                 public void onClick(View v) {
                     PopupMenu pm = new PopupMenu(v.getContext(), v);
-                    pm.inflate(R.menu.menu_translation);
+                    pm.inflate(R.menu.attribute);
                     pm.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                         @Override
                         public boolean onMenuItemClick(MenuItem item) {

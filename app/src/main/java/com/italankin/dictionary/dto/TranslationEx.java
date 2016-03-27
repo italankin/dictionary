@@ -16,7 +16,6 @@
 package com.italankin.dictionary.dto;
 
 import android.os.Parcel;
-import android.util.Log;
 
 /**
  * Extended {@link Translation} class containing additional fields useful for UI.
@@ -29,7 +28,15 @@ public class TranslationEx extends Translation {
      * Contains all means as a single string delimited by {@link #DELIMITER}
      */
     public String means = "";
+
+    /**
+     * Contains all examples as a single string delimited by {@link #DELIMITER}
+     */
     public String examples = "";
+
+    /**
+     * Contains all synonyms as a single string delimited by {@link #DELIMITER}
+     */
     public String synonyms = "";
 
     public TranslationEx(Translation t) {
