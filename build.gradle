@@ -21,6 +21,10 @@ allprojects {
  */
 Properties readProps(String fileName) {
     Properties props = new Properties()
-    props.load(new FileInputStream(fileName))
-    return props;
+    File file = new File(fileName)
+    if (file.exists()) {
+        props.load(new FileInputStream(file))
+        return props;
+    }
+    return null;
 }

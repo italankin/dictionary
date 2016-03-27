@@ -23,10 +23,12 @@ android {
             keyPassword DEBUG['aliasPasswd']
         }
         release {
-            storeFile file(RELEASE['keystore'])
-            storePassword RELEASE['keystorePasswd']
-            keyAlias RELEASE['alias']
-            keyPassword RELEASE['aliasPasswd']
+            if (RELEASE != null) {
+                storeFile file(RELEASE['keystore'])
+                storePassword RELEASE['keystorePasswd']
+                keyAlias RELEASE['alias']
+                keyPassword RELEASE['aliasPasswd']
+            }
         }
     }
 
@@ -42,8 +44,10 @@ android {
             minifyEnabled false
             signingConfig signingConfigs.release
 
-            buildConfigField('String', 'API_KEY', RELEASE['apiKey'])
-            buildConfigField('String', 'BASE_URL', RELEASE['baseUrl'])
+            if (RELEASE != null) {
+                buildConfigField('String', 'API_KEY', RELEASE['apiKey'])
+                buildConfigField('String', 'BASE_URL', RELEASE['baseUrl'])
+            }
         }
     }
 }
