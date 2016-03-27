@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <style name="AppTheme" parent="@style/Theme.AppCompat.Light.NoActionBar">
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryDark">@color/primaryDark</item>
+    <style name="AppTheme" parent="BaseAppTheme">
         <item name="android:statusBarColor">@color/primaryDark</item>
     </style>
 
+    <style name="Toolbar" parent="BaseToolbar">
+        <item name="android:elevation">4dp</item>
+    </style>
 </resources>

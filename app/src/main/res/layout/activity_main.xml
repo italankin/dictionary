@@ -1,156 +1,163 @@
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/ra"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.MainActivity">
 
-    <RelativeLayout
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_below="@+id/toolbar"
+        android:clipToPadding="false"
+        android:paddingBottom="4dp"
+        tools:listitem="@layout/item_attribute"/>
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/recycler_view"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-        <android.support.v7.widget.CardView
-            android:id="@+id/input_card"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="?attr/actionBarSize"
-            android:clickable="true"
-            app:cardCornerRadius="0dp">
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="140dp"
-                android:background="@android:color/white"
-                android:orientation="vertical">
-
-                <EditText
-                    android:id="@+id/etInput"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_above="@+id/tvTranscription"
-                    android:layout_alignParentTop="true"
-                    android:layout_marginLeft="20dp"
-                    android:layout_marginRight="20dp"
-                    android:layout_marginTop="20dp"
-                    android:background="@android:color/transparent"
-                    android:gravity="top"
-                    android:hint="@string/input_hint"
-                    android:inputType="text"
-                    android:maxLength="80"
-                    android:maxLines="1"
-                    android:selectAllOnFocus="true"
-                    android:textColor="#000"
-                    android:textSize="24sp" />
-
-                <TextView
-                    android:id="@+id/tvTranscription"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentBottom="true"
-                    android:layout_marginBottom="20dp"
-                    android:layout_marginLeft="20dp"
-                    android:layout_marginRight="20dp"
-                    android:textColor="#a0a0a0"
-                    android:textSize="18sp"
-                    tools:text="[transcription]" />
-
-                <TextView
-                    android:id="@+id/tvLoad"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentBottom="true"
-                    android:layout_alignParentRight="true"
-                    android:layout_margin="8dp"
-                    android:background="@drawable/selector_rect"
-                    android:padding="8dp"
-                    android:text="@string/lookup"
-                    android:textAllCaps="true"
-                    android:textColor="@color/button_lookup"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-            </RelativeLayout>
-
-        </android.support.v7.widget.CardView>
-
-    </RelativeLayout>
-
-    <android.support.design.widget.AppBarLayout
+    <android.support.v7.widget.CardView
+        android:id="@+id/input_card"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/toolbar"
+        android:clickable="true"
+        app:cardCornerRadius="0dp">
 
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:contentInsetEnd="16dp"
-            app:contentInsetStart="16dp"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+            android:layout_height="140dp"
+            android:background="#fff"
+            android:orientation="vertical"
+            android:paddingBottom="8dp"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:paddingTop="16dp">
 
-            <RelativeLayout
-                android:id="@+id/toolbar_inner_layout"
+            <EditText
+                android:id="@+id/edit_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:visibility="invisible"
-                tools:visibility="visible">
+                android:layout_above="@+id/text_transcription"
+                android:layout_alignParentTop="true"
+                android:background="@android:color/transparent"
+                android:gravity="top"
+                android:hint="@string/input_hint"
+                android:inputType="text"
+                android:lines="2"
+                android:maxLength="50"
+                android:selectAllOnFocus="true"
+                android:textColor="#000"
+                android:textSize="@dimen/text_size_large"/>
+
+            <TextView
+                android:id="@+id/text_transcription"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="true"
+                android:layout_marginBottom="8dp"
+                android:layout_toLeftOf="@+id/lookup"
+                android:textColor="@color/grey_light"
+                android:textSize="@dimen/text_size_medium"
+                tools:text="[transcription]"/>
+
+            <TextView
+                android:id="@+id/lookup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentRight="true"
+                android:background="@drawable/selector_dark"
+                android:padding="8dp"
+                android:text="@string/lookup"
+                android:textAllCaps="true"
+                android:textColor="@color/primary"
+                android:textSize="@dimen/text_size_medium"
+                android:textStyle="bold"/>
+
+        </RelativeLayout>
+
+    </android.support.v7.widget.CardView>
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        style="@style/Toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:contentInsetEnd="16dp"
+        app:contentInsetStart="16dp"
+        app:navigationIcon="@null">
+
+        <RelativeLayout
+            android:id="@+id/toolbar_inner_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:visibility="invisible"
+            tools:visibility="visible">
+
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true">
 
                 <TextView
-                    android:id="@+id/tvDirectionFrom"
+                    android:id="@+id/text_from"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentLeft="true"
-                    android:layout_centerVertical="true"
                     android:background="@drawable/selector_rect"
-                    android:drawablePadding="8dp"
+                    android:drawablePadding="4dp"
                     android:drawableRight="@drawable/ic_expand_more"
                     android:ellipsize="end"
                     android:gravity="left"
                     android:maxLines="1"
                     android:padding="6dp"
-                    android:textColor="@android:color/white"
-                    android:textSize="18sp"
-                    tools:text="English" />
+                    android:textColor="#fff"
+                    android:textSize="@dimen/text_size_medium"
+                    tools:text="English"/>
 
-                <ImageView
-                    android:id="@+id/ivArrow"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerInParent="true"
-                    android:background="@drawable/selector_circle"
-                    android:padding="8dp"
-                    android:scaleType="center"
-                    android:src="@drawable/ic_swap_horiz" />
+            </FrameLayout>
+
+            <ImageView
+                android:id="@+id/swap_langs"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:background="@drawable/selector_circle"
+                android:contentDescription="@string/content_desc_swap_langs"
+                android:padding="8dp"
+                android:scaleType="center"
+                android:src="@drawable/ic_swap_horiz"/>
+
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:layout_toRightOf="@id/swap_langs">
 
                 <TextView
-                    android:id="@+id/tvDirectionTo"
+                    android:id="@+id/text_to"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentRight="true"
-                    android:layout_centerVertical="true"
-                    android:layout_toRightOf="@+id/ivArrow"
+                    android:layout_gravity="right"
                     android:background="@drawable/selector_rect"
-                    android:drawablePadding="8dp"
+                    android:drawablePadding="4dp"
                     android:drawableRight="@drawable/ic_expand_more"
                     android:ellipsize="end"
                     android:gravity="right"
                     android:maxLines="1"
                     android:padding="6dp"
-                    android:textColor="@android:color/white"
-                    android:textSize="18sp"
-                    tools:text="English" />
+                    android:textColor="#fff"
+                    android:textSize="@dimen/text_size_medium"
+                    tools:text="English"/>
 
-            </RelativeLayout>
+            </FrameLayout>
 
-        </android.support.v7.widget.Toolbar>
+        </RelativeLayout>
 
-    </android.support.design.widget.AppBarLayout>
+    </android.support.v7.widget.Toolbar>
 
-</android.support.design.widget.CoordinatorLayout>
+</RelativeLayout>

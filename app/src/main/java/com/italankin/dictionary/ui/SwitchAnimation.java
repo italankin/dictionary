@@ -1,3 +1,18 @@
+/*
+ * Copyright 2016 Igor Talankin
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.italankin.dictionary.ui;
 
 import android.animation.Animator;
@@ -6,6 +21,9 @@ import android.animation.ObjectAnimator;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 
+/**
+ * Animation for creating a switch-like effect.
+ */
 public class SwitchAnimation {
 
     private View mView;
@@ -43,7 +61,7 @@ public class SwitchAnimation {
      */
     public void start() {
         if (mStateFired) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("Cannot start animation twice");
         }
         mAnimation.start();
         mStateFired = true;
@@ -128,7 +146,14 @@ public class SwitchAnimation {
         return set;
     }
 
+    /**
+     * Animation events listener.
+     */
     public interface OnSwitchListener {
+        /**
+         * Triggered when animation is mid-air (when view is actually invisible and ready to
+         * "switch" state.
+         */
         void onSwitch();
     }
 

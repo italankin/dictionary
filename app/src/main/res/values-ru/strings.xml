@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Словарь</string>
-    <string name="about">О программе</string>
-    <string name="action_copy">Копировать</string>
-    <string name="action_copy_examples">Копировать примеры</string>
     <string name="action_copy_meanings">Копировать значения</string>
     <string name="action_copy_synonyms">Копировать синонимы</string>
     <string name="action_copy_translation">Копировать перевод</string>
@@ -25,18 +22,22 @@
     <string name="msg_copied">Скопировано</string>
     <string name="msg_history_empty">История пуста</string>
     <string name="msg_transcription_copied">Транскрипция скопирована в буфер обмена</string>
-    <string name="open_link">Открыть ссылку</string>
-    <string name="pref_about">О программе</string>
+    <string name="pref_open_source_libs">Лицензии</string>
     <string name="pref_cat_other">Прочие</string>
     <string name="pref_cat_general">Общие</string>
     <string name="pref_lookup_both">Поиск в обоих направлениях</string>
-    <string name="pref_yandex_dictionary">Yandex.Dictionary</string>
+    <string name="pref_yandex_dictionary">Яндекс.Словарь</string>
     <string name="retry">Повтор</string>
     <string name="settings">Настройки</string>
     <string name="source">Язык оригинала</string>
     <string name="error_langs">Ошибка при получении списка языков</string>
-    <string name="pref_cache">Кэшировать результаты</string>
-    <string name="pref_cache_clear">Очистить кэш</string>
-    <string name="pref_cat_cache">Кэширование</string>
-    <string name="msg_cache_cleared">Кэш очищен</string>
+    <string name="synonyms">Синонимы</string>
+    <string name="translaton">Перевод</string>
+    <string name="means">Значения</string>
+    <string name="dialog_history">История поиска</string>
+    <string name="share_word">Поделиться: %s</string>
+    <string name="content_desc_more">Больше опций</string>
+    <string name="content_desc_swap_langs">Поменять языки местами</string>
+    <string name="toast_swap_langs">Поменять языки местами</string>
+    <string name="examples">Примеры</string>
 </resources>

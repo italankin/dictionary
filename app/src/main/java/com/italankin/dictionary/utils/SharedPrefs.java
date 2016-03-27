@@ -1,3 +1,18 @@
+/*
+ * Copyright 2016 Igor Talankin
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.italankin.dictionary.utils;
 
 import android.content.Context;
@@ -16,20 +31,16 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
 
+/**
+ * Wrapper around {@link SharedPreferences} for this application purposes.
+ */
 public class SharedPrefs {
 
     private static final String LANGS = "langs.json";
-    private static final int DEFAULT_CACHE_SIZE = 5 * 1024 * 1024; // 5 MB
-    private static final int DEFAULT_CACHE_AGE = 60 * 60 * 24 * 30; // 30 days
 
     public static final String PREF_SOURCE = "source";
     public static final String PREF_DEST = "dest";
     public static final String PREF_LOOKUP_REVERSE = "lookup_reverse";
-    public static final String PREF_YANDEX_DICT = "yandex_dict";
-    public static final String PREF_CACHE_RESULTS = "cache_results";
-    public static final String PREF_CACHE_CLEAR = "cache_clear";
-    public static final String PREF_CACHE_SIZE = "cache_size";
-    public static final String PREF_CACHE_AGE = "cache_age";
 
     private static SharedPrefs INSTANCE;
 
@@ -37,7 +48,7 @@ public class SharedPrefs {
     private Context mContext;
     private Gson mGson;
 
-    public static SharedPrefs getInstance(Context context) {
+    public static synchronized SharedPrefs getInstance(Context context) {
         if (INSTANCE == null) {
             INSTANCE = new SharedPrefs(context);
         }
@@ -122,22 +133,6 @@ public class SharedPrefs {
 
     public boolean lookupReverse() {
         return mPreferences.getBoolean(PREF_LOOKUP_REVERSE, true);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Cache
-    ///////////////////////////////////////////////////////////////////////////
-
-    public boolean cacheResults() {
-        return mPreferences.getBoolean(PREF_CACHE_RESULTS, true);
-    }
-
-    public int getCacheSize() {
-        return mPreferences.getInt(PREF_CACHE_SIZE, DEFAULT_CACHE_SIZE);
-    }
-
-    public int getCacheAge() {
-        return mPreferences.getInt(PREF_CACHE_AGE, DEFAULT_CACHE_AGE);
     }
 
 }

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2016 Igor Talankin
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.italankin.dictionary.ui;
 
 import android.content.ClipData;
@@ -5,8 +20,9 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Resources;
+import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ShareCompat;
 import android.support.v7.app.AlertDialog;
@@ -19,12 +35,11 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.animation.DecelerateInterpolator;
-import android.view.animation.OvershootInterpolator;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,6 +52,11 @@ import com.italankin.dictionary.dto.TranslationEx;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.OnFocusChange;
+import butterknife.OnLongClick;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
@@ -46,33 +66,87 @@ import rx.subjects.PublishSubject;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final int SWITCH_ANIM_DURATION = 450;
+    private static final int SWAP_LANGS_ANIM_DURATION = 300;
+    private static final int TOOLBAR_ANIM_IN_DURATION = 700;
+    private static final int RECYCLER_VIEW_ANIM_IN_DURATION = 300;
+    private static final float INPUT_SCROLL_PARALLAX_FACTOR = 2;
+
     private MainPresenter mPresenter;
 
-    private Toolbar mToolbar;
-    private EditText mInput;
-    private View mInputLayout;
-    private TextView mTextDest;
-    private TextView mTextSource;
-    private ImageView mArrow;
-    private View mLookup;
-    private TextView mTranscription;
-    private View mToolbarInnerLayout;
+    //region Views
+    @Bind(R.id.toolbar)
+    Toolbar toolbar;
 
-    private RecyclerView mRecyclerView;
-    private TranslationAdapter mRecyclerViewAdapter;
+    /**
+     * EditText for text input
+     */
+    @Bind(R.id.edit_input)
+    EditText mInput;
+
+    @Bind(R.id.input_card)
+    View mInputLayout;
+
+    /**
+     * TextView in toolbar indicating current destination language
+     */
+    @Bind(R.id.text_to)
+    TextView mTextDest;
+
+    /**
+     * TextView in toolbar indicating current source language
+     */
+    @Bind(R.id.text_from)
+    TextView mTextSource;
+
+    /**
+     * Arrow in the toolbar for switching languages
+     */
+    @Bind(R.id.swap_langs)
+    View mSwapLangs;
+
+    @Bind(R.id.lookup)
+    View mLookup;
+
+    @Bind(R.id.text_transcription)
+    TextView mTranscription;
+
+    @Bind(R.id.toolbar_inner_layout)
+    View mToolbarInnerLayout;
+
+    @Bind(R.id.recycler_view)
+    RecyclerView mRecyclerView;
+    //endregion
+
     private TranslationAdapter.OnAdapterItemClickListener mRecyclerViewListener;
-    private List<TranslationEx> mTranslations;
 
+    /**
+     * Adapter used to display source languages
+     */
     private LanguageAdapter mLangsSourceAdapter;
+    /**
+     * Adapter used to display destination languages
+     */
     private LanguageAdapter mLangsDestAdapter;
 
+    /**
+     * Used to implement debouce mechanism via publishing lookup requests to this object
+     */
     private PublishSubject<String> mLookupEvents = PublishSubject.create();
+
+    /**
+     * Subscription for {@link #mLookupEvents}. Performs {@link #startLookup(String)} upon receiving
+     * items.
+     */
     private Subscription mLookupSub;
 
     private InputMethodManager mInputManager;
     private ClipboardManager mClipboardManager;
 
-    private int mRecyclerViewScroll = 0;
+    /**
+     * Value represents current recycler view scrolled pixels
+     */
+    private int mRecyclerViewScrollValue = 0;
 
     ///////////////////////////////////////////////////////////////////////////
     // Activity callbacks
@@ -82,6 +156,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
 
         mInputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         mClipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
@@ -89,14 +164,72 @@ public class MainActivity extends AppCompatActivity {
         mPresenter = MainPresenter.getInstance(this);
         mPresenter.attach(this);
 
-        mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(mToolbar);
+        setSupportActionBar(toolbar);
+        setupInputLayout();
+        setupRecyclerView();
+        setControlsState(false);
 
-        mToolbarInnerLayout = findViewById(R.id.toolbar_inner_layout);
-        mTextDest = (TextView) findViewById(R.id.tvDirectionTo);
-        mTextSource = (TextView) findViewById(R.id.tvDirectionFrom);
+        mPresenter.loadLanguages();
+    }
 
-        mInputLayout = findViewById(R.id.input_card);
+    private void setupRecyclerView() {
+        mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        Resources res = getResources();
+        int left = res.getDimensionPixelSize(R.dimen.list_item_margin_left);
+        int top = res.getDimensionPixelSize(R.dimen.list_item_margin_top);
+        int right = res.getDimensionPixelSize(R.dimen.list_item_margin_right);
+        int bottom = res.getDimensionPixelSize(R.dimen.list_item_margin_bottom);
+        mRecyclerView.addItemDecoration(new SimpleItemDecoration(left, top, right, bottom));
+
+        // allow input layout to be scrolled along with recycler view
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                mRecyclerViewScrollValue += dy;
+                updateInputLayout();
+            }
+        });
+
+        // on click listener
+        mRecyclerViewListener = new TranslationAdapter.OnAdapterItemClickListener() {
+            @Override
+            public void onItemClick(int position) {
+                TranslationEx item = mPresenter.getLastResult().translations.get(position);
+                startActivity(TranslationActivity.getStartIntent(getApplicationContext(), item));
+            }
+
+            @Override
+            public void onItemMenuClick(int position, int menuItemId) {
+                ClipData clip = null;
+                TranslationEx item = mPresenter.getLastResult().translations.get(position);
+                switch (menuItemId) {
+                    case R.id.action_lookup_word:
+                        lookupNext(item.text);
+                        break;
+
+                    case R.id.action_copy_mean:
+                        clip = ClipData.newPlainText("means", item.means);
+                        break;
+
+                    case R.id.action_copy_synonyms:
+                        clip = ClipData.newPlainText("synonyms", item.synonyms);
+                        break;
+
+                    case R.id.action_copy_translation:
+                        clip = ClipData.newPlainText("translation", item.text);
+                        break;
+                }
+                if (clip != null) {
+                    mClipboardManager.setPrimaryClip(clip);
+                    Toast.makeText(MainActivity.this, R.string.msg_copied, Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
+    }
+
+    private void setupInputLayout() {
         mInputLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -104,8 +237,24 @@ public class MainActivity extends AppCompatActivity {
                 mInputManager.showSoftInput(mInput, 0);
             }
         });
+        ViewTreeObserver vto = mInputLayout.getViewTreeObserver();
+        vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                if (Build.VERSION.SDK_INT >= 16) {
+                    ViewTreeObserver vto = mInputLayout.getViewTreeObserver();
+                    vto.removeOnGlobalLayoutListener(this);
+                }
+                int top = getResources().getDimensionPixelSize(R.dimen.list_top_offset);
+                mRecyclerView.setPadding(
+                        mRecyclerView.getPaddingLeft(),
+                        mInputLayout.getHeight() + top,
+                        mRecyclerView.getPaddingRight(),
+                        mRecyclerView.getPaddingBottom()
+                );
+            }
+        });
 
-        mInput = (EditText) findViewById(R.id.etInput);
         mInput.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
@@ -116,108 +265,13 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
-        mInput.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (hasFocus) {
-                    mRecyclerView.smoothScrollToPosition(0);
-                }
-            }
-        });
-        mTranscription = (TextView) findViewById(R.id.tvTranscription);
-        mTranscription.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                ClipData clip = ClipData.newPlainText("transcription",
-                        mTranscription.getText().toString());
-                mClipboardManager.setPrimaryClip(clip);
-                Toast.makeText(MainActivity.this, R.string.msg_transcription_copied, Toast.LENGTH_SHORT).show();
-                return true;
-            }
-        });
-
-        mLookup = findViewById(R.id.tvLoad);
-        mLookup.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                lookupNext(mInput.getText().toString());
-            }
-        });
-
-        mTextDest.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showDestLanguageDialog();
-            }
-        });
-        mTextSource.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showSourceLanguageDialog();
-            }
-        });
-
-        mArrow = (ImageView) findViewById(R.id.ivArrow);
-        mArrow.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                swapLanguages();
-            }
-        });
-
-        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-        mRecyclerView.setHasFixedSize(true);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                mRecyclerViewScroll += dy;
-                updateTopView();
-            }
-        });
-        mRecyclerViewListener = new TranslationAdapter.OnAdapterItemClickListener() {
-            @Override
-            public void onItemClick(int position) {
-                TranslationEx item = mTranslations.get(position);
-                lookupNext(item.text);
-            }
-
-            @Override
-            public void onItemMenuClick(int position, int menuItemId) {
-                ClipData clip = null;
-                switch (menuItemId) {
-                    case R.id.action_lookup_word:
-                        TranslationEx item = mTranslations.get(position);
-                        lookupNext(item.text);
-                        break;
-                    case R.id.action_copy_mean:
-                        clip = ClipData.newPlainText("means", mTranslations.get(position).means);
-                        break;
-                    case R.id.action_copy_synonyms:
-                        clip = ClipData.newPlainText("synonyms", mTranslations.get(position).synonyms);
-                        break;
-                    case R.id.action_copy_translation:
-                        clip = ClipData.newPlainText("translation", mTranslations.get(position).text);
-                        break;
-                    case R.id.action_copy_examples:
-                        clip = ClipData.newPlainText("examples", mTranslations.get(position).examples);
-                        break;
-                }
-                if (clip != null) {
-                    mClipboardManager.setPrimaryClip(clip);
-                    Toast.makeText(MainActivity.this, R.string.msg_copied, Toast.LENGTH_SHORT).show();
-                }
-            }
-        };
-
-        setControlsState(false);
-
-        mPresenter.loadLanguages();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        // ensure we reattach presenter in case there're multiple activities being launched
+        mPresenter.attach(this);
         mLookupSub = mLookupEvents
                 .filter(new Func1<String, Boolean>() {
                     @Override
@@ -244,14 +298,75 @@ public class MainActivity extends AppCompatActivity {
             mLookupSub = null;
         }
         if (isFinishing()) {
-            mPresenter.detach();
+            mPresenter.saveLanguages();
+            mPresenter.detach(this);
         }
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        mPresenter.saveLanguages();
+    protected void onNewIntent(Intent intent) {
+        handleIntent(intent);
+    }
+
+    private boolean handleIntent(Intent intent) {
+        if (intent != null && intent.getType() != null) {
+            String type = intent.getType();
+            String text = intent.getStringExtra(Intent.EXTRA_TEXT);
+            text = text.substring(0, Math.min(text.length(), 80));
+            if (type != null && !TextUtils.isEmpty(text) && "text/plain".equals(type)) {
+                intent.setType(null);
+                mInput.setText(text);
+                mInput.selectAll();
+                startLookup(text);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // ButterKnife
+    ///////////////////////////////////////////////////////////////////////////
+
+    @OnClick(R.id.lookup)
+    void onLookupClick() {
+        lookupNext(mInput.getText().toString());
+    }
+
+    @OnFocusChange(R.id.edit_input)
+    void onEditInputFocusChange(boolean hasFocus) {
+        if (hasFocus) {
+            mRecyclerView.smoothScrollToPosition(0);
+        }
+    }
+
+    @OnLongClick(R.id.text_transcription)
+    boolean onTranscriptionLongClick(View v) {
+        ClipData clip = ClipData.newPlainText("transcription", mTranscription.getText().toString());
+        mClipboardManager.setPrimaryClip(clip);
+        Toast.makeText(MainActivity.this, R.string.msg_transcription_copied, Toast.LENGTH_SHORT).show();
+        return true;
+    }
+
+    @OnClick(R.id.text_to)
+    void onDestLangClick() {
+        showDestLanguageDialog();
+    }
+
+    @OnClick(R.id.text_from)
+    void onSourceLangClick() {
+        showSourceLanguageDialog();
+    }
+
+    @OnClick(R.id.swap_langs)
+    void onSwapLangsClick() {
+        swapLanguages();
+    }
+
+    @OnLongClick(R.id.swap_langs)
+    boolean onSwapLangsLongClick() {
+        Toast.makeText(MainActivity.this, R.string.toast_swap_langs, Toast.LENGTH_SHORT).show();
+        return true;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -260,7 +375,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
@@ -275,10 +390,8 @@ public class MainActivity extends AppCompatActivity {
                             .setType("text/plain")
                             .setText(result.toString())
                             .setSubject(result.text)
-                            .getIntent();
-                    if (intent.resolveActivity(getPackageManager()) != null) {
-                        startActivity(intent);
-                    }
+                            .createChooserIntent();
+                    startActivity(intent);
                 } else {
                     Toast.makeText(MainActivity.this, R.string.error_share, Toast.LENGTH_SHORT).show();
                 }
@@ -311,11 +424,11 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Sync scroll state of the top layout.
      */
-    private void updateTopView() {
-        float factor = 3;
-        float max = mInputLayout.getHeight() * factor + mInputLayout.getHeight() / 10f;
+    private void updateInputLayout() {
+        float max = mInputLayout.getHeight() * INPUT_SCROLL_PARALLAX_FACTOR +
+                mInputLayout.getHeight() / 10f; // additional space
         float value = max;
-        float abs = Math.abs(mRecyclerViewScroll / factor);
+        float abs = Math.abs(mRecyclerViewScrollValue / INPUT_SCROLL_PARALLAX_FACTOR);
         if (abs < max) {
             value = abs;
         }
@@ -375,12 +488,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showHistoryDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
         final String[] values = mPresenter.getLastQueries();
         if (values == null || values.length == 0) {
             Toast.makeText(this, R.string.msg_history_empty, Toast.LENGTH_SHORT).show();
             return;
         }
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.dialog_history);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_list_item_1,
                 values);
@@ -400,11 +514,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // Main
+    // Lookup
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Emit a new lookup request object.
+     * Emit a new lookup request.
      *
      * @param s text to lookup
      */
@@ -418,47 +532,33 @@ public class MainActivity extends AppCompatActivity {
      * @param text text to lookup
      */
     private void startLookup(String text) {
-        mPresenter.lookup(text);
-        mInputManager.hideSoftInputFromWindow(mInput.getWindowToken(), 0);
-        mInput.clearFocus();
+        text = text.replaceAll("[^\\p{L}\\w ]", "").trim();
+        mInput.setText(text);
+        if (text.length() > 0) {
+            mPresenter.lookup(text);
+            mInputManager.hideSoftInputFromWindow(mInput.getWindowToken(), 0);
+            mInput.clearFocus();
+        }
     }
 
     /**
      * Called from {@link MainPresenter}, when languages were fetched from cache/net.
      */
     public void onLanguagesResult() {
-        // if we got share intent from other application
-        Intent intent = getIntent();
-        if (intent != null && intent.getType() != null) {
-            String type = intent.getType();
-            String text = intent.getStringExtra(Intent.EXTRA_TEXT);
-            text = text.substring(0, Math.min(text.length(), 80));
-            if (type != null && !TextUtils.isEmpty(text) && "text/plain".equals(type)) {
-                intent.setType(null);
-                mInput.setText(text);
-                startLookup(text);
-            }
-        } else {
-            mPresenter.getLastResultAsync();
+        // if we are not coming from share intent
+        if (!handleIntent(getIntent())) {
+            // load last result async
+            mPresenter.loadLastResult();
         }
+
         mToolbarInnerLayout.setVisibility(View.VISIBLE);
         mToolbarInnerLayout.setTranslationY(-mToolbarInnerLayout.getHeight());
         mToolbarInnerLayout.setAlpha(0);
         mToolbarInnerLayout.animate()
                 .alpha(1)
                 .translationY(0)
-                .setDuration(700)
+                .setDuration(TOOLBAR_ANIM_IN_DURATION)
                 .setInterpolator(new DecelerateInterpolator(2.5f))
-                .start();
-
-        mLookup.setVisibility(View.VISIBLE);
-        mLookup.setScaleX(0);
-        mLookup.setScaleY(0);
-        mLookup.animate()
-                .scaleX(1)
-                .scaleY(1)
-                .setDuration(600)
-                .setInterpolator(new OvershootInterpolator())
                 .start();
 
         setControlsState(true);
@@ -473,22 +573,22 @@ public class MainActivity extends AppCompatActivity {
         }
         lookupNext(mInput.getText().toString());
 
-        int duration = 450;
+        // anim stuff
 
         float rotation = 180f;
-        if (mArrow.getRotation() > 0) {
+        if (mSwapLangs.getRotation() > 0) {
             rotation *= -1;
         }
-        mArrow.setRotation(0);
-        mArrow.animate()
+        mSwapLangs.setRotation(0);
+        mSwapLangs.animate()
                 .rotationBy(rotation)
-                .setDuration(300)
+                .setDuration(SWAP_LANGS_ANIM_DURATION)
                 .start();
 
         SwitchAnimation anim = new SwitchAnimation(mTextSource,
                 mTextSource.getHeight(),
                 0f,
-                duration,
+                SWITCH_ANIM_DURATION,
                 new SwitchAnimation.OnSwitchListener() {
                     @Override
                     public void onSwitch() {
@@ -496,7 +596,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
         anim.start();
-        anim = new SwitchAnimation(mTextDest, -mTextDest.getHeight(), 0, duration, null);
+        anim = new SwitchAnimation(mTextDest, -mTextDest.getHeight(), 0, SWITCH_ANIM_DURATION, null);
         anim.start();
     }
 
@@ -505,27 +605,28 @@ public class MainActivity extends AppCompatActivity {
      *
      * @param result result object returned from server
      */
-    public void onLookupResult(@Nullable Result result) {
-        if (result == null || result.isEmpty()) {
-            onError(getString(R.string.error_no_results));
-            return;
-        }
-        mTranslations = result.translations;
+    public void onLookupResult(Result result) {
+        List<TranslationEx> translations = result.translations;
         mInput.setText(result.text);
         if (!TextUtils.isEmpty(result.transcription)) {
             mTranscription.setText(String.format("[%s]", result.transcription));
         } else {
             mTranscription.setText("");
         }
-        if (mRecyclerViewAdapter == null) {
-            mRecyclerViewAdapter = new TranslationAdapter(mToolbar.getHeight() + mInputLayout.getHeight(),
-                    mRecyclerViewListener);
-            mRecyclerView.setAdapter(mRecyclerViewAdapter);
-        }
-        mRecyclerViewAdapter.setItems(mTranslations);
-        mRecyclerViewScroll = 0;
-        updateTopView();
+        TranslationAdapter adapter = new TranslationAdapter(this, translations);
+        adapter.setListener(mRecyclerViewListener);
+        adapter.notifyItemRangeInserted(0, translations.size());
+        mRecyclerView.setAdapter(adapter);
         mRecyclerView.scrollToPosition(0);
+        mRecyclerViewScrollValue = 0;
+
+        mRecyclerView.setAlpha(0);
+        mRecyclerView.animate()
+                .alpha(1)
+                .setDuration(RECYCLER_VIEW_ANIM_IN_DURATION)
+                .start();
+
+        updateInputLayout();
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -533,7 +634,8 @@ public class MainActivity extends AppCompatActivity {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Error message.
+     * Called when error occured. Typically it's related to server or connection problems/wrong
+     * request.
      *
      * @param messaage text to show
      */
@@ -549,6 +651,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         snackbar.show();
+    }
+
+    /**
+     * Show error when no results were received.
+     */
+    public void onNoResults() {
+        onError(getString(R.string.error_no_results));
     }
 
     /**
