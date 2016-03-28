@@ -347,6 +347,13 @@ public class MainPresenter {
         mLastQueries.clear();
     }
 
+    /**
+     * @return whenever activity should close on successful share
+     */
+    public boolean closeOnShare() {
+        return mPrefs.closeOnShare();
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Languages
     ///////////////////////////////////////////////////////////////////////////
@@ -575,4 +582,5 @@ public class MainPresenter {
             Log.println(priority, TAG, message);
         }
     }
+
 }

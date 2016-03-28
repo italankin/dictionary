@@ -5,7 +5,17 @@
 
         <SwitchPreference
             android:key="lookup_reverse"
-            android:title="@string/pref_lookup_both" />
+            android:title="@string/pref_lookup_both"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_cat_sharing">
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="close_on_share"
+            android:summary="@string/pref_sum_close_on_share"
+            android:title="@string/pref_close_on_share"/>
 
     </PreferenceCategory>
 
@@ -16,7 +26,7 @@
             android:title="@string/pref_yandex_dictionary">
             <intent
                 android:action="android.intent.action.VIEW"
-                android:data="https://tech.yandex.com/dictionary/" />
+                android:data="https://tech.yandex.com/dictionary/"/>
         </Preference>
 
         <Preference

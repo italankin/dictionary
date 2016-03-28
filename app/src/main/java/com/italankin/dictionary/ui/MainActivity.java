@@ -72,6 +72,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int RECYCLER_VIEW_ANIM_IN_DURATION = 300;
     private static final float INPUT_SCROLL_PARALLAX_FACTOR = 2;
 
+    private static final int REQUEST_CODE_SHARE = 17;
+
     private MainPresenter mPresenter;
 
     //region Views
@@ -324,6 +326,14 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_SHARE && resultCode == RESULT_OK && mPresenter.closeOnShare()) {
+            finish();
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // ButterKnife
     ///////////////////////////////////////////////////////////////////////////
@@ -391,7 +401,7 @@ public class MainActivity extends AppCompatActivity {
                             .setText(result.toString())
                             .setSubject(result.text)
                             .createChooserIntent();
-                    startActivity(intent);
+                    startActivityForResult(intent, REQUEST_CODE_SHARE);
                 } else {
                     Toast.makeText(MainActivity.this, R.string.error_share, Toast.LENGTH_SHORT).show();
                 }

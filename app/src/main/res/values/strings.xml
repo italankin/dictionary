@@ -40,9 +40,12 @@
 
     <string name="pref_cat_other">Other</string>
     <string name="pref_cat_general">General</string>
+    <string name="pref_cat_sharing">Sharing</string>
+    <string name="pref_sum_close_on_share">Only applies to main screen. Can behave differently among the apps</string>
     <string name="pref_open_source_libs">Open Source Libraries</string>
     <string name="pref_lookup_both">Lookup in both directions</string>
     <string name="pref_yandex_dictionary">Powered by Yandex.Dictionary</string>
+    <string name="pref_close_on_share">Close app after sharing a result</string>
 
     <string name="dialog_history">Search history</string>
 

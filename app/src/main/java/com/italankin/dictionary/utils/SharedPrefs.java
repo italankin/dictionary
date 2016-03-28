@@ -41,6 +41,7 @@ public class SharedPrefs {
     public static final String PREF_SOURCE = "source";
     public static final String PREF_DEST = "dest";
     public static final String PREF_LOOKUP_REVERSE = "lookup_reverse";
+    public static final String PREF_CLOSE_ON_SHARE = "close_on_share";
 
     private static SharedPrefs INSTANCE;
 
@@ -133,6 +134,10 @@ public class SharedPrefs {
 
     public boolean lookupReverse() {
         return mPreferences.getBoolean(PREF_LOOKUP_REVERSE, true);
+    }
+
+    public boolean closeOnShare() {
+        return mPreferences.getBoolean(PREF_CLOSE_ON_SHARE, false);
     }
 
 }

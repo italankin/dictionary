@@ -40,4 +40,7 @@
     <string name="content_desc_swap_langs">Поменять языки местами</string>
     <string name="toast_swap_langs">Поменять языки местами</string>
     <string name="examples">Примеры</string>
+    <string name="pref_cat_sharing">Отправка результата</string>
+    <string name="pref_close_on_share">Закрывать приложение после успешной отправки. Может не работать с некоторыми приложениями</string>
+    <string name="pref_sum_close_on_share">Работает только на главном экране</string>
 </resources>
