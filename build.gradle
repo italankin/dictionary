@@ -20,11 +20,11 @@ allprojects {
  * @return properties
  */
 Properties readProps(String fileName) {
-    Properties props = new Properties()
     File file = new File(fileName)
     if (file.exists()) {
+        Properties props = new Properties()
         props.load(new FileInputStream(file))
-        return props;
+        return props
     }
-    return null;
+    return null
 }
