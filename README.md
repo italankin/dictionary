@@ -9,6 +9,10 @@ Tiny Android application that allows you to translate and view information about
 
 [![Build Status](https://travis-ci.org/italankin/dictionary.svg?branch=master)](https://travis-ci.org/italankin/dictionary)
 
+## Install ##
+
+You can get app from [Google Play page](https://play.google.com/store/apps/details?id=com.italankin.dictionary). APKs also can be found at [releases](https://github.com/italankin/dictionary/releases) tab in the `Downloads` section.
+
 ## Supported languages ##
 
 Everything is backed by [Yandex.Dictionary](https://tech.yandex.com/dictionary/). Check out their [page](https://tech.yandex.com/dictionary/doc/dg/concepts/api-overview-docpage/) to find more information about supported languages and features.
