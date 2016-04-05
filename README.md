@@ -30,6 +30,17 @@ aliasPasswd     = someAliasPassword
 ```
 It's highly recommended to change `apiKey` field with _your_ API key. You can get the free one [here](https://tech.yandex.com/keys/get/?service=dict).
 
+# Open Source Libraries #
+
+* [Android Open Source Project](https://source.android.com/)
+* [RxJava](https://github.com/ReactiveX/RxJava)
+* [RxAndroid](https://github.com/ReactiveX/RxAndroid)
+* [Retrofit](http://square.github.io/retrofit/)
+* [OkHttp](http://square.github.io/okhttp/)
+* [Gson](https://github.com/google/gson)
+* [ButterKnife](http://jakewharton.github.io/butterknife/)
+* [LicensesDialog](https://github.com/PSDev/LicensesDialog)
+
 # License #
 
     Copyright 2016 Igor Talankin
