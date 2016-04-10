@@ -4,8 +4,14 @@
     <PreferenceCategory android:title="@string/pref_cat_general">
 
         <SwitchPreference
+            android:defaultValue="true"
             android:key="lookup_reverse"
             android:title="@string/pref_lookup_both"/>
+
+        <Preference
+            android:key="search_filters"
+            android:fragment="com.italankin.dictionary.ui.settings.SettingsSearchOptionsFragment"
+            android:title="@string/pref_cat_search_options"/>
 
     </PreferenceCategory>
 
@@ -14,7 +20,7 @@
         <SwitchPreference
             android:defaultValue="false"
             android:key="close_on_share"
-            android:summary="@string/pref_sum_close_on_share"
+            android:summary="@string/pref_close_on_share_sum"
             android:title="@string/pref_close_on_share"/>
 
     </PreferenceCategory>

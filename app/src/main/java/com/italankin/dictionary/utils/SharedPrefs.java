@@ -22,6 +22,7 @@ import android.support.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.italankin.dictionary.api.ApiClient;
 import com.italankin.dictionary.dto.Language;
 
 import java.io.File;
@@ -30,6 +31,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Wrapper around {@link SharedPreferences} for this application purposes.
@@ -40,8 +42,13 @@ public class SharedPrefs {
 
     public static final String PREF_SOURCE = "source";
     public static final String PREF_DEST = "dest";
+    public static final String PREF_LANGS_LOCALE = "langs_locale";
     public static final String PREF_LOOKUP_REVERSE = "lookup_reverse";
     public static final String PREF_CLOSE_ON_SHARE = "close_on_share";
+    public static final String PREF_FILTER_FAMILY = "filter_family";
+    public static final String PREF_FILTER_SHORT_POS = "filter_short_pos";
+    public static final String PREF_FILTER_MORPHO = "filter_morpho";
+    public static final String PREF_FILTER_POS_FILTER = "filter_pos_filter";
 
     private static SharedPrefs INSTANCE;
 
@@ -102,12 +109,13 @@ public class SharedPrefs {
     // Languages list
     ///////////////////////////////////////////////////////////////////////////
 
-    public void putLangs(List<Language> list) throws IOException {
+    public void putLangs(List<Language> list, String locale) throws IOException {
         File file = getLangsFile();
         FileOutputStream fs = new FileOutputStream(file);
         String json = mGson.toJson(list);
         fs.write(json.getBytes());
         fs.close();
+        mPreferences.edit().putString(PREF_LANGS_LOCALE, locale).apply();
     }
 
     public List<Language> getLangs() throws IOException {
@@ -116,6 +124,12 @@ public class SharedPrefs {
         Type collectionType = new TypeToken<List<Language>>() {
         }.getType();
         return mGson.fromJson(fs, collectionType);
+    }
+
+    public boolean shouldUpdateLangs() {
+        String savedLocale = mPreferences.getString(PREF_LANGS_LOCALE, null);
+        String currentLocale = Locale.getDefault().getLanguage();
+        return !currentLocale.equals(savedLocale) || !hasLangsFile();
     }
 
     public boolean hasLangsFile() {
@@ -138,6 +152,14 @@ public class SharedPrefs {
 
     public boolean closeOnShare() {
         return mPreferences.getBoolean(PREF_CLOSE_ON_SHARE, false);
+    }
+
+    public int getSearchFilter() {
+        int family = mPreferences.getBoolean(PREF_FILTER_FAMILY, true) ? ApiClient.FILTER_FAMILY : 0;
+        int shortPos = mPreferences.getBoolean(PREF_FILTER_SHORT_POS, false) ? ApiClient.FILTER_SHORT_POS : 0;
+        int morpho = mPreferences.getBoolean(PREF_FILTER_MORPHO, false) ? ApiClient.FILTER_MORPHO : 0;
+        int pos = mPreferences.getBoolean(PREF_FILTER_POS_FILTER, false) ? ApiClient.FILTER_POS_FILTER : 0;
+        return family | shortPos | morpho | pos;
     }
 
 }

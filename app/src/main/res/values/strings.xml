@@ -41,11 +41,18 @@
     <string name="pref_cat_other">Other</string>
     <string name="pref_cat_general">General</string>
     <string name="pref_cat_sharing">Sharing</string>
-    <string name="pref_sum_close_on_share">Only applies to main screen. Can behave differently among the apps</string>
+    <string name="pref_cat_search_options">Search options</string>
+    <string name="pref_close_on_share">Close app after sharing a result</string>
+    <string name="pref_close_on_share_sum">Only applies to main screen. Can behave differently among the apps</string>
     <string name="pref_open_source_libs">Open Source Libraries</string>
     <string name="pref_lookup_both">Lookup in both directions</string>
     <string name="pref_yandex_dictionary">Powered by Yandex.Dictionary</string>
-    <string name="pref_close_on_share">Close app after sharing a result</string>
+    <string name="pref_search_family">Family filter</string>
+    <string name="pref_search_short_pos">Short parts of speech</string>
+    <string name="pref_search_short_pos_sum">Display short forms for parts of speech</string>
+    <string name="pref_search_morpho">Search by word form</string>
+    <string name="pref_search_pos">Match part of speech</string>
+    <string name="pref_search_pos_sum">Match part of speech for the search word and translation</string>
 
     <string name="dialog_history">Search history</string>
 

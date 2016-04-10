@@ -42,5 +42,12 @@
     <string name="examples">Примеры</string>
     <string name="pref_cat_sharing">Отправка результата</string>
     <string name="pref_close_on_share">Закрывать приложение после успешной отправки. Может не работать с некоторыми приложениями</string>
-    <string name="pref_sum_close_on_share">Работает только на главном экране</string>
+    <string name="pref_close_on_share_sum">Работает только на главном экране</string>
+    <string name="pref_cat_search_options">Опции поиска</string>
+    <string name="pref_search_family">Семейный фильтр</string>
+    <string name="pref_search_morpho">Искать по форме слова</string>
+    <string name="pref_search_short_pos">Сокращенные части речи</string>
+    <string name="pref_search_short_pos_sum">Показывать сокращенные части речи</string>
+    <string name="pref_search_pos">Соответсвие частей речи</string>
+    <string name="pref_search_pos_sum">Включает фильтр соответствия частей речи искомого слова и перевода</string>
 </resources>
