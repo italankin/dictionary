@@ -311,7 +311,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean handleIntent(Intent intent) {
-        if (intent != null && intent.getType() != null) {
+        if (intent.getType() != null) {
             String type = intent.getType();
             String text = intent.getStringExtra(Intent.EXTRA_TEXT);
             text = text.substring(0, Math.min(text.length(), 80));
@@ -473,6 +473,7 @@ public class MainActivity extends AppCompatActivity {
                 updateTextViews();
             }
         });
+        builder.setNegativeButton(android.R.string.cancel, null);
         builder.show();
     }
 
@@ -494,6 +495,7 @@ public class MainActivity extends AppCompatActivity {
                 updateTextViews();
             }
         });
+        builder.setNegativeButton(android.R.string.cancel, null);
         builder.show();
     }
 
@@ -555,12 +557,6 @@ public class MainActivity extends AppCompatActivity {
      * Called from {@link MainPresenter}, when languages were fetched from cache/net.
      */
     public void onLanguagesResult() {
-        // if we are not coming from share intent
-        if (!handleIntent(getIntent())) {
-            // load last result async
-            mPresenter.loadLastResult();
-        }
-
         mToolbarInnerLayout.setVisibility(View.VISIBLE);
         mToolbarInnerLayout.setTranslationY(-mToolbarInnerLayout.getHeight());
         mToolbarInnerLayout.setAlpha(0);
@@ -572,9 +568,14 @@ public class MainActivity extends AppCompatActivity {
                 .start();
 
         setControlsState(true);
-        mInput.requestFocus();
-        mInputManager.showSoftInput(mInput, 0);
         updateTextViews();
+
+        // if we are not coming from share intent
+        if (!handleIntent(getIntent())) {
+            // load last result async
+            mPresenter.loadLastResult();
+            mInput.requestFocus();
+        }
     }
 
     private void swapLanguages() {

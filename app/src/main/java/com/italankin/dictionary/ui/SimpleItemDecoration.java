@@ -29,9 +29,6 @@ public class SimpleItemDecoration extends RecyclerView.ItemDecoration {
      */
     private int[] mOffsets = {0, 0, 0, 0};
 
-    public SimpleItemDecoration() {
-    }
-
     public SimpleItemDecoration(int left, int top, int right, int bottom) {
         mOffsets = new int[]{left, top, right, bottom};
     }

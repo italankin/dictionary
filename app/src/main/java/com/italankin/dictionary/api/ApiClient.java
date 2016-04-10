@@ -28,6 +28,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -167,6 +168,15 @@ public class ApiClient {
                     @Override
                     public List<Definition> call(DicResult dicResult) {
                         return dicResult.def;
+                    }
+                })
+                .map(new Func1<List<Definition>, List<Definition>>() {
+                    @Override
+                    public List<Definition> call(List<Definition> definitions) {
+                        if (definitions == null) {
+                            return Collections.emptyList();
+                        }
+                        return definitions;
                     }
                 });
     }
