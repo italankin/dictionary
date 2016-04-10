@@ -154,7 +154,22 @@ public class MainPresenter {
             return;
         }
 
-        if (mPrefs.hasLangsFile()) {
+        if (mPrefs.shouldUpdateLangs()) {
+            mSubLangs = mClient.getLangs(BuildConfig.API_KEY)
+                    .doOnNext(new Action1<List<Language>>() {
+                        @Override
+                        public void call(List<Language> list) {
+                            try {
+                                mPrefs.putLangs(list, Locale.getDefault().getLanguage());
+                            } catch (IOException e) {
+                                throw new RuntimeException(e.getMessage());
+                            }
+                            updateLanguages(list);
+                        }
+                    })
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(onGetLangsResult, mGetLangsErrorHandler);
+        } else {
             mSubLangs = Observable
                     .create(new Observable.OnSubscribe<Object>() {
                         @Override
@@ -172,25 +187,6 @@ public class MainPresenter {
                         }
                     })
                     .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(onGetLangsResult, mGetLangsErrorHandler);
-        } else {
-            mSubLangs = mClient.getLangs(BuildConfig.API_KEY)
-                    .map(new Func1<List<Language>, Object>() {
-                        @Override
-                        public Object call(List<Language> list) {
-                            try {
-                                if (list == null || list.isEmpty()) {
-                                    throw new NullPointerException();
-                                }
-                                mPrefs.putLangs(list);
-                            } catch (IOException e) {
-                                throw new RuntimeException(e.getMessage());
-                            }
-                            updateLanguages(list);
-                            return null;
-                        }
-                    })
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(onGetLangsResult, mGetLangsErrorHandler);
         }
@@ -241,7 +237,7 @@ public class MainPresenter {
                 .flatMap(new Func1<List<Definition>, Observable<List<Definition>>>() {
                     @Override
                     public Observable<List<Definition>> call(List<Definition> definitions) {
-                        if ((definitions == null || definitions.isEmpty()) && mPrefs.lookupReverse()) {
+                        if (definitions.isEmpty() && mPrefs.lookupReverse()) {
                             // if we got no result, attempt to lookup in reverse direction
                             //noinspection WrongConstant
                             return mClient.lookup(BuildConfig.API_KEY, getLangParam(true), text,
@@ -253,7 +249,7 @@ public class MainPresenter {
                 .map(new Func1<List<Definition>, Result>() {
                     @Override
                     public Result call(List<Definition> definitions) {
-                        if (definitions == null || definitions.isEmpty()) {
+                        if (definitions.isEmpty()) {
                             return null;
                         }
                         return new Result(definitions);
@@ -481,7 +477,8 @@ public class MainPresenter {
                     @Override
                     public void call(Subscriber<? super Object> subscriber) {
                         try {
-                            mPrefs.putLangs(mLangs);
+                            String code = Locale.getDefault().getLanguage();
+                            mPrefs.putLangs(mLangs, code);
                             if (!subscriber.isUnsubscribed()) {
                                 subscriber.onNext(null);
                             }

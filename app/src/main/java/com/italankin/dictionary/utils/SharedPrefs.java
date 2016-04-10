@@ -31,6 +31,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Wrapper around {@link SharedPreferences} for this application purposes.
@@ -41,6 +42,7 @@ public class SharedPrefs {
 
     public static final String PREF_SOURCE = "source";
     public static final String PREF_DEST = "dest";
+    public static final String PREF_LANGS_LOCALE = "langs_locale";
     public static final String PREF_LOOKUP_REVERSE = "lookup_reverse";
     public static final String PREF_CLOSE_ON_SHARE = "close_on_share";
     public static final String PREF_FILTER_FAMILY = "filter_family";
@@ -107,12 +109,13 @@ public class SharedPrefs {
     // Languages list
     ///////////////////////////////////////////////////////////////////////////
 
-    public void putLangs(List<Language> list) throws IOException {
+    public void putLangs(List<Language> list, String locale) throws IOException {
         File file = getLangsFile();
         FileOutputStream fs = new FileOutputStream(file);
         String json = mGson.toJson(list);
         fs.write(json.getBytes());
         fs.close();
+        mPreferences.edit().putString(PREF_LANGS_LOCALE, locale).apply();
     }
 
     public List<Language> getLangs() throws IOException {
@@ -121,6 +124,12 @@ public class SharedPrefs {
         Type collectionType = new TypeToken<List<Language>>() {
         }.getType();
         return mGson.fromJson(fs, collectionType);
+    }
+
+    public boolean shouldUpdateLangs() {
+        String savedLocale = mPreferences.getString(PREF_LANGS_LOCALE, null);
+        String currentLocale = Locale.getDefault().getLanguage();
+        return !currentLocale.equals(savedLocale) || !hasLangsFile();
     }
 
     public boolean hasLangsFile() {
