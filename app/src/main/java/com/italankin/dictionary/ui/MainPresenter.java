@@ -235,14 +235,17 @@ public class MainPresenter {
             mSubLookup.unsubscribe();
         }
 
-        mSubLookup = mClient.lookup(BuildConfig.API_KEY, getLangParam(false), text, mUiLanguage, 0)
+        @ApiClient.LookupFlags final int flags = mPrefs.getSearchFilter();
+
+        mSubLookup = mClient.lookup(BuildConfig.API_KEY, getLangParam(false), text, mUiLanguage, flags)
                 .flatMap(new Func1<List<Definition>, Observable<List<Definition>>>() {
                     @Override
                     public Observable<List<Definition>> call(List<Definition> definitions) {
                         if ((definitions == null || definitions.isEmpty()) && mPrefs.lookupReverse()) {
                             // if we got no result, attempt to lookup in reverse direction
+                            //noinspection WrongConstant
                             return mClient.lookup(BuildConfig.API_KEY, getLangParam(true), text,
-                                    mUiLanguage, 0);
+                                    mUiLanguage, flags);
                         }
                         return Observable.just(definitions);
                     }

@@ -15,6 +15,8 @@
  */
 package com.italankin.dictionary.api;
 
+import android.support.annotation.IntDef;
+
 import com.italankin.dictionary.BuildConfig;
 import com.italankin.dictionary.dto.Definition;
 import com.italankin.dictionary.dto.DicResult;
@@ -22,6 +24,8 @@ import com.italankin.dictionary.dto.Language;
 import com.italankin.dictionary.utils.NetworkInterceptor;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -41,6 +45,17 @@ import rx.schedulers.Schedulers;
  * Client class for API usage
  */
 public class ApiClient {
+
+    public static final int FILTER_NONE = 0x0;
+    public static final int FILTER_FAMILY = 0x1;
+    public static final int FILTER_SHORT_POS = 0x2;
+    public static final int FILTER_MORPHO = 0x4;
+    public static final int FILTER_POS_FILTER = 0x8;
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef(value = {FILTER_NONE, FILTER_FAMILY, FILTER_SHORT_POS, FILTER_MORPHO, FILTER_POS_FILTER})
+    public @interface LookupFlags {
+    }
 
     private static ApiClient INSTANCE;
 
@@ -131,15 +146,17 @@ public class ApiClient {
      *              the dictionary entry
      * @param flags search options (bitmask of flags). Possible values:
      *              <ul>
-     *              <li>FAMILY = 0x0001 - Apply the family search filter.</li>
-     *              <li>MORPHO = 0x0004 - Enable searching by word form.</li>
-     *              <li>POS_FILTER = 0x0008 - Enable a filter that requires matching parts of speech
+     *              <li>{@link #FILTER_NONE} - disable all options</li>
+     *              <li>{@link #FILTER_FAMILY} - apply the family search filter.</li>
+     *              <li>{@link #FILTER_SHORT_POS} - parts of speech will be presented in short forms.</li>
+     *              <li>{@link #FILTER_MORPHO} - enable searching by word form.</li>
+     *              <li>{@link #FILTER_POS_FILTER} - enable a filter that requires matching parts of speech
      *              for the search word and translation.</li>
      *              </ul>
      * @return {@link List} of {@link Definition}s
      */
     public Observable<List<Definition>> lookup(String key, String lang, String text,
-                                               String ui, int flags) {
+                                               String ui, @LookupFlags int flags) {
         try {
             text = URLDecoder.decode(text, "UTF-8");
         } catch (UnsupportedEncodingException e) {

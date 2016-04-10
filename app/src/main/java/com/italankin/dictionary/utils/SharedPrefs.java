@@ -22,6 +22,7 @@ import android.support.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.italankin.dictionary.api.ApiClient;
 import com.italankin.dictionary.dto.Language;
 
 import java.io.File;
@@ -42,6 +43,10 @@ public class SharedPrefs {
     public static final String PREF_DEST = "dest";
     public static final String PREF_LOOKUP_REVERSE = "lookup_reverse";
     public static final String PREF_CLOSE_ON_SHARE = "close_on_share";
+    public static final String PREF_FILTER_FAMILY = "filter_family";
+    public static final String PREF_FILTER_SHORT_POS = "filter_short_pos";
+    public static final String PREF_FILTER_MORPHO = "filter_morpho";
+    public static final String PREF_FILTER_POS_FILTER = "filter_pos_filter";
 
     private static SharedPrefs INSTANCE;
 
@@ -138,6 +143,14 @@ public class SharedPrefs {
 
     public boolean closeOnShare() {
         return mPreferences.getBoolean(PREF_CLOSE_ON_SHARE, false);
+    }
+
+    public int getSearchFilter() {
+        int family = mPreferences.getBoolean(PREF_FILTER_FAMILY, true) ? ApiClient.FILTER_FAMILY : 0;
+        int shortPos = mPreferences.getBoolean(PREF_FILTER_SHORT_POS, false) ? ApiClient.FILTER_SHORT_POS : 0;
+        int morpho = mPreferences.getBoolean(PREF_FILTER_MORPHO, false) ? ApiClient.FILTER_MORPHO : 0;
+        int pos = mPreferences.getBoolean(PREF_FILTER_POS_FILTER, false) ? ApiClient.FILTER_POS_FILTER : 0;
+        return family | shortPos | morpho | pos;
     }
 
 }
