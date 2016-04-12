@@ -1,5 +1,8 @@
 language: android
 
+git:
+    depth: 3
+
 android:
   components:
     - tools
