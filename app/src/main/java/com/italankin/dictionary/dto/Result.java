@@ -15,13 +15,16 @@
  */
 package com.italankin.dictionary.dto;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Container object used to represent query result.
  */
-public class Result {
+public class Result implements Parcelable {
 
     public List<Definition> rawResult;
     public String text;
@@ -76,5 +79,36 @@ public class Result {
     public boolean isEmpty() {
         return rawResult == null || rawResult.isEmpty();
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Parcelable
+    ///////////////////////////////////////////////////////////////////////////
+
+    protected static Result from(Parcel in) {
+        List<Definition> list = in.createTypedArrayList(Definition.CREATOR);
+        return new Result(list);
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeTypedList(rawResult);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Creator<Result> CREATOR = new Creator<Result>() {
+        @Override
+        public Result createFromParcel(Parcel in) {
+            return Result.from(in);
+        }
+
+        @Override
+        public Result[] newArray(int size) {
+            return new Result[size];
+        }
+    };
 
 }
