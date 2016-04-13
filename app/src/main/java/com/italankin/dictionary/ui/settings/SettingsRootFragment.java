@@ -15,6 +15,7 @@
  */
 package com.italankin.dictionary.ui.settings;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.preference.Preference;
@@ -42,6 +43,16 @@ public class SettingsRootFragment extends PreferenceFragment {
     public void onAttach(Context context) {
         super.onAttach(context);
         mCallbacks = (Callbacks) context;
+    }
+
+    /**
+     * Workaround for API < 23, which do not have {@link #onAttach(Context)} method.
+     */
+    @Override
+    @SuppressWarnings({"deprecation"})
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        mCallbacks = (Callbacks) activity;
     }
 
     @Override

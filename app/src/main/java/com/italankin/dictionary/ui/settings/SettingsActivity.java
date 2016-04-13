@@ -55,6 +55,7 @@ public class SettingsActivity extends AppCompatActivity implements SettingsRootF
         });
 
         mManager = getFragmentManager();
+
         if (savedInstanceState == null) {
             FragmentTransaction t = mManager.beginTransaction();
             t.replace(R.id.container, new SettingsRootFragment(), TAG_ROOT);
