@@ -544,7 +544,7 @@ public class MainActivity extends AppCompatActivity {
      * @param text text to lookup
      */
     private void startLookup(String text) {
-        text = text.replaceAll("[^\\p{L}\\w ]", "").trim();
+        text = text.replaceAll("[^\\p{L}\\w -]", " ").trim();
         mInput.setText(text);
         if (text.length() > 0) {
             mPresenter.lookup(text);
