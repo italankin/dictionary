@@ -572,9 +572,11 @@ public class MainActivity extends AppCompatActivity {
 
         // if we are not coming from share intent
         if (!handleIntent(getIntent())) {
+            if (mPresenter.getLastResult() == null) {
+                mInput.requestFocus();
+            }
             // load last result async
             mPresenter.loadLastResult();
-            mInput.requestFocus();
         }
     }
 
