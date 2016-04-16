@@ -77,9 +77,11 @@ public class ApiClient {
     }
 
     private ApiClient() {
-        OkHttpClient okHttp = new OkHttpClient.Builder()
-                .addInterceptor(new NetworkInterceptor())
-                .build();
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        if (BuildConfig.DEBUG) {
+            builder.addInterceptor(new NetworkInterceptor());
+        }
+        OkHttpClient okHttp = builder.build();
 
         GsonConverterFactory converter = GsonConverterFactory.create();
         RxJavaCallAdapterFactory adapter = RxJavaCallAdapterFactory.createWithScheduler(Schedulers.io());
