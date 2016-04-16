@@ -22,6 +22,7 @@ import android.support.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.italankin.dictionary.R;
 import com.italankin.dictionary.api.ApiClient;
 import com.italankin.dictionary.dto.Language;
 
@@ -40,15 +41,15 @@ public class SharedPrefs {
 
     private static final String LANGS = "langs.json";
 
-    public static final String PREF_SOURCE = "source";
-    public static final String PREF_DEST = "dest";
-    public static final String PREF_LANGS_LOCALE = "langs_locale";
-    public static final String PREF_LOOKUP_REVERSE = "lookup_reverse";
-    public static final String PREF_CLOSE_ON_SHARE = "close_on_share";
-    public static final String PREF_FILTER_FAMILY = "filter_family";
-    public static final String PREF_FILTER_SHORT_POS = "filter_short_pos";
-    public static final String PREF_FILTER_MORPHO = "filter_morpho";
-    public static final String PREF_FILTER_POS_FILTER = "filter_pos_filter";
+    private static final String PREF_SOURCE = "source";
+    private static final String PREF_DEST = "dest";
+    private static final String PREF_LANGS_LOCALE = "langs_locale";
+    private static String PREF_LOOKUP_REVERSE;
+    private static String PREF_CLOSE_ON_SHARE;
+    private static String PREF_FILTER_FAMILY;
+    private static String PREF_FILTER_SHORT_POS;
+    private static String PREF_FILTER_MORPHO;
+    private static String PREF_FILTER_POS_FILTER;
 
     private static SharedPrefs INSTANCE;
 
@@ -67,6 +68,13 @@ public class SharedPrefs {
         mContext = context;
         mPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         mGson = new Gson();
+
+        PREF_LOOKUP_REVERSE = context.getString(R.string.pref_key_lookup_reverse);
+        PREF_CLOSE_ON_SHARE = context.getString(R.string.pref_key_close_on_share);
+        PREF_FILTER_FAMILY = context.getString(R.string.pref_key_filter_family);
+        PREF_FILTER_SHORT_POS = context.getString(R.string.pref_key_filter_short_pos);
+        PREF_FILTER_MORPHO = context.getString(R.string.pref_key_filter_morpho);
+        PREF_FILTER_POS_FILTER = context.getString(R.string.pref_key_filter_pos_filter);
     }
 
     ///////////////////////////////////////////////////////////////////////////

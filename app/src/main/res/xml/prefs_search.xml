@@ -3,23 +3,23 @@
 
     <SwitchPreference
         android:defaultValue="true"
-        android:key="filter_family"
+        android:key="@string/pref_key_filter_family"
         android:title="@string/pref_search_family"/>
 
     <SwitchPreference
         android:defaultValue="false"
-        android:key="filter_short_pos"
+        android:key="@string/pref_key_filter_short_pos"
         android:summary="@string/pref_search_short_pos_sum"
         android:title="@string/pref_search_short_pos"/>
 
     <SwitchPreference
         android:defaultValue="false"
-        android:key="filter_morpho"
+        android:key="@string/pref_key_filter_morpho"
         android:title="@string/pref_search_morpho"/>
 
     <SwitchPreference
         android:defaultValue="false"
-        android:key="filter_pos_filter"
+        android:key="@string/pref_key_filter_pos_filter"
         android:summary="@string/pref_search_pos_sum"
         android:title="@string/pref_search_pos"/>
 
