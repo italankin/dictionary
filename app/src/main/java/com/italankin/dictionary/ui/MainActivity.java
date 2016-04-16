@@ -69,7 +69,6 @@ public class MainActivity extends AppCompatActivity {
     private static final int SWITCH_ANIM_DURATION = 450;
     private static final int SWAP_LANGS_ANIM_DURATION = 300;
     private static final int TOOLBAR_ANIM_IN_DURATION = 700;
-    private static final int RECYCLER_VIEW_ANIM_IN_DURATION = 300;
     private static final float INPUT_SCROLL_PARALLAX_FACTOR = 2;
 
     private static final int REQUEST_CODE_SHARE = 17;
@@ -120,8 +119,6 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView mRecyclerView;
     //endregion
 
-    private TranslationAdapter.OnAdapterItemClickListener mRecyclerViewListener;
-
     /**
      * Adapter used to display source languages
      */
@@ -149,6 +146,7 @@ public class MainActivity extends AppCompatActivity {
      * Value represents current recycler view scrolled pixels
      */
     private int mRecyclerViewScrollValue = 0;
+    private TranslationAdapter mRecyclerViewAdapter;
 
     ///////////////////////////////////////////////////////////////////////////
     // Activity callbacks
@@ -195,7 +193,9 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // on click listener
-        mRecyclerViewListener = new TranslationAdapter.OnAdapterItemClickListener() {
+
+        mRecyclerViewAdapter = new TranslationAdapter(this);
+        mRecyclerViewAdapter.setListener(new TranslationAdapter.OnAdapterItemClickListener() {
             @Override
             public void onItemClick(int position) {
                 TranslationEx item = mPresenter.getLastResult().translations.get(position);
@@ -228,7 +228,9 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, R.string.msg_copied, Toast.LENGTH_SHORT).show();
                 }
             }
-        };
+        });
+
+        mRecyclerView.setAdapter(mRecyclerViewAdapter);
     }
 
     private void setupInputLayout() {
@@ -626,18 +628,9 @@ public class MainActivity extends AppCompatActivity {
         } else {
             mTranscription.setText("");
         }
-        TranslationAdapter adapter = new TranslationAdapter(this, translations);
-        adapter.setListener(mRecyclerViewListener);
-        adapter.notifyItemRangeInserted(0, translations.size());
-        mRecyclerView.setAdapter(adapter);
+        mRecyclerViewAdapter.setData(translations);
         mRecyclerView.scrollToPosition(0);
         mRecyclerViewScrollValue = 0;
-
-        mRecyclerView.setAlpha(0);
-        mRecyclerView.animate()
-                .alpha(1)
-                .setDuration(RECYCLER_VIEW_ANIM_IN_DURATION)
-                .start();
 
         updateInputLayout();
     }

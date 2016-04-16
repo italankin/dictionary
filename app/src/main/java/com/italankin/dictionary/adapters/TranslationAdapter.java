@@ -16,6 +16,8 @@
 package com.italankin.dictionary.adapters;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -29,6 +31,7 @@ import android.widget.TextView;
 import com.italankin.dictionary.R;
 import com.italankin.dictionary.dto.TranslationEx;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -38,13 +41,25 @@ public class TranslationAdapter extends RecyclerView.Adapter<TranslationAdapter.
 
     private final LayoutInflater mInflater;
 
-    private List<TranslationEx> mDataset;
+    private final List<TranslationEx> mDataset = new ArrayList<>(0);
 
     private OnAdapterItemClickListener mListener;
 
-    public TranslationAdapter(Context context, List<TranslationEx> data) {
+    public TranslationAdapter(Context context) {
         mInflater = LayoutInflater.from(context);
-        mDataset = data;
+    }
+
+    /**
+     * Update adapter dataset with new items.
+     *
+     * @param data new items of list
+     */
+    public void setData(@NonNull List<TranslationEx> data) {
+        int size = mDataset.size();
+        mDataset.clear();
+        notifyItemRangeRemoved(0, size);
+        mDataset.addAll(data);
+        notifyItemRangeInserted(0, mDataset.size());
     }
 
     /**
@@ -52,7 +67,7 @@ public class TranslationAdapter extends RecyclerView.Adapter<TranslationAdapter.
      *
      * @param listener listener
      */
-    public void setListener(OnAdapterItemClickListener listener) {
+    public void setListener(@Nullable OnAdapterItemClickListener listener) {
         mListener = listener;
     }
 
@@ -89,6 +104,8 @@ public class TranslationAdapter extends RecyclerView.Adapter<TranslationAdapter.
         public TextView pos;
         public ImageView menu;
 
+        private PopupMenu popupMenu;
+
         public ViewHolder(View v) {
             super(v);
             v.setOnClickListener(new View.OnClickListener() {
@@ -104,21 +121,21 @@ public class TranslationAdapter extends RecyclerView.Adapter<TranslationAdapter.
             syns = (TextView) v.findViewById(R.id.synonyms);
             pos = (TextView) v.findViewById(R.id.pos);
             menu = (ImageView) v.findViewById(R.id.overflow);
+            popupMenu = new PopupMenu(v.getContext(), menu);
+            popupMenu.inflate(R.menu.attribute);
+            popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    if (mListener != null) {
+                        mListener.onItemMenuClick(getAdapterPosition(), item.getItemId());
+                    }
+                    return true;
+                }
+            });
             menu.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    PopupMenu pm = new PopupMenu(v.getContext(), v);
-                    pm.inflate(R.menu.attribute);
-                    pm.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                        @Override
-                        public boolean onMenuItemClick(MenuItem item) {
-                            if (mListener != null) {
-                                mListener.onItemMenuClick(getAdapterPosition(), item.getItemId());
-                            }
-                            return true;
-                        }
-                    });
-                    pm.show();
+                    popupMenu.show();
                 }
             });
         }
