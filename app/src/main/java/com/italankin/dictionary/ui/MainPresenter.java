@@ -30,7 +30,7 @@ import com.italankin.dictionary.utils.SharedPrefs;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -101,8 +101,7 @@ public class MainPresenter {
     private Subscription mSubLookup;
 
     private Result mLastResult;
-
-    private HashSet<String> mLastQueries = new HashSet<>(0);
+    private LinkedList<Result> mResults = new LinkedList<>();
 
     private MainPresenter(Context context) {
         mPrefs = SharedPrefs.getInstance(context);
@@ -262,7 +261,7 @@ public class MainPresenter {
                             public void call(Result result) {
                                 if (result != null) {
                                     mLastResult = result;
-                                    mLastQueries.add(result.text);
+                                    mResults.add(result);
                                 }
                                 MainActivity a = mRef.get();
                                 if (a != null) {
@@ -336,14 +335,17 @@ public class MainPresenter {
     /**
      * @return list of last queries
      */
-    public String[] getLastQueries() {
-        String[] result = new String[mLastQueries.size()];
-        mLastQueries.toArray(result);
+    public String[] getHistory() {
+        int size = mResults.size();
+        String[] result = new String[size];
+        for (int i = 0; i < size; i++) {
+            result[i] = mResults.get(i).text;
+        }
         return result;
     }
 
-    public void clearLastQueries() {
-        mLastQueries.clear();
+    public void loadHistory(int position) {
+        mRef.get().onLookupResult(mResults.get(position));
     }
 
     /**

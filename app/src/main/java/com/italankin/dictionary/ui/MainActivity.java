@@ -502,7 +502,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showHistoryDialog() {
-        final String[] values = mPresenter.getLastQueries();
+        final String[] values = mPresenter.getHistory();
         if (values == null || values.length == 0) {
             Toast.makeText(this, R.string.msg_history_empty, Toast.LENGTH_SHORT).show();
             return;
@@ -512,16 +512,10 @@ public class MainActivity extends AppCompatActivity {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_list_item_1,
                 values);
-        builder.setNeutralButton(R.string.clear_history, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                mPresenter.clearLastQueries();
-            }
-        });
         builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                lookupNext(values[which]);
+                mPresenter.loadHistory(which);
             }
         });
         builder.show();
