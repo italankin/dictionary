@@ -7,7 +7,6 @@
     <string name="input_hint">Enter word or phrase</string>
     <string name="lookup">Lookup</string>
     <string name="retry">Retry</string>
-    <string name="clear_history">Clear</string>
     <string name="settings">Settings</string>
     <string name="translaton">Translation</string>
     <string name="means">Meanings</string>

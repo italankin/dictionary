@@ -8,7 +8,6 @@
     <string name="action_lookup_word">Поиск</string>
     <string name="action_settings">Настройки</string>
     <string name="action_share">Поделиться</string>
-    <string name="clear_history">Очистить</string>
     <string name="destination">Язык перевода</string>
     <string name="error">Ошибка</string>
     <string name="error_lang_not_supported">Направление перевода не поддерживается</string>

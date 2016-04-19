@@ -3,7 +3,6 @@
     <color name="primary">#689ec9</color>
     <color name="primaryDark">#3c607c</color>
     <color name="primaryLight">#85c2f2</color>
-    <color name="primaryTrans">#80689ec9</color>
     <color name="accent_material_light" tools:override="true">#689ec9</color>
 
     <color name="selector">#40ffffff</color>
