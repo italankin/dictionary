@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int SWITCH_ANIM_DURATION = 450;
     private static final int SWAP_LANGS_ANIM_DURATION = 300;
     private static final int TOOLBAR_ANIM_IN_DURATION = 700;
-    private static final float INPUT_SCROLL_PARALLAX_FACTOR = 2;
+    private static final float INPUT_SCROLL_PARALLAX_FACTOR = 1.5f;
 
     private static final int REQUEST_CODE_SHARE = 17;
 
@@ -142,10 +142,6 @@ public class MainActivity extends AppCompatActivity {
     private InputMethodManager mInputManager;
     private ClipboardManager mClipboardManager;
 
-    /**
-     * Value represents current recycler view scrolled pixels
-     */
-    private int mRecyclerViewScrollValue = 0;
     private TranslationAdapter mRecyclerViewAdapter;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -187,10 +183,18 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                mRecyclerViewScrollValue += dy;
-                updateInputLayout();
+                updateInputLayoutPosition();
             }
         });
+
+        top = getResources().getDimensionPixelSize(R.dimen.list_top_offset);
+        int inputHeight = getResources().getDimensionPixelSize(R.dimen.input_panel_height);
+        mRecyclerView.setPadding(
+                mRecyclerView.getPaddingLeft(),
+                inputHeight + top,
+                mRecyclerView.getPaddingRight(),
+                mRecyclerView.getPaddingBottom()
+        );
 
         // on click listener
 
@@ -249,13 +253,7 @@ public class MainActivity extends AppCompatActivity {
                     ViewTreeObserver vto = mInputLayout.getViewTreeObserver();
                     vto.removeOnGlobalLayoutListener(this);
                 }
-                int top = getResources().getDimensionPixelSize(R.dimen.list_top_offset);
-                mRecyclerView.setPadding(
-                        mRecyclerView.getPaddingLeft(),
-                        mInputLayout.getHeight() + top,
-                        mRecyclerView.getPaddingRight(),
-                        mRecyclerView.getPaddingBottom()
-                );
+                updateInputLayoutPosition();
             }
         });
 
@@ -436,11 +434,11 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Sync scroll state of the top layout.
      */
-    private void updateInputLayout() {
+    private void updateInputLayoutPosition() {
         float max = mInputLayout.getHeight() * INPUT_SCROLL_PARALLAX_FACTOR +
                 mInputLayout.getHeight() / 10f; // additional space
         float value = max;
-        float abs = Math.abs(mRecyclerViewScrollValue / INPUT_SCROLL_PARALLAX_FACTOR);
+        float abs = Math.abs(mRecyclerView.computeVerticalScrollOffset() / INPUT_SCROLL_PARALLAX_FACTOR);
         if (abs < max) {
             value = abs;
         }
@@ -568,11 +566,12 @@ public class MainActivity extends AppCompatActivity {
 
         // if we are not coming from share intent
         if (!handleIntent(getIntent())) {
-            if (mPresenter.getLastResult() == null) {
+            Result lastResult = mPresenter.getLastResult();
+            if (lastResult == null) {
                 mInput.requestFocus();
+            } else {
+                onLookupResult(lastResult);
             }
-            // load last result async
-            mPresenter.loadLastResult();
         }
     }
 
@@ -623,10 +622,8 @@ public class MainActivity extends AppCompatActivity {
             mTranscription.setText("");
         }
         mRecyclerViewAdapter.setData(translations);
-        mRecyclerView.scrollToPosition(0);
-        mRecyclerViewScrollValue = 0;
 
-        updateInputLayout();
+        updateInputLayoutPosition();
     }
 
     ///////////////////////////////////////////////////////////////////////////
