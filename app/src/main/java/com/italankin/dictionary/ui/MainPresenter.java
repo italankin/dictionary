@@ -33,7 +33,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
@@ -305,34 +304,6 @@ public class MainPresenter {
     }
 
     /**
-     * Dispatch last result to activity.
-     */
-    public void loadLastResult() {
-        if (mLastResult != null) {
-            mSubLookup = Observable.timer(300, TimeUnit.MILLISECONDS)
-                    .subscribeOn(Schedulers.newThread())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Action1<Long>() {
-                        @Override
-                        public void call(Long aLong) {
-                            MainActivity a = mRef.get();
-                            if (a != null) {
-                                if (mLastResult != null) {
-                                    a.onLookupResult(mLastResult);
-                                } else {
-                                    a.onNoResults();
-                                }
-                            }
-                            if (mSubLookup != null && !mSubLookup.isUnsubscribed()) {
-                                mSubLookup.unsubscribe();
-                                mSubLookup = null;
-                            }
-                        }
-                    });
-        }
-    }
-
-    /**
      * @return list of last queries
      */
     public String[] getHistory() {
@@ -522,7 +493,9 @@ public class MainPresenter {
     private Action1<Throwable> mErrorHandler = new Action1<Throwable>() {
         @Override
         public void call(Throwable throwable) {
-            throwable.printStackTrace();
+            if (BuildConfig.DEBUG) {
+                throwable.printStackTrace();
+            }
             MainActivity a = mRef.get();
             if (a != null) {
                 String message = a.getString(R.string.error);
