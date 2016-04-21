@@ -43,14 +43,17 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.italankin.dictionary.App;
 import com.italankin.dictionary.R;
-import com.italankin.dictionary.adapters.LanguageAdapter;
-import com.italankin.dictionary.adapters.TranslationAdapter;
 import com.italankin.dictionary.dto.Result;
 import com.italankin.dictionary.dto.TranslationEx;
+import com.italankin.dictionary.ui.adapters.LanguageAdapter;
+import com.italankin.dictionary.ui.adapters.TranslationAdapter;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import javax.inject.Inject;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -73,7 +76,8 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_CODE_SHARE = 17;
 
-    private MainPresenter mPresenter;
+    @Inject
+    MainPresenter _presenter;
 
     //region Views
     @Bind(R.id.toolbar)
@@ -151,21 +155,23 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        App.injector().inject(this);
+
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
         mInputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         mClipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 
-        mPresenter = MainPresenter.getInstance(this);
-        mPresenter.attach(this);
+        _presenter.attach(this);
 
         setSupportActionBar(toolbar);
         setupInputLayout();
         setupRecyclerView();
         setControlsState(false);
 
-        mPresenter.loadLanguages();
+        _presenter.loadLanguages();
     }
 
     private void setupRecyclerView() {
@@ -202,14 +208,14 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerViewAdapter.setListener(new TranslationAdapter.OnAdapterItemClickListener() {
             @Override
             public void onItemClick(int position) {
-                TranslationEx item = mPresenter.getLastResult().translations.get(position);
+                TranslationEx item = _presenter.getLastResult().translations.get(position);
                 startActivity(TranslationActivity.getStartIntent(getApplicationContext(), item));
             }
 
             @Override
             public void onItemMenuClick(int position, int menuItemId) {
                 ClipData clip = null;
-                TranslationEx item = mPresenter.getLastResult().translations.get(position);
+                TranslationEx item = _presenter.getLastResult().translations.get(position);
                 switch (menuItemId) {
                     case R.id.action_lookup_word:
                         lookupNext(item.text);
@@ -273,7 +279,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         // ensure we reattach presenter in case there're multiple activities being launched
-        mPresenter.attach(this);
+        _presenter.attach(this);
         mLookupSub = mLookupEvents
                 .filter(new Func1<String, Boolean>() {
                     @Override
@@ -300,8 +306,8 @@ public class MainActivity extends AppCompatActivity {
             mLookupSub = null;
         }
         if (isFinishing()) {
-            mPresenter.saveLanguages();
-            mPresenter.detach(this);
+            _presenter.saveLanguages();
+            _presenter.detach(this);
         }
     }
 
@@ -329,7 +335,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE_SHARE && resultCode == RESULT_OK && mPresenter.closeOnShare()) {
+        if (requestCode == REQUEST_CODE_SHARE && resultCode == RESULT_OK && _presenter.closeOnShare()) {
             finish();
         }
     }
@@ -393,7 +399,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_share:
-                Result result = mPresenter.getLastResult();
+                Result result = _presenter.getLastResult();
                 if (result != null && !result.isEmpty()) {
                     Intent intent = ShareCompat.IntentBuilder
                             .from(this)
@@ -425,9 +431,9 @@ public class MainActivity extends AppCompatActivity {
     ///////////////////////////////////////////////////////////////////////////
 
     private void updateTextViews() {
-        String source = mPresenter.getSourceLanguage().getName();
+        String source = _presenter.getSourceLanguage().getName();
         mTextSource.setText(source);
-        String dest = mPresenter.getDestLanguage().getName();
+        String dest = _presenter.getDestLanguage().getName();
         mTextDest.setText(dest);
     }
 
@@ -462,14 +468,14 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.source);
         if (mLangsSourceAdapter == null) {
-            mLangsSourceAdapter = new LanguageAdapter(this, mPresenter.getLanguagesList());
+            mLangsSourceAdapter = new LanguageAdapter(this, _presenter.getLanguagesList());
         }
-        mPresenter.sortLanguagesList();
+        _presenter.sortLanguagesList();
         mLangsSourceAdapter.notifyDataSetChanged();
         builder.setAdapter(mLangsSourceAdapter, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                mPresenter.setSourceLanguage(which);
+                _presenter.setSourceLanguage(which);
                 updateTextViews();
             }
         });
@@ -484,14 +490,14 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.destination);
         if (mLangsDestAdapter == null) {
-            mLangsDestAdapter = new LanguageAdapter(this, mPresenter.getLanguagesList());
+            mLangsDestAdapter = new LanguageAdapter(this, _presenter.getLanguagesList());
         }
-        mPresenter.sortLanguagesList();
+        _presenter.sortLanguagesList();
         mLangsDestAdapter.notifyDataSetChanged();
         builder.setAdapter(mLangsDestAdapter, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                mPresenter.setDestLanguage(which);
+                _presenter.setDestLanguage(which);
                 updateTextViews();
             }
         });
@@ -500,7 +506,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showHistoryDialog() {
-        final String[] values = mPresenter.getHistory();
+        final String[] values = _presenter.getHistory();
         if (values == null || values.length == 0) {
             Toast.makeText(this, R.string.msg_history_empty, Toast.LENGTH_SHORT).show();
             return;
@@ -513,7 +519,7 @@ public class MainActivity extends AppCompatActivity {
         builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                mPresenter.loadHistory(which);
+                _presenter.loadHistory(which);
             }
         });
         builder.show();
@@ -541,7 +547,7 @@ public class MainActivity extends AppCompatActivity {
         text = text.replaceAll("[^\\p{L}\\w -]", " ").trim();
         mInput.setText(text);
         if (text.length() > 0) {
-            mPresenter.lookup(text);
+            _presenter.lookup(text);
             mInputManager.hideSoftInputFromWindow(mInput.getWindowToken(), 0);
             mInput.clearFocus();
         }
@@ -566,7 +572,7 @@ public class MainActivity extends AppCompatActivity {
 
         // if we are not coming from share intent
         if (!handleIntent(getIntent())) {
-            Result lastResult = mPresenter.getLastResult();
+            Result lastResult = _presenter.getLastResult();
             if (lastResult == null) {
                 mInput.requestFocus();
             } else {
@@ -576,7 +582,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void swapLanguages() {
-        if (!mPresenter.swapLanguages()) {
+        if (!_presenter.swapLanguages()) {
             return;
         }
         lookupNext(mInput.getText().toString());
@@ -666,7 +672,7 @@ public class MainActivity extends AppCompatActivity {
         snackbar.setAction(R.string.retry, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPresenter.loadLanguages();
+                _presenter.loadLanguages();
             }
         });
         snackbar.show();
