@@ -58,16 +58,7 @@ public class ApiClient {
     public @interface LookupFlags {
     }
 
-    private static ApiClient INSTANCE;
-
     private final ApiService mService;
-
-    public static synchronized ApiClient getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new ApiClient();
-        }
-        return INSTANCE;
-    }
 
     private static Language languageFromCode(String code, String defaultCode) {
         Locale locale = new Locale(code);
@@ -76,7 +67,7 @@ public class ApiClient {
         return lang;
     }
 
-    private ApiClient() {
+    public ApiClient() {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         if (BuildConfig.DEBUG) {
             builder.addInterceptor(new NetworkInterceptor());
@@ -159,7 +150,7 @@ public class ApiClient {
      * @return {@link List} of {@link Definition}s
      */
     public Observable<List<Definition>> lookup(String key, String lang, String text,
-                                               String ui, @LookupFlags int flags) {
+            String ui, @LookupFlags int flags) {
         try {
             text = URLDecoder.decode(text, "UTF-8");
         } catch (UnsupportedEncodingException e) {

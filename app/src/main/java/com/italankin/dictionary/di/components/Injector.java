@@ -13,20 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.italankin.dictionary.ui.settings;
+package com.italankin.dictionary.di.components;
 
-import android.os.Bundle;
-import android.preference.PreferenceFragment;
+import com.italankin.dictionary.di.modules.MainModule;
+import com.italankin.dictionary.ui.MainActivity;
 
-import com.italankin.dictionary.R;
+import javax.inject.Singleton;
 
-public class SettingsSearchOptionsFragment extends PreferenceFragment {
+import dagger.Component;
 
-    @Override
-    public void onCreate(final Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setRetainInstance(true);
-        addPreferencesFromResource(R.xml.prefs_search);
-    }
+/**
+ * Dagger component used for injection.
+ */
+@Singleton
+@Component(modules = MainModule.class)
+public interface Injector {
+
+    void inject(MainActivity target);
 
 }

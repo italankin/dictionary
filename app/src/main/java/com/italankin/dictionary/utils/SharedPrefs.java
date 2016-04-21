@@ -51,20 +51,11 @@ public class SharedPrefs {
     private static String PREF_FILTER_MORPHO;
     private static String PREF_FILTER_POS_FILTER;
 
-    private static SharedPrefs INSTANCE;
-
     private SharedPreferences mPreferences;
     private Context mContext;
     private Gson mGson;
 
-    public static synchronized SharedPrefs getInstance(Context context) {
-        if (INSTANCE == null) {
-            INSTANCE = new SharedPrefs(context);
-        }
-        return INSTANCE;
-    }
-
-    private SharedPrefs(Context context) {
+    public SharedPrefs(Context context) {
         mContext = context;
         mPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         mGson = new Gson();

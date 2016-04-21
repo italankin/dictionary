@@ -13,20 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.italankin.dictionary.ui.settings;
+package com.italankin.dictionary;
 
-import android.os.Bundle;
-import android.preference.PreferenceFragment;
+import android.app.Application;
 
-import com.italankin.dictionary.R;
+import com.italankin.dictionary.di.components.DaggerInjector;
+import com.italankin.dictionary.di.components.Injector;
+import com.italankin.dictionary.di.modules.MainModule;
 
-public class SettingsSearchOptionsFragment extends PreferenceFragment {
+public class App extends Application {
+
+    private static Injector injector;
 
     @Override
-    public void onCreate(final Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setRetainInstance(true);
-        addPreferencesFromResource(R.xml.prefs_search);
+    public void onCreate() {
+        super.onCreate();
+
+        injector = DaggerInjector.builder()
+                .mainModule(new MainModule(this))
+                .build();
+    }
+
+    public static Injector injector() {
+        return injector;
     }
 
 }

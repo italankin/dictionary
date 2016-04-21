@@ -13,20 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.italankin.dictionary.ui.settings;
+package com.italankin.dictionary.di;
 
-import android.os.Bundle;
-import android.preference.PreferenceFragment;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-import com.italankin.dictionary.R;
+import javax.inject.Qualifier;
 
-public class SettingsSearchOptionsFragment extends PreferenceFragment {
-
-    @Override
-    public void onCreate(final Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setRetainInstance(true);
-        addPreferencesFromResource(R.xml.prefs_search);
-    }
-
+/**
+ * This annotation is used to tell Dagger that annotated object is available at runtime.
+ */
+@Qualifier
+@Retention(RetentionPolicy.RUNTIME)
+public @interface RuntimeScope {
 }

@@ -33,9 +33,7 @@ public class SettingsRootFragment extends PreferenceFragment {
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setRetainInstance(true);
-
         addPreferencesFromResource(R.xml.prefs_root);
     }
 
@@ -81,4 +79,5 @@ public class SettingsRootFragment extends PreferenceFragment {
     public interface Callbacks {
         void onSearchFiltersClick();
     }
+
 }

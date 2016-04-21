@@ -15,7 +15,6 @@
  */
 package com.italankin.dictionary.ui;
 
-import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -49,21 +48,6 @@ import rx.schedulers.Schedulers;
 public class MainPresenter {
 
     private static final String TAG = "[" + MainPresenter.class.getSimpleName() + "]";
-
-    private static MainPresenter INSTANCE;
-
-    /**
-     * Retrieve an singleton instance of this class.
-     *
-     * @param context used to obtain {@link SharedPrefs} instance
-     * @return instance of {@link MainPresenter}
-     */
-    public static synchronized MainPresenter getInstance(Context context) {
-        if (INSTANCE == null) {
-            INSTANCE = new MainPresenter(context);
-        }
-        return INSTANCE;
-    }
 
     /**
      * Reference to attached activity
@@ -102,9 +86,9 @@ public class MainPresenter {
     private Result mLastResult;
     private LinkedList<Result> mResults = new LinkedList<>();
 
-    private MainPresenter(Context context) {
-        mPrefs = SharedPrefs.getInstance(context);
-        mClient = ApiClient.getInstance();
+    public MainPresenter(ApiClient client, SharedPrefs prefs) {
+        mClient = client;
+        mPrefs = prefs;
         mUiLanguage = Locale.getDefault().getLanguage();
     }
 

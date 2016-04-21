@@ -34,6 +34,8 @@ It's highly recommended to change `apiKey` field with _your_ API key. You can ge
 
 * [Android Open Source Project](https://source.android.com/)
 * [RxJava](https://github.com/ReactiveX/RxJava)
+* [Dagger 2](http://google.github.io/dagger/)
+* [android-apt](https://bitbucket.org/hvisser/android-apt)
 * [RxAndroid](https://github.com/ReactiveX/RxAndroid)
 * [Retrofit](http://square.github.io/retrofit/)
 * [OkHttp](http://square.github.io/okhttp/)
