@@ -17,7 +17,6 @@ package com.italankin.dictionary.api;
 
 import android.support.annotation.IntDef;
 
-import com.italankin.dictionary.BuildConfig;
 import com.italankin.dictionary.dto.Definition;
 import com.italankin.dictionary.dto.DicResult;
 import com.italankin.dictionary.dto.Language;
@@ -66,11 +65,11 @@ public class ApiClient {
         return lang;
     }
 
-    public ApiClient(OkHttpClient client) {
+    public ApiClient(OkHttpClient client, String endpoint) {
         GsonConverterFactory converter = GsonConverterFactory.create();
         RxJavaCallAdapterFactory adapter = RxJavaCallAdapterFactory.createWithScheduler(Schedulers.io());
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BuildConfig.BASE_URL)
+                .baseUrl(endpoint)
                 .addCallAdapterFactory(adapter)
                 .addConverterFactory(converter)
                 .client(client)

@@ -69,7 +69,7 @@ public class MainModule {
     @Provides
     @Singleton
     ApiClient provideApiClient(OkHttpClient client) {
-        return new ApiClient(client);
+        return new ApiClient(client, BuildConfig.BASE_URL);
     }
 
     @Provides
