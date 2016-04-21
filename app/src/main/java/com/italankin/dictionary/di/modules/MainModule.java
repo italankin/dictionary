@@ -18,15 +18,18 @@ package com.italankin.dictionary.di.modules;
 import android.content.Context;
 
 import com.italankin.dictionary.App;
+import com.italankin.dictionary.BuildConfig;
 import com.italankin.dictionary.api.ApiClient;
 import com.italankin.dictionary.di.RuntimeScope;
 import com.italankin.dictionary.ui.MainPresenter;
+import com.italankin.dictionary.utils.NetworkInterceptor;
 import com.italankin.dictionary.utils.SharedPrefs;
 
 import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
+import okhttp3.OkHttpClient;
 
 /**
  * Main application module, contains main dependencies.
@@ -55,8 +58,18 @@ public class MainModule {
 
     @Provides
     @Singleton
-    ApiClient provideApiClient() {
-        return new ApiClient();
+    OkHttpClient provideOkHttpClient() {
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        if (BuildConfig.DEBUG) {
+            builder.addInterceptor(new NetworkInterceptor());
+        }
+        return builder.build();
+    }
+
+    @Provides
+    @Singleton
+    ApiClient provideApiClient(OkHttpClient client) {
+        return new ApiClient(client);
     }
 
     @Provides

@@ -21,7 +21,6 @@ import com.italankin.dictionary.BuildConfig;
 import com.italankin.dictionary.dto.Definition;
 import com.italankin.dictionary.dto.DicResult;
 import com.italankin.dictionary.dto.Language;
-import com.italankin.dictionary.utils.NetworkInterceptor;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Retention;
@@ -67,20 +66,14 @@ public class ApiClient {
         return lang;
     }
 
-    public ApiClient() {
-        OkHttpClient.Builder builder = new OkHttpClient.Builder();
-        if (BuildConfig.DEBUG) {
-            builder.addInterceptor(new NetworkInterceptor());
-        }
-        OkHttpClient okHttp = builder.build();
-
+    public ApiClient(OkHttpClient client) {
         GsonConverterFactory converter = GsonConverterFactory.create();
         RxJavaCallAdapterFactory adapter = RxJavaCallAdapterFactory.createWithScheduler(Schedulers.io());
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BuildConfig.BASE_URL)
                 .addCallAdapterFactory(adapter)
                 .addConverterFactory(converter)
-                .client(okHttp)
+                .client(client)
                 .build();
         mService = retrofit.create(ApiService.class);
     }

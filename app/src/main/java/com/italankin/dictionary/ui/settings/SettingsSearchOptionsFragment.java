@@ -20,6 +20,9 @@ import android.preference.PreferenceFragment;
 
 import com.italankin.dictionary.R;
 
+/**
+ * Additional fragment for settings screen. Displays search options.
+ */
 public class SettingsSearchOptionsFragment extends PreferenceFragment {
 
     @Override

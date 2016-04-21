@@ -26,6 +26,9 @@ import com.italankin.dictionary.R;
 
 import de.psdev.licensesdialog.LicensesDialog;
 
+/**
+ * Root fragment for settings screen.
+ */
 public class SettingsRootFragment extends PreferenceFragment {
 
     private Callbacks mCallbacks;
