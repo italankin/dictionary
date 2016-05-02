@@ -21,7 +21,7 @@ import com.italankin.dictionary.App;
 import com.italankin.dictionary.BuildConfig;
 import com.italankin.dictionary.api.ApiClient;
 import com.italankin.dictionary.di.RuntimeScope;
-import com.italankin.dictionary.ui.MainPresenter;
+import com.italankin.dictionary.ui.main.MainPresenter;
 import com.italankin.dictionary.utils.NetworkInterceptor;
 import com.italankin.dictionary.utils.SharedPrefs;
 

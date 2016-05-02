@@ -128,7 +128,7 @@ public class SharedPrefs {
     public boolean shouldUpdateLangs() {
         String savedLocale = mPreferences.getString(PREF_LANGS_LOCALE, null);
         String currentLocale = Locale.getDefault().getLanguage();
-        return !currentLocale.equals(savedLocale) || !hasLangsFile();
+        return currentLocale != null && !currentLocale.equals(savedLocale) || !hasLangsFile();
     }
 
     public boolean hasLangsFile() {

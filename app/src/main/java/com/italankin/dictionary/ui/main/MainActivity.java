@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.italankin.dictionary.ui;
+package com.italankin.dictionary.ui.main;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -47,8 +47,7 @@ import com.italankin.dictionary.App;
 import com.italankin.dictionary.R;
 import com.italankin.dictionary.dto.Result;
 import com.italankin.dictionary.dto.TranslationEx;
-import com.italankin.dictionary.ui.adapters.LanguageAdapter;
-import com.italankin.dictionary.ui.adapters.TranslationAdapter;
+import com.italankin.dictionary.ui.translation.TranslationActivity;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;

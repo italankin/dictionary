@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.italankin.dictionary.ui.adapters;
+package com.italankin.dictionary.ui.main;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Adapter class for displaying translations in {@link com.italankin.dictionary.ui.MainActivity}
+ * Adapter class for displaying translations in {@link MainActivity}
  */
 public class TranslationAdapter extends RecyclerView.Adapter<TranslationAdapter.ViewHolder> {
 

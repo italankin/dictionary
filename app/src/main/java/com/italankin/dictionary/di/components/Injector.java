@@ -16,7 +16,7 @@
 package com.italankin.dictionary.di.components;
 
 import com.italankin.dictionary.di.modules.MainModule;
-import com.italankin.dictionary.ui.MainActivity;
+import com.italankin.dictionary.ui.main.MainActivity;
 
 import javax.inject.Singleton;
 

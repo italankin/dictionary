@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.italankin.dictionary.ui;
+package com.italankin.dictionary.ui.translation;
 
 import android.content.Context;
 import android.content.Intent;
@@ -33,6 +33,7 @@ import android.widget.Toast;
 import com.italankin.dictionary.R;
 import com.italankin.dictionary.dto.Attribute;
 import com.italankin.dictionary.dto.TranslationEx;
+import com.italankin.dictionary.ui.main.MainActivity;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
