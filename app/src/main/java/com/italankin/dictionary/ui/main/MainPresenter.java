@@ -310,6 +310,13 @@ public class MainPresenter {
         return mPrefs.closeOnShare();
     }
 
+    /**
+     * @return should Back button move focus to the search field
+     */
+    public boolean backFocusSearchField() {
+        return mPrefs.backFocusSearch();
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Languages
     ///////////////////////////////////////////////////////////////////////////

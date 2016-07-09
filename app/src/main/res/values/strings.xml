@@ -45,6 +45,8 @@
     <string name="pref_close_on_share_sum">Only applies to main screen. Can behave differently among the apps</string>
     <string name="pref_open_source_libs">Open Source Libraries</string>
     <string name="pref_lookup_both">Lookup in both directions</string>
+    <string name="pref_back_focus">Focus search field</string>
+    <string name="pref_back_focus_sum">Move focus to the search field then pressing Back button</string>
     <string name="pref_yandex_dictionary">Powered by Yandex.Dictionary</string>
     <string name="pref_search_family">Family filter</string>
     <string name="pref_search_short_pos">Short parts of speech</string>

@@ -339,6 +339,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        if (_presenter.backFocusSearchField()) {
+            if (mInput.hasFocus()) {
+                super.onBackPressed();
+            } else {
+                mInput.requestFocus();
+                mInputManager.showSoftInput(mInput, 0);
+            }
+        } else {
+            super.onBackPressed();
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // ButterKnife
     ///////////////////////////////////////////////////////////////////////////
