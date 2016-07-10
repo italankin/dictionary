@@ -15,6 +15,8 @@
  */
 package com.italankin.dictionary.ui.main;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -40,6 +42,7 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -70,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int SWITCH_ANIM_DURATION = 450;
     private static final int SWAP_LANGS_ANIM_DURATION = 300;
+    private static final long PROGRESS_ANIM_DURATION = 500;
     private static final int TOOLBAR_ANIM_IN_DURATION = 700;
     private static final float INPUT_SCROLL_PARALLAX_FACTOR = 1.5f;
 
@@ -120,6 +124,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Bind(R.id.recycler_view)
     RecyclerView mRecyclerView;
+
+    @Bind(R.id.progress_bar)
+    ProgressBar mProgressBar;
     //endregion
 
     /**
@@ -563,6 +570,7 @@ public class MainActivity extends AppCompatActivity {
             _presenter.lookup(text);
             mInputManager.hideSoftInputFromWindow(mInput.getWindowToken(), 0);
             mInput.clearFocus();
+            showProgressBar();
         }
     }
 
@@ -641,7 +649,7 @@ public class MainActivity extends AppCompatActivity {
             mTranscription.setText("");
         }
         mRecyclerViewAdapter.setData(translations);
-
+        hideProgressBar();
         updateInputLayoutPosition();
     }
 
@@ -667,6 +675,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         snackbar.show();
+        hideProgressBar();
     }
 
     /**
@@ -689,6 +698,43 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         snackbar.show();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Utility
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Show the progress bar.
+     */
+    private void showProgressBar() {
+        if (mProgressBar.getVisibility() == View.INVISIBLE) {
+            mProgressBar.setAlpha(0);
+            mProgressBar.setVisibility(View.VISIBLE);
+        }
+        mProgressBar.animate()
+                .alpha(1)
+                .setListener(null)
+                .setDuration(PROGRESS_ANIM_DURATION)
+                .start();
+    }
+
+    /**
+     * Hide the progress bar.
+     */
+    private void hideProgressBar() {
+        if (mProgressBar.getVisibility() == View.VISIBLE) {
+            mProgressBar.animate()
+                    .alpha(0)
+                    .setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            mProgressBar.setVisibility(View.INVISIBLE);
+                        }
+                    })
+                    .setDuration(PROGRESS_ANIM_DURATION)
+                    .start();
+        }
     }
 
 }

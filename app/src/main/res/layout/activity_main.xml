@@ -29,9 +29,6 @@
             android:layout_height="@dimen/input_panel_height"
             android:background="#fff"
             android:orientation="vertical"
-            android:paddingBottom="8dp"
-            android:paddingLeft="16dp"
-            android:paddingRight="16dp"
             android:paddingTop="16dp">
 
             <EditText
@@ -40,6 +37,8 @@
                 android:layout_height="wrap_content"
                 android:layout_above="@+id/text_transcription"
                 android:layout_alignParentTop="true"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
                 android:background="@android:color/transparent"
                 android:gravity="top"
                 android:hint="@string/input_hint"
@@ -56,7 +55,8 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentLeft="true"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="16dp"
+                android:layout_marginLeft="16dp"
                 android:layout_toLeftOf="@+id/lookup"
                 android:textColor="@color/grey_light"
                 android:textSize="@dimen/text_size_medium"
@@ -68,6 +68,8 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentRight="true"
+                android:layout_marginBottom="8dp"
+                android:layout_marginRight="16dp"
                 android:background="@drawable/selector_dark"
                 android:padding="8dp"
                 android:text="@string/lookup"
@@ -75,6 +77,16 @@
                 android:textColor="@color/primary"
                 android:textSize="@dimen/text_size_medium"
                 android:textStyle="bold"/>
+
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="-7dp"
+                android:indeterminate="true"
+                android:visibility="invisible"/>
 
         </RelativeLayout>
 
