@@ -53,11 +53,6 @@ public class Result implements Parcelable {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        if (transcription != null && transcription.length() > 0) {
-            sb.append("[");
-            sb.append(transcription);
-            sb.append("]\n");
-        }
         if (translations != null && !translations.isEmpty()) {
             TranslationEx t;
             for (int i = 0; i < translations.size(); i++) {

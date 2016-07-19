@@ -299,6 +299,16 @@ public class MainPresenter {
         return result;
     }
 
+    public String[] getShareResult() {
+        String[] result = new String[2];
+        result[0] = mLastResult.text;
+        if(mPrefs.shareIncludeTranscription()) {
+            result[0] = result[0] + " [" + mLastResult.transcription + "]";
+        }
+        result[1] = mLastResult.toString();
+        return result;
+    }
+
     public void loadHistory(int position) {
         mRef.get().onLookupResult(mResults.get(position));
     }

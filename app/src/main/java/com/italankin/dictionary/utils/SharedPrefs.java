@@ -47,6 +47,7 @@ public class SharedPrefs {
     private static String PREF_LOOKUP_REVERSE;
     private static String PREF_BACK_FOCUS;
     private static String PREF_CLOSE_ON_SHARE;
+    private static String PREF_INCLUDE_TRANSCRIPTION;
     private static String PREF_FILTER_FAMILY;
     private static String PREF_FILTER_SHORT_POS;
     private static String PREF_FILTER_MORPHO;
@@ -64,6 +65,7 @@ public class SharedPrefs {
         PREF_LOOKUP_REVERSE = context.getString(R.string.pref_key_lookup_reverse);
         PREF_BACK_FOCUS = context.getString(R.string.pref_key_back_focus);
         PREF_CLOSE_ON_SHARE = context.getString(R.string.pref_key_close_on_share);
+        PREF_INCLUDE_TRANSCRIPTION = context.getString(R.string.pref_key_include_transcription);
         PREF_FILTER_FAMILY = context.getString(R.string.pref_key_filter_family);
         PREF_FILTER_SHORT_POS = context.getString(R.string.pref_key_filter_short_pos);
         PREF_FILTER_MORPHO = context.getString(R.string.pref_key_filter_morpho);
@@ -157,6 +159,10 @@ public class SharedPrefs {
 
     public boolean closeOnShare() {
         return mPreferences.getBoolean(PREF_CLOSE_ON_SHARE, false);
+    }
+
+    public boolean shareIncludeTranscription() {
+        return mPreferences.getBoolean(PREF_INCLUDE_TRANSCRIPTION, false);
     }
 
     public int getSearchFilter() {

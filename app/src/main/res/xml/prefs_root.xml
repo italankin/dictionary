@@ -25,6 +25,12 @@
 
         <SwitchPreference
             android:defaultValue="false"
+            android:key="@string/pref_key_include_transcription"
+            android:summary="@string/pref_include_transcription_sum"
+            android:title="@string/pref_include_transcription"/>
+
+        <SwitchPreference
+            android:defaultValue="false"
             android:key="@string/pref_key_close_on_share"
             android:summary="@string/pref_close_on_share_sum"
             android:title="@string/pref_close_on_share"/>

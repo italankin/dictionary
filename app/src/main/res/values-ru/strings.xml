@@ -51,4 +51,6 @@
     <string name="pref_search_pos_sum">Включает фильтр соответствия частей речи искомого слова и перевода</string>
     <string name="pref_back_focus">Фокусировка на поле поиска</string>
     <string name="pref_back_focus_sum">Перемещать фокус в поле поиска при нажатии на кнопку Назад</string>
+    <string name="pref_include_transcription">Включать транскрипцию</string>
+    <string name="pref_include_transcription_sum">Транскрипция будет включена в текст</string>
 </resources>
