@@ -50,6 +50,7 @@ import com.italankin.dictionary.App;
 import com.italankin.dictionary.R;
 import com.italankin.dictionary.dto.Result;
 import com.italankin.dictionary.dto.TranslationEx;
+import com.italankin.dictionary.ui.settings.SettingsActivity;
 import com.italankin.dictionary.ui.translation.TranslationActivity;
 
 import java.util.List;
@@ -438,8 +439,7 @@ public class MainActivity extends AppCompatActivity {
                 return true;
 
             case R.id.action_settings:
-                Intent intent = new Intent("com.italankin.dictionary.SETTINGS");
-                startActivity(intent);
+                startActivity(SettingsActivity.getStartIntent(this));
                 return true;
         }
 

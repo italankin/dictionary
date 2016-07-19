@@ -17,6 +17,8 @@ package com.italankin.dictionary.ui.settings;
 
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -39,6 +41,10 @@ public class SettingsActivity extends AppCompatActivity implements SettingsRootF
     Toolbar toolbar;
 
     private FragmentManager mManager;
+
+    public static Intent getStartIntent(Context context) {
+        return new Intent(context, SettingsActivity.class);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

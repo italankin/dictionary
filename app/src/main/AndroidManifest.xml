@@ -42,11 +42,6 @@
         <activity
             android:name=".ui.settings.SettingsActivity"
             android:label="@string/settings">
-
-            <intent-filter>
-                <category android:name="android.intent.category.DEFAULT"/>
-                <action android:name="com.italankin.dictionary.SETTINGS"/>
-            </intent-filter>
         </activity>
 
     </application>
