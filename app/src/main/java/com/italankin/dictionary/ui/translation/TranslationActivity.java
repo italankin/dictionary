@@ -35,7 +35,7 @@ import com.italankin.dictionary.dto.Attribute;
 import com.italankin.dictionary.dto.TranslationEx;
 import com.italankin.dictionary.ui.main.MainActivity;
 
-import butterknife.Bind;
+import butterknife.BindView;
 import butterknife.ButterKnife;
 
 /**
@@ -48,22 +48,22 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
     private TranslationEx mData;
 
     //region Views
-    @Bind(R.id.toolbar)
+    @BindView(R.id.toolbar)
     Toolbar toolbar;
 
-    @Bind(R.id.text_translation)
+    @BindView(R.id.text_translation)
     TextView textTrans;
 
-    @Bind(R.id.text_position)
+    @BindView(R.id.text_position)
     TextView textPos;
 
-    @Bind(R.id.card_means)
+    @BindView(R.id.card_means)
     View layoutMeans;
 
-    @Bind(R.id.card_synonyms)
+    @BindView(R.id.card_synonyms)
     View layoutSynonyms;
 
-    @Bind(R.id.card_examples)
+    @BindView(R.id.card_examples)
     View layoutExamples;
     //endregion
 

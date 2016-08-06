@@ -26,7 +26,7 @@ import android.view.View;
 
 import com.italankin.dictionary.R;
 
-import butterknife.Bind;
+import butterknife.BindView;
 import butterknife.ButterKnife;
 
 /**
@@ -37,7 +37,7 @@ public class SettingsActivity extends AppCompatActivity implements SettingsRootF
     public static final String TAG_ROOT = "root";
     public static final String TAG_SEARCH_OPTIONS = "search_options";
 
-    @Bind(R.id.toolbar)
+    @BindView(R.id.toolbar)
     Toolbar toolbar;
 
     private FragmentManager mManager;

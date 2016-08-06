@@ -61,7 +61,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
-import butterknife.Bind;
+import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnFocusChange;
@@ -89,49 +89,49 @@ public class MainActivity extends AppCompatActivity {
     MainPresenter _presenter;
 
     //region Views
-    @Bind(R.id.toolbar)
+    @BindView(R.id.toolbar)
     Toolbar toolbar;
 
     /**
      * EditText for text input
      */
-    @Bind(R.id.edit_input)
+    @BindView(R.id.edit_input)
     EditText mInput;
 
-    @Bind(R.id.input_card)
+    @BindView(R.id.input_card)
     View mInputLayout;
 
     /**
      * TextView in toolbar indicating current destination language
      */
-    @Bind(R.id.spinner_lang_source)
+    @BindView(R.id.spinner_lang_source)
     Spinner mSpinnerSource;
 
     /**
      * TextView in toolbar indicating current source language
      */
-    @Bind(R.id.spinner_lang_dest)
+    @BindView(R.id.spinner_lang_dest)
     Spinner mSpinnerDest;
 
     /**
      * Arrow in the toolbar for switching languages
      */
-    @Bind(R.id.swap_langs)
+    @BindView(R.id.swap_langs)
     View mSwapLangs;
 
-    @Bind(R.id.lookup)
+    @BindView(R.id.lookup)
     View mLookup;
 
-    @Bind(R.id.text_transcription)
+    @BindView(R.id.text_transcription)
     TextView mTranscription;
 
-    @Bind(R.id.toolbar_inner_layout)
+    @BindView(R.id.toolbar_inner_layout)
     View mToolbarInnerLayout;
 
-    @Bind(R.id.recycler_view)
+    @BindView(R.id.recycler_view)
     RecyclerView mRecyclerView;
 
-    @Bind(R.id.progress_bar)
+    @BindView(R.id.progress_bar)
     ProgressBar mProgressBar;
     //endregion
 
