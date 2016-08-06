@@ -3,6 +3,9 @@ language: android
 git:
     depth: 3
 
+jdk:
+  - oraclejdk8
+
 android:
   components:
     - tools
