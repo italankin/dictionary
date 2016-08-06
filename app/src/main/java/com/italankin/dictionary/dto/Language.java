@@ -57,4 +57,20 @@ public class Language implements Comparable<Language> {
         return this.name.compareTo(another.name);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Language language = (Language) o;
+
+        return code.equals(language.code);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return code.hashCode();
+    }
+
 }

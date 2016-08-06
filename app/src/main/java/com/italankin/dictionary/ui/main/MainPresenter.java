@@ -28,8 +28,8 @@ import com.italankin.dictionary.utils.SharedPrefs;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
@@ -47,7 +47,7 @@ import rx.schedulers.Schedulers;
  */
 public class MainPresenter {
 
-    private static final String TAG = "[" + MainPresenter.class.getSimpleName() + "]";
+    private static final String TAG = "[MainPresenter]";
 
     /**
      * Reference to attached activity
@@ -84,7 +84,7 @@ public class MainPresenter {
     private Subscription mSubLookup;
 
     private Result mLastResult;
-    private LinkedList<Result> mResults = new LinkedList<>();
+    private final ArrayList<Result> mResults = new ArrayList<>();
 
     public MainPresenter(ApiClient client, SharedPrefs prefs) {
         mClient = client;
@@ -127,7 +127,7 @@ public class MainPresenter {
     public void loadLanguages() {
         if (mDest != null && mSource != null) {
             MainActivity a = mRef.get();
-            a.onLanguagesResult();
+            a.onLanguagesResult(mLangs, getDestLanguageIndex(), getSourceLanguageIndex());
             return;
         }
 
@@ -184,8 +184,12 @@ public class MainPresenter {
         if (!list.isEmpty()) {
             setSourceLanguageByCode(mPrefs.getSourceLang());
             setDestLanguageByCode(mPrefs.getDestLang());
-            sortLanguagesList();
+            sortLanguages();
         }
+    }
+
+    public void sortLanguages() {
+        Collections.sort(mLangs);
     }
 
     /**
@@ -196,7 +200,7 @@ public class MainPresenter {
         public void call(Object o) {
             MainActivity a = mRef.get();
             if (a != null) {
-                a.onLanguagesResult();
+                a.onLanguagesResult(mLangs, getDestLanguageIndex(), getSourceLanguageIndex());
             }
             mSubLangs.unsubscribe();
         }
@@ -299,18 +303,18 @@ public class MainPresenter {
         return result;
     }
 
+    public void loadHistory(int position) {
+        mRef.get().onLookupResult(mResults.get(position));
+    }
+
     public String[] getShareResult() {
         String[] result = new String[2];
         result[0] = mLastResult.text;
-        if(mPrefs.shareIncludeTranscription()) {
+        if (mPrefs.shareIncludeTranscription()) {
             result[0] = result[0] + " [" + mLastResult.transcription + "]";
         }
         result[1] = mLastResult.toString();
         return result;
-    }
-
-    public void loadHistory(int position) {
-        mRef.get().onLookupResult(mResults.get(position));
     }
 
     /**
@@ -390,34 +394,12 @@ public class MainPresenter {
         mPrefs.setDestLang(mDest);
     }
 
-    /**
-     * @return list of the available languages.
-     */
-    public List<Language> getLanguagesList() {
-        return mLangs;
+    public int getSourceLanguageIndex() {
+        return mLangs.indexOf(mSource);
     }
 
-    /**
-     * Sort language list.
-     *
-     * @see Language#compareTo(Language)
-     */
-    public void sortLanguagesList() {
-        Collections.sort(mLangs);
-    }
-
-    /**
-     * @return currently set source language
-     */
-    public Language getSourceLanguage() {
-        return mSource;
-    }
-
-    /**
-     * @return currently set destination language
-     */
-    public Language getDestLanguage() {
-        return mDest;
+    public int getDestLanguageIndex() {
+        return mLangs.indexOf(mDest);
     }
 
     /**

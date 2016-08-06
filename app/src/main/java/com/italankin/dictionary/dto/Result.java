@@ -71,8 +71,20 @@ public class Result implements Parcelable {
         return sb.toString();
     }
 
-    public boolean isEmpty() {
-        return rawResult == null || rawResult.isEmpty();
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Result result = (Result) o;
+
+        return text.equals(result.text);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return text.hashCode();
     }
 
     ///////////////////////////////////////////////////////////////////////////

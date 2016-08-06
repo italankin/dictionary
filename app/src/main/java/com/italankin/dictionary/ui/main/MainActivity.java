@@ -40,14 +40,17 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.animation.DecelerateInterpolator;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.italankin.dictionary.App;
 import com.italankin.dictionary.R;
+import com.italankin.dictionary.dto.Language;
 import com.italankin.dictionary.dto.Result;
 import com.italankin.dictionary.dto.TranslationEx;
 import com.italankin.dictionary.ui.settings.SettingsActivity;
@@ -70,13 +73,15 @@ import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
+import static android.widget.AdapterView.OnItemSelectedListener;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final int SWITCH_ANIM_DURATION = 450;
     private static final int SWAP_LANGS_ANIM_DURATION = 300;
     private static final long PROGRESS_ANIM_DURATION = 500;
     private static final int TOOLBAR_ANIM_IN_DURATION = 700;
-    private static final float INPUT_SCROLL_PARALLAX_FACTOR = 1.5f;
+    private static final float INPUT_SCROLL_PARALLAX_FACTOR = 1.2f;
 
     private static final int REQUEST_CODE_SHARE = 17;
 
@@ -99,14 +104,14 @@ public class MainActivity extends AppCompatActivity {
     /**
      * TextView in toolbar indicating current destination language
      */
-    @Bind(R.id.text_to)
-    TextView mTextDest;
+    @Bind(R.id.spinner_lang_source)
+    Spinner mSpinnerSource;
 
     /**
      * TextView in toolbar indicating current source language
      */
-    @Bind(R.id.text_from)
-    TextView mTextSource;
+    @Bind(R.id.spinner_lang_dest)
+    Spinner mSpinnerDest;
 
     /**
      * Arrow in the toolbar for switching languages
@@ -129,15 +134,6 @@ public class MainActivity extends AppCompatActivity {
     @Bind(R.id.progress_bar)
     ProgressBar mProgressBar;
     //endregion
-
-    /**
-     * Adapter used to display source languages
-     */
-    private LanguageAdapter mLangsSourceAdapter;
-    /**
-     * Adapter used to display destination languages
-     */
-    private LanguageAdapter mLangsDestAdapter;
 
     /**
      * Used to implement debouce mechanism via publishing lookup requests to this object
@@ -385,16 +381,6 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    @OnClick(R.id.text_to)
-    void onDestLangClick() {
-        showDestLanguageDialog();
-    }
-
-    @OnClick(R.id.text_from)
-    void onSourceLangClick() {
-        showSourceLanguageDialog();
-    }
-
     @OnClick(R.id.swap_langs)
     void onSwapLangsClick() {
         swapLanguages();
@@ -446,13 +432,6 @@ public class MainActivity extends AppCompatActivity {
     // Views update
     ///////////////////////////////////////////////////////////////////////////
 
-    private void updateTextViews() {
-        String source = _presenter.getSourceLanguage().getName();
-        mTextSource.setText(source);
-        String dest = _presenter.getDestLanguage().getName();
-        mTextDest.setText(dest);
-    }
-
     /**
      * Sync scroll state of the top layout.
      */
@@ -476,50 +455,6 @@ public class MainActivity extends AppCompatActivity {
     ///////////////////////////////////////////////////////////////////////////
     // Dialogs
     ///////////////////////////////////////////////////////////////////////////
-
-    /**
-     * Show dialog for choosing source language.
-     */
-    public void showSourceLanguageDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.source);
-        if (mLangsSourceAdapter == null) {
-            mLangsSourceAdapter = new LanguageAdapter(this, _presenter.getLanguagesList());
-        }
-        _presenter.sortLanguagesList();
-        mLangsSourceAdapter.notifyDataSetChanged();
-        builder.setAdapter(mLangsSourceAdapter, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                _presenter.setSourceLanguage(which);
-                updateTextViews();
-            }
-        });
-        builder.setNegativeButton(android.R.string.cancel, null);
-        builder.show();
-    }
-
-    /**
-     * Show dialog for choosing destination language.
-     */
-    public void showDestLanguageDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.destination);
-        if (mLangsDestAdapter == null) {
-            mLangsDestAdapter = new LanguageAdapter(this, _presenter.getLanguagesList());
-        }
-        _presenter.sortLanguagesList();
-        mLangsDestAdapter.notifyDataSetChanged();
-        builder.setAdapter(mLangsDestAdapter, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                _presenter.setDestLanguage(which);
-                updateTextViews();
-            }
-        });
-        builder.setNegativeButton(android.R.string.cancel, null);
-        builder.show();
-    }
 
     private void showHistoryDialog() {
         final String[] values = _presenter.getHistory();
@@ -572,8 +507,42 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Called from {@link MainPresenter}, when languages were fetched from cache/net.
+     *
+     * @param languages   list of languages
+     * @param destIndex   selected dest index
+     * @param sourceIndex selected source index
      */
-    public void onLanguagesResult() {
+    public void onLanguagesResult(List<Language> languages, int destIndex, int sourceIndex) {
+        LanguageAdapter adapter = new LanguageAdapter(this, languages);
+        mSpinnerSource.setAdapter(adapter);
+        mSpinnerSource.setSelection(sourceIndex);
+        mSpinnerSource.setOnItemSelectedListener(new OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                _presenter.setSourceLanguage(position);
+                lookupNext(mInput.getText().toString());
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+        mSpinnerDest.setAdapter(adapter);
+        mSpinnerDest.setSelection(destIndex);
+        mSpinnerDest.setOnItemSelectedListener(new OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                _presenter.setDestLanguage(position);
+                lookupNext(mInput.getText().toString());
+                _presenter.sortLanguages();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                _presenter.sortLanguages();
+            }
+        });
+
         mToolbarInnerLayout.setVisibility(View.VISIBLE);
         mToolbarInnerLayout.setTranslationY(-mToolbarInnerLayout.getHeight());
         mToolbarInnerLayout.setAlpha(0);
@@ -585,7 +554,6 @@ public class MainActivity extends AppCompatActivity {
                 .start();
 
         setControlsState(true);
-        updateTextViews();
 
         // if we are not coming from share intent
         if (!handleIntent(getIntent())) {
@@ -616,18 +584,29 @@ public class MainActivity extends AppCompatActivity {
                 .setDuration(SWAP_LANGS_ANIM_DURATION)
                 .start();
 
-        SwitchAnimation anim = new SwitchAnimation(mTextSource,
-                mTextSource.getHeight(),
+        mSpinnerDest.setEnabled(false);
+        mSpinnerSource.setEnabled(false);
+        SwitchAnimation anim = new SwitchAnimation(mSpinnerDest,
+                -mSpinnerDest.getHeight(),
                 0f,
                 SWITCH_ANIM_DURATION,
                 new SwitchAnimation.OnSwitchListener() {
                     @Override
                     public void onSwitch() {
-                        updateTextViews();
+                        OnItemSelectedListener listener = mSpinnerDest.getOnItemSelectedListener();
+                        mSpinnerDest.setOnItemSelectedListener(null);
+                        mSpinnerDest.setSelection(_presenter.getDestLanguageIndex());
+                        mSpinnerDest.setOnItemSelectedListener(listener);
+                        listener = mSpinnerSource.getOnItemSelectedListener();
+                        mSpinnerSource.setOnItemSelectedListener(null);
+                        mSpinnerSource.setSelection(_presenter.getSourceLanguageIndex());
+                        mSpinnerSource.setOnItemSelectedListener(listener);
+                        mSpinnerDest.setEnabled(true);
+                        mSpinnerSource.setEnabled(true);
                     }
                 });
         anim.start();
-        anim = new SwitchAnimation(mTextDest, -mTextDest.getHeight(), 0, SWITCH_ANIM_DURATION, null);
+        anim = new SwitchAnimation(mSpinnerSource, mSpinnerSource.getHeight(), 0, SWITCH_ANIM_DURATION, null);
         anim.start();
     }
 

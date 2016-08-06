@@ -15,65 +15,96 @@
  */
 package com.italankin.dictionary.ui.main;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import com.italankin.dictionary.R;
 import com.italankin.dictionary.dto.Language;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
  * Adapter for language list.
  */
-public class LanguageAdapter extends ArrayAdapter<Language> implements View.OnClickListener {
+public class LanguageAdapter extends BaseAdapter implements CompoundButton.OnCheckedChangeListener {
 
-    private LayoutInflater inflater;
-    private List<Language> list;
+    private final LayoutInflater inflater;
+    private final List<Language> dataset;
 
-    public LanguageAdapter(Context context, List<Language> list) {
-        super(context, 0, list);
+    public LanguageAdapter(Context context, List<Language> dataset) {
         this.inflater = LayoutInflater.from(context);
-        this.list = list;
+        if (dataset == null) {
+            this.dataset = Collections.emptyList();
+        } else {
+            this.dataset = dataset;
+        }
     }
 
     @Override
+    @SuppressLint("ViewHolder") // As there's only one selected item, VH is not necessary
     public View getView(int position, View convertView, ViewGroup parent) {
-        ViewHolder holder;
         Language item = getItem(position);
+        convertView = inflater.inflate(R.layout.item_spinner_language, parent, false);
+        TextView text = (TextView) convertView.findViewById(R.id.text);
+        text.setText(item.getName());
+        return convertView;
+    }
+
+    @Override
+    public View getDropDownView(int position, View convertView, ViewGroup parent) {
+        ViewHolder holder;
 
         if (convertView == null) {
-            convertView = inflater.inflate(R.layout.item_language, parent, false);
+            convertView = inflater.inflate(R.layout.item_spinner_language_dropdown, parent, false);
             holder = new ViewHolder();
-            holder.name = (TextView) convertView.findViewById(R.id.text_lang);
-            holder.fav = (CheckBox) convertView.findViewById(R.id.cb_fav);
-            holder.fav.setOnClickListener(this);
+            holder.text = (TextView) convertView.findViewById(R.id.text);
+            holder.checkBox = (CheckBox) convertView.findViewById(R.id.checkbox);
+            holder.checkBox.setOnCheckedChangeListener(this);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
 
-        holder.name.setText(item.getName());
-        holder.fav.setChecked(item.isFavorite());
-        holder.fav.setTag(position);
+        Language item = getItem(position);
+        holder.text.setText(item.getName());
+        holder.checkBox.setTag(item);
+        holder.checkBox.setChecked(item.isFavorite());
 
         return convertView;
     }
 
     @Override
-    public void onClick(View v) {
-        Language item = list.get((int) v.getTag());
-        item.setFavorite(!item.isFavorite());
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        Language lang = (Language) buttonView.getTag();
+        lang.setFavorite(isChecked);
+    }
+
+    @Override
+    public int getCount() {
+        return dataset.size();
+    }
+
+    @Override
+    public Language getItem(int position) {
+        return dataset.get(position);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return getItem(position).hashCode();
     }
 
     private static class ViewHolder {
-        public TextView name;
-        public CheckBox fav;
+        public TextView text;
+        public CheckBox checkBox;
     }
 
 }

@@ -109,28 +109,15 @@
             android:visibility="invisible"
             tools:visibility="visible">
 
-            <FrameLayout
+            <Spinner
+                android:id="@+id/spinner_lang_source"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentLeft="true"
-                android:layout_centerVertical="true">
-
-                <TextView
-                    android:id="@+id/text_from"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/selector_rect"
-                    android:drawablePadding="4dp"
-                    android:drawableRight="@drawable/ic_expand_more"
-                    android:ellipsize="end"
-                    android:gravity="left"
-                    android:maxLines="1"
-                    android:padding="6dp"
-                    android:textColor="#fff"
-                    android:textSize="@dimen/text_size_medium"
-                    tools:text="English"/>
-
-            </FrameLayout>
+                android:layout_centerVertical="true"
+                android:layout_toLeftOf="@+id/swap_langs"
+                android:popupBackground="#fff"
+                tools:listitem="@layout/item_spinner_language"/>
 
             <ImageView
                 android:id="@+id/swap_langs"
@@ -143,30 +130,16 @@
                 android:scaleType="center"
                 android:src="@drawable/ic_swap_horiz"/>
 
-            <FrameLayout
+            <Spinner
+                android:id="@+id/spinner_lang_dest"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
                 android:layout_centerVertical="true"
-                android:layout_toRightOf="@id/swap_langs">
-
-                <TextView
-                    android:id="@+id/text_to"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="right"
-                    android:background="@drawable/selector_rect"
-                    android:drawablePadding="4dp"
-                    android:drawableRight="@drawable/ic_expand_more"
-                    android:ellipsize="end"
-                    android:gravity="right"
-                    android:maxLines="1"
-                    android:padding="6dp"
-                    android:textColor="#fff"
-                    android:textSize="@dimen/text_size_medium"
-                    tools:text="English"/>
-
-            </FrameLayout>
+                android:layout_toLeftOf="@+id/swap_langs"
+                android:layout_toRightOf="@+id/swap_langs"
+                android:popupBackground="#fff"
+                tools:listitem="@layout/item_spinner_language"/>
 
         </RelativeLayout>
 
