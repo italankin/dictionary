@@ -406,14 +406,18 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_share:
-                String[] result = _presenter.getShareResult();
-                Intent intent = ShareCompat.IntentBuilder
-                        .from(this)
-                        .setType("text/plain")
-                        .setSubject(result[0])
-                        .setText(result[1])
-                        .createChooserIntent();
-                startActivityForResult(intent, REQUEST_CODE_SHARE);
+                if (_presenter.getLastResult() == null) {
+                    Toast.makeText(MainActivity.this, R.string.error_share, Toast.LENGTH_SHORT).show();
+                } else {
+                    String[] result = _presenter.getShareResult();
+                    Intent intent = ShareCompat.IntentBuilder
+                            .from(this)
+                            .setType("text/plain")
+                            .setSubject(result[0])
+                            .setText(result[1])
+                            .createChooserIntent();
+                    startActivityForResult(intent, REQUEST_CODE_SHARE);
+                }
                 return true;
 
             case R.id.action_history:
