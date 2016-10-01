@@ -13,7 +13,7 @@ android {
         minSdkVersion 14
         targetSdkVersion 24
         versionCode 13
-        versionName '1.6.0'
+        versionName '1.6.1'
         archivesBaseName = "dictionary-$versionName"
     }
 

@@ -28,7 +28,7 @@
     <string name="error_share">Nothing to share</string>
     <string name="error_no_connection">No connection</string>
     <string name="error_no_results">No results</string>
-    <string name="error_langs">Cannot fetch languages</string>
+    <string name="error_langs">Cannot load languages</string>
     <string name="error_lang_not_supported">Translation direction is not supported</string>
     <string name="error_long_request">Query text is too long</string>
     <string name="error_no_app">No suitable application</string>
