@@ -27,8 +27,6 @@
     <string name="pref_lookup_both">Поиск в обоих направлениях</string>
     <string name="pref_yandex_dictionary">Яндекс.Словарь</string>
     <string name="retry">Повтор</string>
-    <string name="settings">Настройки</string>
-    <string name="source">Язык оригинала</string>
     <string name="error_langs">Ошибка при получении списка языков</string>
     <string name="synonyms">Синонимы</string>
     <string name="translaton">Перевод</string>
