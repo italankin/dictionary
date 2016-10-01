@@ -707,6 +707,9 @@ public class MainActivity extends AppCompatActivity {
     // Utility
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Share last result (currently displaying to user).
+     */
     private void shareLastResult() {
         if (_presenter.getLastResult() == null) {
             Toast.makeText(MainActivity.this, R.string.error_share, Toast.LENGTH_SHORT).show();
