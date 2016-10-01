@@ -25,6 +25,7 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ShareCompat;
 import android.support.v7.app.AlertDialog;
@@ -79,8 +80,9 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int SWITCH_ANIM_DURATION = 450;
     private static final int SWAP_LANGS_ANIM_DURATION = 300;
-    private static final long PROGRESS_ANIM_DURATION = 500;
-    private static final int TOOLBAR_ANIM_IN_DURATION = 700;
+    private static final long PROGRESS_ANIM_DURATION = 300;
+    private static final int TOOLBAR_ANIM_IN_DURATION = 600;
+    private static final int SHARE_FAB_ANIM_DURATION = 300;
     private static final float INPUT_SCROLL_PARALLAX_FACTOR = 1.2f;
 
     private static final int REQUEST_CODE_SHARE = 17;
@@ -133,6 +135,9 @@ public class MainActivity extends AppCompatActivity {
 
     @BindView(R.id.progress_bar)
     ProgressBar mProgressBar;
+
+    @BindView(R.id.btn_share)
+    FloatingActionButton mShareFab;
     //endregion
 
     /**
@@ -168,6 +173,7 @@ public class MainActivity extends AppCompatActivity {
         mClipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 
         _presenter.attach(this);
+        _presenter.onRestoreState(savedInstanceState);
 
         setSupportActionBar(toolbar);
         setupInputLayout();
@@ -196,18 +202,19 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        top = getResources().getDimensionPixelSize(R.dimen.list_top_offset);
-        int inputHeight = getResources().getDimensionPixelSize(R.dimen.input_panel_height);
+        top = res.getDimensionPixelSize(R.dimen.list_top_offset);
+        int inputHeight = res.getDimensionPixelSize(R.dimen.input_panel_height);
         mRecyclerView.setPadding(
                 mRecyclerView.getPaddingLeft(),
                 inputHeight + top,
                 mRecyclerView.getPaddingRight(),
-                mRecyclerView.getPaddingBottom()
+                res.getDimensionPixelSize(R.dimen.list_padding_bottom)
         );
 
         // on click listener
 
         mRecyclerViewAdapter = new TranslationAdapter(this);
+        mRecyclerViewAdapter.setHasStableIds(true);
         mRecyclerViewAdapter.setListener(new TranslationAdapter.OnAdapterItemClickListener() {
             @Override
             public void onItemClick(int position) {
@@ -299,6 +306,25 @@ public class MainActivity extends AppCompatActivity {
                         startLookup(s);
                     }
                 });
+        if (_presenter.showShareFab()) {
+            if (_presenter.getLastResult() != null && mShareFab.getVisibility() != View.VISIBLE) {
+                showShareFab();
+            }
+        } else {
+            mShareFab.setVisibility(View.GONE);
+            mRecyclerView.setPadding(
+                    mRecyclerView.getPaddingLeft(),
+                    mRecyclerView.getPaddingTop(),
+                    mRecyclerView.getPaddingRight(),
+                    getResources().getDimensionPixelSize(R.dimen.list_padding_bottom)
+            );
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        _presenter.onSaveState(outState);
     }
 
     @Override
@@ -392,6 +418,11 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    @OnClick(R.id.btn_share)
+    void onShareFabClick() {
+        shareLastResult();
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Options menu
     ///////////////////////////////////////////////////////////////////////////
@@ -406,18 +437,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_share:
-                if (_presenter.getLastResult() == null) {
-                    Toast.makeText(MainActivity.this, R.string.error_share, Toast.LENGTH_SHORT).show();
-                } else {
-                    String[] result = _presenter.getShareResult();
-                    Intent intent = ShareCompat.IntentBuilder
-                            .from(this)
-                            .setType("text/plain")
-                            .setSubject(result[0])
-                            .setText(result[1])
-                            .createChooserIntent();
-                    startActivityForResult(intent, REQUEST_CODE_SHARE);
-                }
+                shareLastResult();
                 return true;
 
             case R.id.action_history:
@@ -474,7 +494,7 @@ public class MainActivity extends AppCompatActivity {
         builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                _presenter.loadHistory(which);
+                _presenter.lookup(values[which]);
             }
         });
         builder.show();
@@ -502,10 +522,11 @@ public class MainActivity extends AppCompatActivity {
         text = text.replaceAll("[^\\p{L}\\w -]", " ").trim();
         mInput.setText(text);
         if (text.length() > 0) {
-            _presenter.lookup(text);
-            mInputManager.hideSoftInputFromWindow(mInput.getWindowToken(), 0);
-            mInput.clearFocus();
-            showProgressBar();
+            if (_presenter.lookup(text)) {
+                showProgressBar();
+                mInputManager.hideSoftInputFromWindow(mInput.getWindowToken(), 0);
+                mInput.clearFocus();
+            }
         }
     }
 
@@ -630,6 +651,9 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerViewAdapter.setData(translations);
         hideProgressBar();
         updateInputLayoutPosition();
+        if (_presenter.showShareFab() && mShareFab.getVisibility() != View.VISIBLE) {
+            showShareFab();
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -660,7 +684,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Show error when no results were received.
      */
-    public void onNoResults() {
+    public void onEmptyResult() {
         onError(getString(R.string.error_no_results));
     }
 
@@ -682,6 +706,21 @@ public class MainActivity extends AppCompatActivity {
     ///////////////////////////////////////////////////////////////////////////
     // Utility
     ///////////////////////////////////////////////////////////////////////////
+
+    private void shareLastResult() {
+        if (_presenter.getLastResult() == null) {
+            Toast.makeText(MainActivity.this, R.string.error_share, Toast.LENGTH_SHORT).show();
+        } else {
+            String[] result = _presenter.getShareResult();
+            Intent intent = ShareCompat.IntentBuilder
+                    .from(this)
+                    .setType("text/plain")
+                    .setSubject(result[0])
+                    .setText(result[1])
+                    .createChooserIntent();
+            startActivityForResult(intent, REQUEST_CODE_SHARE);
+        }
+    }
 
     /**
      * Show the progress bar.
@@ -714,6 +753,32 @@ public class MainActivity extends AppCompatActivity {
                     .setDuration(PROGRESS_ANIM_DURATION)
                     .start();
         }
+    }
+
+    /**
+     * Show share button.
+     */
+    private void showShareFab() {
+        Resources res = getResources();
+        int bottom = res.getDimensionPixelSize(R.dimen.list_padding_bottom);
+        int margin = res.getDimensionPixelSize(R.dimen.fab_share_margin);
+        int size = res.getDimensionPixelSize(R.dimen.fab_share_size);
+        bottom += margin * 2 + size;
+        mRecyclerView.setPadding(
+                mRecyclerView.getPaddingLeft(),
+                mRecyclerView.getPaddingTop(),
+                mRecyclerView.getPaddingRight(),
+                bottom
+        );
+        mShareFab.setVisibility(View.VISIBLE);
+        mShareFab.setScaleX(0);
+        mShareFab.setScaleY(0);
+        mShareFab.animate()
+                .scaleX(1)
+                .scaleY(1)
+                .setDuration(SHARE_FAB_ANIM_DURATION)
+                .setInterpolator(new DecelerateInterpolator(2))
+                .start();
     }
 
 }

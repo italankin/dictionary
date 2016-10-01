@@ -24,6 +24,12 @@
     <PreferenceCategory android:title="@string/pref_cat_sharing">
 
         <SwitchPreference
+            android:defaultValue="true"
+            android:key="@string/pref_key_show_share_fab"
+            android:summary="@string/pref_show_share_fab_sub"
+            android:title="@string/pref_show_share_fab"/>
+
+        <SwitchPreference
             android:defaultValue="false"
             android:key="@string/pref_key_include_transcription"
             android:summary="@string/pref_include_transcription_sum"

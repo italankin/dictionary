@@ -53,4 +53,6 @@
     <string name="pref_back_focus_sum">Перемещать фокус в поле поиска при нажатии на кнопку Назад</string>
     <string name="pref_include_transcription">Включать транскрипцию</string>
     <string name="pref_include_transcription_sum">Транскрипция будет включена в текст</string>
+    <string name="pref_show_share_fab">Кнопка \"Поделиться\"</string>
+    <string name="pref_show_share_fab_sub">Показывать кнопку \"Поделиться\" для быстрого доступа</string>
 </resources>

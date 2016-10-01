@@ -3,7 +3,7 @@ apply plugin: 'com.neenbedankt.android-apt'
 
 android {
     compileSdkVersion 24
-    buildToolsVersion '24.0.1'
+    buildToolsVersion '24.0.3'
 
     def DEBUG = readProps('app/config/debug.properties')
     def RELEASE = readProps('app/config/release.properties')
@@ -12,8 +12,8 @@ android {
         applicationId 'com.italankin.dictionary'
         minSdkVersion 14
         targetSdkVersion 24
-        versionCode 12
-        versionName '1.5.1'
+        versionCode 13
+        versionName '1.6.0'
         archivesBaseName = "dictionary-$versionName"
     }
 
@@ -59,7 +59,7 @@ android {
 }
 
 dependencies {
-    compile 'io.reactivex:rxjava:1.1.8'
+    compile 'io.reactivex:rxjava:1.2.0'
     compile 'io.reactivex:rxandroid:1.2.1'
 
     compile 'com.google.dagger:dagger:2.6'
@@ -70,8 +70,8 @@ dependencies {
     compile 'com.squareup.retrofit2:converter-gson:2.1.0'
     compile 'com.squareup.retrofit2:adapter-rxjava:2.1.0'
 
-    compile 'com.jakewharton:butterknife:8.2.1'
-    apt 'com.jakewharton:butterknife-compiler:8.2.1'
+    compile 'com.jakewharton:butterknife:8.4.0'
+    apt 'com.jakewharton:butterknife-compiler:8.4.0'
 
     compile 'com.android.support:appcompat-v7:24.2.1'
     compile 'com.android.support:support-v4:24.2.1'

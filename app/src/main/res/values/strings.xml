@@ -56,6 +56,8 @@
     <string name="pref_search_morpho">Search by word form</string>
     <string name="pref_search_pos">Match part of speech</string>
     <string name="pref_search_pos_sum">Match part of speech for the search word and translation</string>
+    <string name="pref_show_share_fab_sub">Show button for quick share</string>
+    <string name="pref_show_share_fab">Quick share</string>
 
     <string name="dialog_history">Search history</string>
 

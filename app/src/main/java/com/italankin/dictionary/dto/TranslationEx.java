@@ -68,6 +68,11 @@ public class TranslationEx extends Translation {
         return sb.toString();
     }
 
+    @Override
+    public int hashCode() {
+        return text.hashCode();
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Parcelable
     ///////////////////////////////////////////////////////////////////////////

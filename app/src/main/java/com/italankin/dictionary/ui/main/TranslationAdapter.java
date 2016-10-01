@@ -141,6 +141,11 @@ public class TranslationAdapter extends RecyclerView.Adapter<TranslationAdapter.
         }
     }
 
+    @Override
+    public long getItemId(int position) {
+        return mDataset.get(position).hashCode();
+    }
+
     /**
      * Listener interface for handling click events.
      */

@@ -52,6 +52,7 @@ public class SharedPrefs {
     private static String PREF_FILTER_SHORT_POS;
     private static String PREF_FILTER_MORPHO;
     private static String PREF_FILTER_POS_FILTER;
+    private static String PREF_SHOW_SHARE_FAB;
 
     private SharedPreferences mPreferences;
     private Context mContext;
@@ -70,6 +71,7 @@ public class SharedPrefs {
         PREF_FILTER_SHORT_POS = context.getString(R.string.pref_key_filter_short_pos);
         PREF_FILTER_MORPHO = context.getString(R.string.pref_key_filter_morpho);
         PREF_FILTER_POS_FILTER = context.getString(R.string.pref_key_filter_pos_filter);
+        PREF_SHOW_SHARE_FAB = context.getString(R.string.pref_key_show_share_fab);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -148,6 +150,10 @@ public class SharedPrefs {
     ///////////////////////////////////////////////////////////////////////////
     // Other
     ///////////////////////////////////////////////////////////////////////////
+
+    public boolean showShareFab() {
+        return mPreferences.getBoolean(PREF_SHOW_SHARE_FAB, true);
+    }
 
     public boolean lookupReverse() {
         return mPreferences.getBoolean(PREF_LOOKUP_REVERSE, true);

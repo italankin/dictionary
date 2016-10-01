@@ -13,4 +13,7 @@
     <dimen name="text_size_medium">18sp</dimen>
     <dimen name="text_size_large">24sp</dimen>
     <dimen name="text_size_small">14sp</dimen>
+    <dimen name="fab_share_margin">16dp</dimen>
+    <dimen name="fab_share_size">56dp</dimen>
+    <dimen name="list_padding_bottom">4dp</dimen>
 </resources>

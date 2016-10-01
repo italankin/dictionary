@@ -15,6 +15,7 @@
  */
 package com.italankin.dictionary.ui.main;
 
+import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -30,6 +31,7 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -48,6 +50,8 @@ import rx.schedulers.Schedulers;
 public class MainPresenter {
 
     private static final String TAG = "[MainPresenter]";
+    private static final String KEY_RESULTS = "MainPresenter.results";
+    private static final String KEY_LAST_RESULT = "MainPresenter.last_result";
 
     /**
      * Reference to attached activity
@@ -84,7 +88,7 @@ public class MainPresenter {
     private Subscription mSubLookup;
 
     private Result mLastResult;
-    private final ArrayList<Result> mResults = new ArrayList<>();
+    private final LinkedHashMap<String, Result> mResults = new LinkedHashMap<>();
 
     public MainPresenter(ApiClient client, SharedPrefs prefs) {
         mClient = client;
@@ -101,6 +105,35 @@ public class MainPresenter {
             return;
         }
         mRef = new WeakReference<>(activity);
+    }
+
+    public void onSaveState(Bundle state) {
+        if (state != null) {
+            ArrayList<Result> list = new ArrayList<>(mResults.values());
+            state.putParcelableArrayList(KEY_RESULTS, list);
+            if (mLastResult != null) {
+                state.putString(KEY_LAST_RESULT, getKey(mLastResult.text));
+            }
+        }
+    }
+
+    public void onRestoreState(Bundle state) {
+        if (state != null) {
+            ArrayList<Result> list = state.getParcelableArrayList(KEY_RESULTS);
+            if (list != null && !list.isEmpty()) {
+                mResults.clear();
+                for (Result entry : list) {
+                    mResults.put(getKey(entry.text), entry);
+                }
+                String lastResultKey = state.getString(KEY_LAST_RESULT);
+                if (lastResultKey != null) {
+                    mLastResult = mResults.get(lastResultKey);
+                }
+            } else {
+                mResults.clear();
+                mLastResult = null;
+            }
+        }
     }
 
     /**
@@ -203,6 +236,7 @@ public class MainPresenter {
                 a.onLanguagesResult(mLangs, getDestLanguageIndex(), getSourceLanguageIndex());
             }
             mSubLangs.unsubscribe();
+            mSubLangs = null;
         }
     };
 
@@ -210,11 +244,26 @@ public class MainPresenter {
      * Lookup text.
      *
      * @param text string to lookup
+     * @return {@code true}, if network request will be performed
      */
-    public void lookup(final String text) {
+    public boolean lookup(final String text) {
+        String key = getKey(text);
+
+        if (mLastResult != null && key.equals(getKey(mLastResult.text)) && mPrefs.lookupReverse()) {
+            return false;
+        }
+
         if (mSubLookup != null && !mSubLookup.isUnsubscribed()) {
             // cancel existing sent request
             mSubLookup.unsubscribe();
+            mSubLookup = null;
+        }
+
+        Result cached = mResults.get(key);
+        if (cached != null && mLastResult != cached) {
+            mLastResult = cached;
+            mRef.get().onLookupResult(cached);
+            return false;
         }
 
         @ApiClient.LookupFlags final int flags = mPrefs.getSearchFilter();
@@ -248,14 +297,14 @@ public class MainPresenter {
                             public void call(Result result) {
                                 if (result != null) {
                                     mLastResult = result;
-                                    mResults.add(result);
+                                    mResults.put(getKey(result.text), result);
                                 }
                                 MainActivity a = mRef.get();
                                 if (a != null) {
                                     if (result != null) {
                                         a.onLookupResult(result);
                                     } else {
-                                        a.onNoResults();
+                                        a.onEmptyResult();
                                     }
                                 }
                                 if (mSubLookup != null && !mSubLookup.isUnsubscribed()) {
@@ -266,6 +315,17 @@ public class MainPresenter {
                         },
                         mErrorHandler
                 );
+        return true;
+    }
+
+    /**
+     * Returns unified key for an entry in {@link #mResults}.
+     *
+     * @param s string to generate key for
+     * @return key
+     */
+    private String getKey(String s) {
+        return s == null ? "" : s.toLowerCase(Locale.getDefault());
     }
 
     /**
@@ -297,14 +357,11 @@ public class MainPresenter {
     public String[] getHistory() {
         int size = mResults.size();
         String[] result = new String[size];
-        for (int i = 0; i < size; i++) {
-            result[i] = mResults.get(i).text;
+        int i = 0;
+        for (Result r : mResults.values()) {
+            result[i++] = r.text;
         }
         return result;
-    }
-
-    public void loadHistory(int position) {
-        mRef.get().onLookupResult(mResults.get(position));
     }
 
     public String[] getShareResult() {
@@ -329,6 +386,13 @@ public class MainPresenter {
      */
     public boolean backFocusSearchField() {
         return mPrefs.backFocusSearch();
+    }
+
+    /**
+     * @return should show fab button
+     */
+    public boolean showShareFab() {
+        return mPrefs.showShareFab();
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -426,6 +490,7 @@ public class MainPresenter {
     public void saveLanguages() {
         if (mSubLangs != null && !mSubLangs.isUnsubscribed()) {
             mSubLangs.unsubscribe();
+            mSubLangs = null;
         }
 
         mSubLangs = Observable
