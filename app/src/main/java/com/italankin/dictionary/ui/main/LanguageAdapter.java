@@ -34,7 +34,7 @@ import java.util.List;
 /**
  * Adapter for language list.
  */
-public class LanguageAdapter extends BaseAdapter implements CompoundButton.OnCheckedChangeListener {
+class LanguageAdapter extends BaseAdapter implements CompoundButton.OnCheckedChangeListener {
 
     private final LayoutInflater inflater;
     private final List<Language> dataset;

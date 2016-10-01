@@ -155,6 +155,7 @@ public class MainActivity extends AppCompatActivity {
     private ClipboardManager mClipboardManager;
 
     private TranslationAdapter mRecyclerViewAdapter;
+    private LastItemExtraPadding mBottomPaddingDecorator;
 
     ///////////////////////////////////////////////////////////////////////////
     // Activity callbacks
@@ -202,13 +203,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mBottomPaddingDecorator = new LastItemExtraPadding(this);
+
         top = res.getDimensionPixelSize(R.dimen.list_top_offset);
         int inputHeight = res.getDimensionPixelSize(R.dimen.input_panel_height);
         mRecyclerView.setPadding(
                 mRecyclerView.getPaddingLeft(),
                 inputHeight + top,
                 mRecyclerView.getPaddingRight(),
-                res.getDimensionPixelSize(R.dimen.list_padding_bottom)
+                mRecyclerView.getPaddingBottom()
         );
 
         // on click listener
@@ -286,8 +289,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
+    protected void onStart() {
+        super.onStart();
         // ensure we reattach presenter in case there're multiple activities being launched
         _presenter.attach(this);
         mLookupSub = mLookupEvents
@@ -306,18 +309,14 @@ public class MainActivity extends AppCompatActivity {
                         startLookup(s);
                     }
                 });
+        int fabVisibility = mShareFab.getVisibility();
         if (_presenter.showShareFab()) {
-            if (_presenter.getLastResult() != null && mShareFab.getVisibility() != View.VISIBLE) {
+            if (_presenter.getLastResult() != null && fabVisibility != View.VISIBLE) {
                 showShareFab();
             }
-        } else {
+        } else if (fabVisibility != View.GONE) {
             mShareFab.setVisibility(View.GONE);
-            mRecyclerView.setPadding(
-                    mRecyclerView.getPaddingLeft(),
-                    mRecyclerView.getPaddingTop(),
-                    mRecyclerView.getPaddingRight(),
-                    getResources().getDimensionPixelSize(R.dimen.list_padding_bottom)
-            );
+            mRecyclerView.removeItemDecoration(mBottomPaddingDecorator);
         }
     }
 
@@ -328,8 +327,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
+    protected void onStop() {
+        super.onStop();
         if (mLookupSub != null && !mLookupSub.isUnsubscribed()) {
             mLookupSub.unsubscribe();
             mLookupSub = null;
@@ -762,17 +761,7 @@ public class MainActivity extends AppCompatActivity {
      * Show share button.
      */
     private void showShareFab() {
-        Resources res = getResources();
-        int bottom = res.getDimensionPixelSize(R.dimen.list_padding_bottom);
-        int margin = res.getDimensionPixelSize(R.dimen.fab_share_margin);
-        int size = res.getDimensionPixelSize(R.dimen.fab_share_size);
-        bottom += margin * 2 + size;
-        mRecyclerView.setPadding(
-                mRecyclerView.getPaddingLeft(),
-                mRecyclerView.getPaddingTop(),
-                mRecyclerView.getPaddingRight(),
-                bottom
-        );
+        mRecyclerView.addItemDecoration(mBottomPaddingDecorator);
         mShareFab.setVisibility(View.VISIBLE);
         mShareFab.setScaleX(0);
         mShareFab.setScaleY(0);

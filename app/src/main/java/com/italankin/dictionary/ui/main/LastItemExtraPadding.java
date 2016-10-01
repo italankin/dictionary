@@ -15,27 +15,36 @@
  */
 package com.italankin.dictionary.ui.main;
 
+import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Rect;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
+import com.italankin.dictionary.R;
+
 /**
- * Simple item decorator for adding child padding.
+ * This class is used to add bottom padding to the {@link RecyclerView} to workaround problem with
+ * {@link RecyclerView#computeVerticalScrollOffset()} returning 0 when RecyclerView has bottom padding.
  */
-class SimpleItemDecoration extends RecyclerView.ItemDecoration {
+class LastItemExtraPadding extends RecyclerView.ItemDecoration {
 
-    /**
-     * left, top, right, bottom
-     */
-    private int[] mOffsets = {0, 0, 0, 0};
+    private final int offset;
 
-    public SimpleItemDecoration(int left, int top, int right, int bottom) {
-        mOffsets = new int[]{left, top, right, bottom};
+    public LastItemExtraPadding(Context context) {
+        Resources res = context.getResources();
+        int margin = res.getDimensionPixelSize(R.dimen.fab_share_margin);
+        int size = res.getDimensionPixelSize(R.dimen.fab_share_size);
+        offset = margin * 2 + size;
     }
 
     @Override
     public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
-        outRect.set(mOffsets[0], mOffsets[1], mOffsets[2], mOffsets[3]);
+        int pos = parent.getChildAdapterPosition(view);
+        int count = parent.getAdapter().getItemCount();
+        if (pos == count - 1) {
+            outRect.bottom = offset;
+        }
     }
 
 }

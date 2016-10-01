@@ -24,7 +24,7 @@ import android.view.animation.DecelerateInterpolator;
 /**
  * Animation for creating a switch-like effect.
  */
-public class SwitchAnimation {
+class SwitchAnimation {
 
     private View mView;
     private float mTranslationX;

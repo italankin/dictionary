@@ -37,7 +37,7 @@ import java.util.List;
 /**
  * Adapter class for displaying translations in {@link MainActivity}
  */
-public class TranslationAdapter extends RecyclerView.Adapter<TranslationAdapter.ViewHolder> {
+class TranslationAdapter extends RecyclerView.Adapter<TranslationAdapter.ViewHolder> {
 
     private final LayoutInflater mInflater;
 
