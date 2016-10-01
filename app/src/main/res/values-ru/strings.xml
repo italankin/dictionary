@@ -8,7 +8,6 @@
     <string name="action_lookup_word">Поиск</string>
     <string name="action_settings">Настройки</string>
     <string name="action_share">Поделиться</string>
-    <string name="destination">Язык перевода</string>
     <string name="error">Ошибка</string>
     <string name="error_lang_not_supported">Направление перевода не поддерживается</string>
     <string name="error_long_request">Превышена длина текста запроса</string>
@@ -28,6 +27,7 @@
     <string name="pref_yandex_dictionary">Яндекс.Словарь</string>
     <string name="retry">Повтор</string>
     <string name="error_langs">Ошибка при получении списка языков</string>
+    <string name="settings">Настройки</string>
     <string name="synonyms">Синонимы</string>
     <string name="translaton">Перевод</string>
     <string name="means">Значения</string>
