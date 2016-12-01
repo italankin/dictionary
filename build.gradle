@@ -3,7 +3,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.2.0'
+        classpath 'com.android.tools.build:gradle:2.2.2'
         classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
     }
 }
@@ -12,20 +12,4 @@ allprojects {
     repositories {
         jcenter()
     }
-}
-
-/**
- * Construct new properties object and read it from file.
- *
- * @param fileName name of the file
- * @return properties
- */
-Properties readProps(String fileName) {
-    File file = new File(fileName)
-    if (file.exists()) {
-        Properties props = new Properties()
-        props.load(new FileInputStream(file))
-        return props
-    }
-    return null
 }

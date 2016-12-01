@@ -37,12 +37,15 @@ import java.util.List;
 /**
  * Adapter class for displaying translations in {@link MainActivity}
  */
-class TranslationAdapter extends RecyclerView.Adapter<TranslationAdapter.ViewHolder> {
+class TranslationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+
+    private static final int TYPE_ITEM = 0;
+    private static final int TYPE_SPACE = 1;
 
     private final LayoutInflater mInflater;
-
     private final List<TranslationEx> mDataset = new ArrayList<>(0);
 
+    private boolean mShowExtraSpace = false;
     private OnAdapterItemClickListener mListener;
 
     public TranslationAdapter(Context context) {
@@ -62,6 +65,17 @@ class TranslationAdapter extends RecyclerView.Adapter<TranslationAdapter.ViewHol
         notifyItemRangeInserted(0, mDataset.size());
     }
 
+    public void showExtraSpace(boolean show) {
+        if (mShowExtraSpace != show) {
+            mShowExtraSpace = show;
+            if (mShowExtraSpace) {
+                notifyItemInserted(mDataset.size() + 1);
+            } else {
+                notifyItemRemoved(mDataset.size() + 1);
+            }
+        }
+    }
+
     /**
      * Set on click listener for items.
      *
@@ -72,13 +86,21 @@ class TranslationAdapter extends RecyclerView.Adapter<TranslationAdapter.ViewHol
     }
 
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View v = mInflater.inflate(R.layout.item_attribute, parent, false);
-        return new ViewHolder(v);
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        if (viewType == TYPE_ITEM) {
+            View v = mInflater.inflate(R.layout.item_attribute, parent, false);
+            return new ItemViewHolder(v);
+        }
+        return new SpaceViewHolder(mInflater.inflate(R.layout.item_space, parent, false));
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
+        if (getItemViewType(position) == TYPE_SPACE) {
+            return;
+        }
+        ItemViewHolder holder = (ItemViewHolder) viewHolder;
+
         TranslationEx item = mDataset.get(position);
 
         holder.text.setText(item.text);
@@ -94,10 +116,52 @@ class TranslationAdapter extends RecyclerView.Adapter<TranslationAdapter.ViewHol
 
     @Override
     public int getItemCount() {
-        return (mDataset == null) ? 0 : mDataset.size();
+        return mDataset.size() + (mShowExtraSpace ? 1 : 0);
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    @Override
+    public int getItemViewType(int position) {
+        if (mShowExtraSpace && position == mDataset.size()) {
+            return TYPE_SPACE;
+        }
+        return TYPE_ITEM;
+    }
+
+    @Override
+    public long getItemId(int position) {
+        if (getItemViewType(position) == TYPE_SPACE) {
+            return Long.MAX_VALUE;
+        }
+        return mDataset.get(position).hashCode();
+    }
+
+    /**
+     * Listener interface for handling click events.
+     */
+    public interface OnAdapterItemClickListener {
+        /**
+         * Triggered when user clicks on list item.
+         *
+         * @param position item position
+         */
+        void onItemClick(int position);
+
+        /**
+         * Triggered when user clicks popup list item.
+         *
+         * @param position   item position
+         * @param menuItemId menu item id
+         */
+        void onItemMenuClick(int position, int menuItemId);
+    }
+
+    public static class SpaceViewHolder extends RecyclerView.ViewHolder {
+        public SpaceViewHolder(View itemView) {
+            super(itemView);
+        }
+    }
+
+    public class ItemViewHolder extends RecyclerView.ViewHolder {
         public TextView text;
         public TextView means;
         public TextView syns;
@@ -106,7 +170,7 @@ class TranslationAdapter extends RecyclerView.Adapter<TranslationAdapter.ViewHol
 
         private PopupMenu popupMenu;
 
-        public ViewHolder(View v) {
+        public ItemViewHolder(View v) {
             super(v);
             v.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -139,31 +203,6 @@ class TranslationAdapter extends RecyclerView.Adapter<TranslationAdapter.ViewHol
                 }
             });
         }
-    }
-
-    @Override
-    public long getItemId(int position) {
-        return mDataset.get(position).hashCode();
-    }
-
-    /**
-     * Listener interface for handling click events.
-     */
-    public interface OnAdapterItemClickListener {
-        /**
-         * Triggered when user clicks on list item.
-         *
-         * @param position item position
-         */
-        void onItemClick(int position);
-
-        /**
-         * Triggered when user clicks popup list item.
-         *
-         * @param position   item position
-         * @param menuItemId menu item id
-         */
-        void onItemMenuClick(int position, int menuItemId);
     }
 
 }

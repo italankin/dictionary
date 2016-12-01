@@ -71,7 +71,6 @@ public class MainModule {
     }
 
     @Provides
-    @Singleton
     MainPresenter provideMainPresenter(ApiClient client, SharedPrefs prefs) {
         return new MainPresenter(client, prefs);
     }
