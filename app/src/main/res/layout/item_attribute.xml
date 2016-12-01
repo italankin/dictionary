@@ -16,35 +16,40 @@
         android:orientation="vertical"
         android:padding="8dp">
 
-        <TextView
-            android:id="@+id/text"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:id="@+id/first_line"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:ellipsize="end"
-            android:lines="1"
-            android:textColor="#fff"
-            android:textSize="@dimen/text_size_medium"
-            tools:text="Text"/>
+            android:layout_toLeftOf="@+id/overflow">
 
-        <TextView
-            android:id="@+id/pos"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="4dp"
-            android:layout_toLeftOf="@+id/overflow"
-            android:layout_toRightOf="@+id/text"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="@color/item_translation_pos"
-            android:textSize="@dimen/text_size_medium"
-            tools:text="Text"/>
+            <TextView
+                android:id="@+id/text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:lines="1"
+                android:textColor="#fff"
+                android:textSize="@dimen/text_size_medium"
+                tools:text="Text"/>
+
+            <TextView
+                android:id="@+id/pos"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="4dp"
+                android:ellipsize="end"
+                android:lines="1"
+                android:textColor="@color/item_translation_pos"
+                android:textSize="@dimen/text_size_medium"
+                tools:text="Text"/>
+
+        </LinearLayout>
 
         <TextView
             android:id="@+id/means"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/text"
+            android:layout_below="@+id/first_line"
             android:layout_toLeftOf="@+id/overflow"
             android:ellipsize="end"
             android:maxLines="1"
