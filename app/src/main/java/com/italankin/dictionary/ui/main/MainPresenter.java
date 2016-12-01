@@ -149,7 +149,6 @@ public class MainPresenter {
                     }
                 })
                 .debounce(LOOKUP_DEBOUNCE, TimeUnit.MILLISECONDS, Schedulers.computation())
-                .distinctUntilChanged()
                 .subscribe(new Action1<String>() {
                     @Override
                     public void call(String s) {
