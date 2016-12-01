@@ -19,9 +19,11 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.italankin.dictionary.BuildConfig;
 import com.italankin.dictionary.R;
 import com.italankin.dictionary.api.ApiClient;
 import com.italankin.dictionary.dto.Language;
@@ -29,10 +31,15 @@ import com.italankin.dictionary.dto.Language;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.Callable;
+
+import rx.Observable;
+import rx.Observer;
+import rx.Subscription;
+import rx.schedulers.Schedulers;
 
 /**
  * Wrapper around {@link SharedPreferences} for this application purposes.
@@ -57,6 +64,9 @@ public class SharedPrefs {
     private SharedPreferences mPreferences;
     private Context mContext;
     private Gson mGson;
+
+    private Observable<List<Language>> mLanguages;
+    private Subscription mLanguagesSub;
 
     public SharedPrefs(Context context) {
         mContext = context;
@@ -114,21 +124,83 @@ public class SharedPrefs {
     // Languages list
     ///////////////////////////////////////////////////////////////////////////
 
-    public void putLangs(List<Language> list, String locale) throws IOException {
-        File file = getLangsFile();
-        FileOutputStream fs = new FileOutputStream(file);
-        String json = mGson.toJson(list);
-        fs.write(json.getBytes());
-        fs.close();
-        mPreferences.edit().putString(PREF_LANGS_LOCALE, locale).apply();
+    public void saveLanguagesList(final List<Language> list, final String locale) {
+        Observable
+                .fromCallable(new Callable<Boolean>() {
+                    @Override
+                    public Boolean call() throws Exception {
+                        File file = getLangsFile();
+                        FileOutputStream fs = new FileOutputStream(file);
+                        String json = mGson.toJson(list);
+                        fs.write(json.getBytes());
+                        fs.close();
+                        mPreferences.edit().putString(PREF_LANGS_LOCALE, locale).apply();
+                        return true;
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .subscribe(new Observer<Boolean>() {
+                    @Override
+                    public void onNext(Boolean value) {
+                        if (BuildConfig.DEBUG) {
+                            Log.d("SharedPrefs", "saveLanguagesList: " + value);
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        if (BuildConfig.DEBUG) {
+                            Log.e("SharedPrefs", "saveLanguagesList: ", e);
+                        }
+                    }
+
+                    @Override
+                    public void onCompleted() {
+                    }
+                });
     }
 
-    public List<Language> getLangs() throws IOException {
-        File file = getLangsFile();
-        FileReader fs = new FileReader(file);
-        Type collectionType = new TypeToken<List<Language>>() {
-        }.getType();
-        return mGson.fromJson(fs, collectionType);
+    public Observable<List<Language>> getLanguagesList() {
+        if (mLanguages == null) {
+            mLanguages = getLanguagesListObservable();
+            mLanguagesSub = mLanguages.subscribe(new Observer<List<Language>>() {
+                @Override
+                public void onNext(List<Language> languages) {
+                    saveLanguagesList(languages, Locale.getDefault().getLanguage());
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    mLanguages = null;
+                    if (BuildConfig.DEBUG) {
+                        Log.e("SharedPrefs", "getLanguagesList: ", e);
+                    }
+                }
+
+                @Override
+                public void onCompleted() {
+                    mLanguagesSub = null;
+                }
+            });
+        }
+        return mLanguages;
+    }
+
+    @NonNull
+    private Observable<List<Language>> getLanguagesListObservable() {
+        return Observable
+                .fromCallable(new Callable<List<Language>>() {
+                    @Override
+                    public List<Language> call() throws Exception {
+                        File file = getLangsFile();
+                        FileReader fs = new FileReader(file);
+                        Type collectionType = new TypeToken<List<Language>>() {
+                        }.getType();
+                        return mGson.fromJson(fs, collectionType);
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .cache();
     }
 
     public boolean shouldUpdateLangs() {

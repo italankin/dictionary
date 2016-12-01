@@ -15,7 +15,6 @@
  */
 package com.italankin.dictionary.ui.main;
 
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -29,11 +28,10 @@ import com.italankin.dictionary.utils.SharedPrefs;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
@@ -43,20 +41,15 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
+import rx.subjects.PublishSubject;
+import rx.subjects.Subject;
 
 /**
  * Presenter for working with {@link MainActivity}.
  */
 public class MainPresenter {
 
-    private static final String TAG = "[MainPresenter]";
-    private static final String KEY_RESULTS = "MainPresenter.results";
-    private static final String KEY_LAST_RESULT = "MainPresenter.last_result";
-
-    /**
-     * Reference to attached activity
-     */
-    private WeakReference<MainActivity> mRef;
+    private static final int LOOKUP_DEBOUNCE = 450;
 
     /**
      * Api client for making requests
@@ -66,6 +59,11 @@ public class MainPresenter {
      * Application shared preferences
      */
     private final SharedPrefs mPrefs;
+
+    /**
+     * Reference to attached activity
+     */
+    private WeakReference<MainActivity> mRef;
 
     /**
      * UI language for receiving results for this locale (if available)
@@ -87,8 +85,44 @@ public class MainPresenter {
      */
     private Subscription mSubLookup;
 
-    private Result mLastResult;
-    private final LinkedHashMap<String, Result> mResults = new LinkedHashMap<>();
+    /**
+     * {@link Subject} for filtering input events.
+     */
+    private Subject<String, String> mEvents = PublishSubject.create();
+    /**
+     * A {@link Subscription} for handling emissions of {@link #mEvents}.
+     */
+    private Subscription mEventsSub;
+
+    /**
+     * Callback function called when receiving languages list.
+     */
+    private Action1<Object> onGetLangsResult = new Action1<Object>() {
+        @Override
+        public void call(Object o) {
+            MainActivity a = mRef.get();
+            if (a != null) {
+                a.onLanguagesResult(mLangs, getDestLanguageIndex(), getSourceLanguageIndex());
+            }
+            mSubLangs = null;
+        }
+    };
+
+    /**
+     * Handling languages fetching errors.
+     */
+    private Action1<Throwable> mGetLangsErrorHandler = new Action1<Throwable>() {
+        @Override
+        public void call(Throwable throwable) {
+            if (BuildConfig.DEBUG) {
+                throwable.printStackTrace();
+            }
+            MainActivity a = mRef.get();
+            if (a != null) {
+                a.onLanguagesError();
+            }
+        }
+    };
 
     public MainPresenter(ApiClient client, SharedPrefs prefs) {
         mClient = client;
@@ -100,57 +134,46 @@ public class MainPresenter {
      * @param activity activity for attaching presenter to
      */
     public void attach(MainActivity activity) {
-        if (mRef != null && activity == mRef.get()) {
-            log("already attached to %s", activity);
-            return;
-        }
         mRef = new WeakReference<>(activity);
-    }
-
-    public void onSaveState(Bundle state) {
-        if (state != null) {
-            ArrayList<Result> list = new ArrayList<>(mResults.values());
-            state.putParcelableArrayList(KEY_RESULTS, list);
-            if (mLastResult != null) {
-                state.putString(KEY_LAST_RESULT, getKey(mLastResult.text));
-            }
-        }
-    }
-
-    public void onRestoreState(Bundle state) {
-        if (state != null) {
-            ArrayList<Result> list = state.getParcelableArrayList(KEY_RESULTS);
-            if (list != null && !list.isEmpty()) {
-                mResults.clear();
-                for (Result entry : list) {
-                    mResults.put(getKey(entry.text), entry);
-                }
-                String lastResultKey = state.getString(KEY_LAST_RESULT);
-                if (lastResultKey != null) {
-                    mLastResult = mResults.get(lastResultKey);
-                }
-            } else {
-                mResults.clear();
-                mLastResult = null;
-            }
-        }
+        mEventsSub = mEvents
+                .map(new Func1<String, String>() {
+                    @Override
+                    public String call(String s) {
+                        return s.replaceAll("[^\\p{L}\\w -]", "").trim();
+                    }
+                })
+                .filter(new Func1<String, Boolean>() {
+                    @Override
+                    public Boolean call(String s) {
+                        return s != null && !s.isEmpty();
+                    }
+                })
+                .debounce(LOOKUP_DEBOUNCE, TimeUnit.MILLISECONDS, Schedulers.computation())
+                .distinctUntilChanged()
+                .subscribe(new Action1<String>() {
+                    @Override
+                    public void call(String s) {
+                        lookupInternal(s);
+                    }
+                });
     }
 
     /**
-     * Called when activity is finishing.
+     * Called when activity is finishing or recreating itself.
      */
-    public void detach(MainActivity activity) {
-        if (activity != mRef.get()) {
-            return;
-        }
+    public void detach() {
         mRef.clear();
-        if (mSubLangs != null && mSubLangs.isUnsubscribed()) {
+        if (mSubLangs != null && !mSubLangs.isUnsubscribed()) {
             mSubLangs.unsubscribe();
             mSubLangs = null;
         }
-        if (mSubLookup != null && mSubLookup.isUnsubscribed()) {
+        if (mSubLookup != null && !mSubLookup.isUnsubscribed()) {
             mSubLookup.unsubscribe();
             mSubLookup = null;
+        }
+        if (mEventsSub != null && !mEventsSub.isUnsubscribed()) {
+            mEventsSub.unsubscribe();
+            mEventsSub = null;
         }
     }
 
@@ -158,9 +181,8 @@ public class MainPresenter {
      * Load languages list. They will be loaded from net, if there are no cached files.
      */
     public void loadLanguages() {
-        if (mDest != null && mSource != null) {
-            MainActivity a = mRef.get();
-            a.onLanguagesResult(mLangs, getDestLanguageIndex(), getSourceLanguageIndex());
+        if (mLangs != null && mDest != null && mSource != null) {
+            mRef.get().onLanguagesResult(mLangs, getDestLanguageIndex(), getSourceLanguageIndex());
             return;
         }
 
@@ -174,31 +196,19 @@ public class MainPresenter {
                     .doOnNext(new Action1<List<Language>>() {
                         @Override
                         public void call(List<Language> list) {
-                            try {
-                                mPrefs.putLangs(list, Locale.getDefault().getLanguage());
-                            } catch (IOException e) {
-                                throw new RuntimeException(e.getMessage());
-                            }
+                            mPrefs.saveLanguagesList(list, Locale.getDefault().getLanguage());
                             updateLanguages(list);
                         }
                     })
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(onGetLangsResult, mGetLangsErrorHandler);
         } else {
-            mSubLangs = Observable
-                    .create(new Observable.OnSubscribe<Object>() {
+            mSubLangs = mPrefs.getLanguagesList()
+                    .map(new Func1<List<Language>, Object>() {
                         @Override
-                        public void call(Subscriber<? super Object> subscriber) {
-                            try {
-                                updateLanguages(mPrefs.getLangs());
-                                if (!subscriber.isUnsubscribed()) {
-                                    subscriber.onNext(null);
-                                }
-                            } catch (Exception e) {
-                                if (!subscriber.isUnsubscribed()) {
-                                    subscriber.onError(e);
-                                }
-                            }
+                        public Boolean call(List<Language> languages) {
+                            updateLanguages(languages);
+                            return true;
                         }
                     })
                     .subscribeOn(Schedulers.io())
@@ -226,44 +236,24 @@ public class MainPresenter {
     }
 
     /**
-     * Callback function called when receiving languages list.
+     * Queue lookup request.
+     *
+     * @param text string to lookup
      */
-    private Action1<Object> onGetLangsResult = new Action1<Object>() {
-        @Override
-        public void call(Object o) {
-            MainActivity a = mRef.get();
-            if (a != null) {
-                a.onLanguagesResult(mLangs, getDestLanguageIndex(), getSourceLanguageIndex());
-            }
-            mSubLangs.unsubscribe();
-            mSubLangs = null;
-        }
-    };
+    public void lookup(String text) {
+        mEvents.onNext(text);
+    }
 
     /**
      * Lookup text.
      *
      * @param text string to lookup
-     * @return {@code true}, if network request will be performed
      */
-    public boolean lookup(final String text) {
-        String key = getKey(text);
-
-        if (mLastResult != null && key.equals(getKey(mLastResult.text)) && mPrefs.lookupReverse()) {
-            return false;
-        }
-
+    private void lookupInternal(final String text) {
         if (mSubLookup != null && !mSubLookup.isUnsubscribed()) {
             // cancel existing sent request
             mSubLookup.unsubscribe();
             mSubLookup = null;
-        }
-
-        Result cached = mResults.get(key);
-        if (cached != null && mLastResult != cached) {
-            mLastResult = cached;
-            mRef.get().onLookupResult(cached);
-            return false;
         }
 
         @ApiClient.LookupFlags final int flags = mPrefs.getSearchFilter();
@@ -295,10 +285,6 @@ public class MainPresenter {
                         new Action1<Result>() {
                             @Override
                             public void call(Result result) {
-                                if (result != null) {
-                                    mLastResult = result;
-                                    mResults.put(getKey(result.text), result);
-                                }
                                 MainActivity a = mRef.get();
                                 if (a != null) {
                                     if (result != null) {
@@ -315,17 +301,6 @@ public class MainPresenter {
                         },
                         mErrorHandler
                 );
-        return true;
-    }
-
-    /**
-     * Returns unified key for an entry in {@link #mResults}.
-     *
-     * @param s string to generate key for
-     * @return key
-     */
-    private String getKey(String s) {
-        return s == null ? "" : s.toLowerCase(Locale.getDefault());
     }
 
     /**
@@ -342,59 +317,6 @@ public class MainPresenter {
         }
     }
 
-    /**
-     * Return last successfull result
-     *
-     * @return {@link Result} object
-     */
-    public Result getLastResult() {
-        return mLastResult;
-    }
-
-    /**
-     * @return list of last queries
-     */
-    public String[] getHistory() {
-        int size = mResults.size();
-        String[] result = new String[size];
-        int i = 0;
-        for (Result r : mResults.values()) {
-            result[i++] = r.text;
-        }
-        return result;
-    }
-
-    public String[] getShareResult() {
-        String[] result = new String[2];
-        result[0] = mLastResult.text;
-        if (mPrefs.shareIncludeTranscription()) {
-            result[0] = result[0] + " [" + mLastResult.transcription + "]";
-        }
-        result[1] = mLastResult.toString();
-        return result;
-    }
-
-    /**
-     * @return whenever activity should close on successful share
-     */
-    public boolean closeOnShare() {
-        return mPrefs.closeOnShare();
-    }
-
-    /**
-     * @return should Back button move focus to the search field
-     */
-    public boolean backFocusSearchField() {
-        return mPrefs.backFocusSearch();
-    }
-
-    /**
-     * @return should show fab button
-     */
-    public boolean showShareFab() {
-        return mPrefs.showShareFab();
-    }
-
     ///////////////////////////////////////////////////////////////////////////
     // Languages
     ///////////////////////////////////////////////////////////////////////////
@@ -404,9 +326,14 @@ public class MainPresenter {
      *
      * @param position language index
      */
-    public void setSourceLanguage(int position) {
-        mSource = mLangs.get(position);
-        mPrefs.setSourceLang(mSource);
+    public boolean setSourceLanguage(int position) {
+        Language l = mLangs.get(position);
+        if (mSource != l) {
+            mSource = l;
+            mPrefs.setSourceLang(mSource);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -414,9 +341,14 @@ public class MainPresenter {
      *
      * @param position language index
      */
-    public void setDestLanguage(int position) {
-        mDest = mLangs.get(position);
-        mPrefs.setDestLang(mDest);
+    public boolean setDestLanguage(int position) {
+        Language l = mLangs.get(position);
+        if (mDest != l) {
+            mDest = l;
+            mPrefs.setDestLang(mDest);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -499,7 +431,7 @@ public class MainPresenter {
                     public void call(Subscriber<? super Object> subscriber) {
                         try {
                             String code = Locale.getDefault().getLanguage();
-                            mPrefs.putLangs(mLangs, code);
+                            mPrefs.saveLanguagesList(mLangs, code);
                             if (!subscriber.isUnsubscribed()) {
                                 subscriber.onNext(null);
                             }
@@ -515,7 +447,9 @@ public class MainPresenter {
                         new Action1<Object>() {
                             @Override
                             public void call(Object o) {
-                                log("saveLanguages: success");
+                                if (BuildConfig.DEBUG) {
+                                    Log.d("MainPresenter", "saveLanguages: success");
+                                }
                                 if (mSubLangs != null && !mSubLangs.isUnsubscribed()) {
                                     mSubLangs.unsubscribe();
                                     mSubLangs = null;
@@ -525,7 +459,9 @@ public class MainPresenter {
                         new Action1<Throwable>() {
                             @Override
                             public void call(Throwable throwable) {
-                                log("saveLanguages: " + throwable.toString());
+                                if (BuildConfig.DEBUG) {
+                                    Log.d("MainPresenter", "saveLanguages: " + throwable.toString());
+                                }
                             }
                         }
                 );
@@ -573,37 +509,5 @@ public class MainPresenter {
             }
         }
     };
-
-    /**
-     * Handling languages fetching errors.
-     */
-    private Action1<Throwable> mGetLangsErrorHandler = new Action1<Throwable>() {
-        @Override
-        public void call(Throwable throwable) {
-            throwable.printStackTrace();
-            MainActivity a = mRef.get();
-            if (a != null) {
-                a.onLanguagesError();
-            }
-        }
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Logging
-    ///////////////////////////////////////////////////////////////////////////
-
-    private void log(String format, Object... args) {
-        log(String.format(format, args));
-    }
-
-    private void log(String message) {
-        log(Log.DEBUG, message);
-    }
-
-    private void log(int priority, String message) {
-        if (BuildConfig.DEBUG) {
-            Log.println(priority, TAG, message);
-        }
-    }
 
 }
