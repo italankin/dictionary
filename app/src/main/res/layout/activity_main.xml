@@ -42,7 +42,7 @@
                 android:background="@android:color/transparent"
                 android:gravity="top"
                 android:hint="@string/input_hint"
-                android:imeOptions="actionSearch"
+                android:imeOptions="actionSearch|flagNoExtractUi"
                 android:inputType="text"
                 android:lines="2"
                 android:maxLength="50"
