@@ -488,6 +488,7 @@ public class MainPresenter {
                 if (throwable instanceof HttpException) {
                     HttpException e = (HttpException) throwable;
                     switch (e.code()) {
+                        case 400:
                         case 501:
                             message = a.getString(R.string.error_lang_not_supported);
                             break;
@@ -501,7 +502,7 @@ public class MainPresenter {
                             message = a.getString(R.string.error_long_request);
                             break;
                         default:
-                            message = e.getMessage();
+                            message = a.getString(R.string.error_no_results);
                     }
                 }
                 a.onError(message);
