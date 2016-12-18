@@ -79,6 +79,8 @@ public class SettingsActivity extends AppCompatActivity implements SettingsRootF
     @Override
     public void onSearchFiltersClick() {
         FragmentTransaction t = mManager.beginTransaction();
+        t.setCustomAnimations(R.animator.fragment_in, R.animator.fragment_out,
+                R.animator.fragment_in, R.animator.fragment_out);
         t.replace(R.id.container, new SettingsSearchOptionsFragment(), TAG_SEARCH_OPTIONS);
         t.addToBackStack(null);
         t.commit();

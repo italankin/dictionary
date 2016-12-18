@@ -5,18 +5,18 @@
 
         <SwitchPreference
             android:defaultValue="true"
-            android:key="@string/pref_key_lookup_reverse"
+            android:key="lookup_reverse"
             android:title="@string/pref_lookup_both"/>
 
         <SwitchPreference
             android:defaultValue="false"
-            android:key="@string/pref_key_back_focus"
+            android:key="back_focus"
             android:summary="@string/pref_back_focus_sum"
             android:title="@string/pref_back_focus"/>
 
         <Preference
             android:fragment="com.italankin.dictionary.ui.settings.SettingsSearchOptionsFragment"
-            android:key="@string/pref_key_search_filters"
+            android:key="search_filters"
             android:title="@string/pref_cat_search_options"/>
 
     </PreferenceCategory>
@@ -25,19 +25,19 @@
 
         <SwitchPreference
             android:defaultValue="true"
-            android:key="@string/pref_key_show_share_fab"
+            android:key="show_share_fab"
             android:summary="@string/pref_show_share_fab_sub"
             android:title="@string/pref_show_share_fab"/>
 
         <SwitchPreference
             android:defaultValue="false"
-            android:key="@string/pref_key_include_transcription"
+            android:key="include_transcription"
             android:summary="@string/pref_include_transcription_sum"
             android:title="@string/pref_include_transcription"/>
 
         <SwitchPreference
             android:defaultValue="false"
-            android:key="@string/pref_key_close_on_share"
+            android:key="close_on_share"
             android:summary="@string/pref_close_on_share_sum"
             android:title="@string/pref_close_on_share"/>
 
@@ -46,7 +46,7 @@
     <PreferenceCategory android:title="@string/pref_cat_other">
 
         <Preference
-            android:key="@string/pref_key_yandex_dict"
+            android:key="yandex_dict"
             android:title="@string/pref_yandex_dictionary">
             <intent
                 android:action="android.intent.action.VIEW"
@@ -54,7 +54,7 @@
         </Preference>
 
         <Preference
-            android:key="@string/pref_key_open_source_libs"
+            android:key="open_source_libs"
             android:title="@string/pref_open_source_libs">
         </Preference>
 

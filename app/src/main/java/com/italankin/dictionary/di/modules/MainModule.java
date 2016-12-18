@@ -15,7 +15,9 @@
  */
 package com.italankin.dictionary.di.modules;
 
+import android.content.ClipboardManager;
 import android.content.Context;
+import android.view.inputmethod.InputMethodManager;
 
 import com.italankin.dictionary.App;
 import com.italankin.dictionary.BuildConfig;
@@ -46,6 +48,18 @@ public class MainModule {
     @Singleton
     Context provideApplicationContext() {
         return application;
+    }
+
+    @Provides
+    @Singleton
+    ClipboardManager provideClipboardManager() {
+        return (ClipboardManager) application.getSystemService(Context.CLIPBOARD_SERVICE);
+    }
+
+    @Provides
+    @Singleton
+    InputMethodManager provideInputMethodManager() {
+        return (InputMethodManager) application.getSystemService(Context.INPUT_METHOD_SERVICE);
     }
 
     @Provides

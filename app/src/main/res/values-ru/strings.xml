@@ -19,7 +19,6 @@
     <string name="lookup">Поиск</string>
     <string name="msg_copied">Скопировано</string>
     <string name="msg_history_empty">История пуста</string>
-    <string name="msg_transcription_copied">Транскрипция скопирована в буфер обмена</string>
     <string name="pref_open_source_libs">Лицензии</string>
     <string name="pref_cat_other">Прочие</string>
     <string name="pref_cat_general">Общие</string>

@@ -65,14 +65,14 @@ public class SettingsRootFragment extends PreferenceFragment {
     @Override
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
         String key = preference.getKey();
-        if (key.equals(getString(R.string.pref_key_open_source_libs))) {
+        if (key.equals("open_source_libs")) {
             LicensesDialog dialog = new LicensesDialog.Builder(getActivity())
                     .setNotices(R.raw.notices)
                     .setTitle(R.string.pref_open_source_libs)
                     .build();
             dialog.showAppCompat();
             return true;
-        } else if (key.equals(getString(R.string.pref_key_search_filters))) {
+        } else if (key.equals("search_filters")) {
             mCallbacks.onSearchFiltersClick();
             return true;
         }
