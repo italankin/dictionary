@@ -77,8 +77,6 @@ public class HidingViewBehavior extends CoordinatorLayout.Behavior<View> {
         if (Math.abs(velocityY) > Math.abs(velocityX)) {
             if (velocityY > 0) {
                 hideView();
-            } else if (velocityY < 0) {
-                showView();
             }
         }
         return false;
