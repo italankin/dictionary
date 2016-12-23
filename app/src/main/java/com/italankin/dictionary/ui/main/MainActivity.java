@@ -250,7 +250,6 @@ public class MainActivity extends AppCompatActivity {
                     case R.id.action_lookup_word:
                         mInput.setText(item.text);
                         resetViewsState();
-                        mRecyclerView.scrollToPosition(0);
                         startLookup(item.text);
                         break;
 
@@ -326,6 +325,7 @@ public class MainActivity extends AppCompatActivity {
                 intent.setType(null);
                 mInput.setText(text);
                 mInput.selectAll();
+                resetViewsState();
                 startLookup(text);
             }
             return true;
@@ -457,6 +457,7 @@ public class MainActivity extends AppCompatActivity {
         builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                resetViewsState();
                 startLookup(history.get(which));
             }
         });
