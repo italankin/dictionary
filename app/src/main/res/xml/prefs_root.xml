@@ -58,6 +58,11 @@
             android:title="@string/pref_open_source_libs">
         </Preference>
 
+        <Preference
+            android:key="version"
+            android:title="">
+        </Preference>
+
     </PreferenceCategory>
 
 </PreferenceScreen>

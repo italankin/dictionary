@@ -22,6 +22,7 @@ import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
 
+import com.italankin.dictionary.BuildConfig;
 import com.italankin.dictionary.R;
 
 import de.psdev.licensesdialog.LicensesDialog;
@@ -38,6 +39,9 @@ public class SettingsRootFragment extends PreferenceFragment {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
         addPreferencesFromResource(R.xml.prefs_root);
+        Preference version = findPreference("version");
+        String title = getString(R.string.version, BuildConfig.VERSION_NAME);
+        version.setTitle(title);
     }
 
     @Override

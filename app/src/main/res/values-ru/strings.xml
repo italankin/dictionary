@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Словарь</string>
+    <string name="version">Версия v%1$s</string>
     <string name="action_copy_meanings">Копировать значения</string>
     <string name="action_copy_synonyms">Копировать синонимы</string>
     <string name="action_copy_translation">Копировать перевод</string>
