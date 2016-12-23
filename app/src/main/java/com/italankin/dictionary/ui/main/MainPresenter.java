@@ -142,6 +142,7 @@ public class MainPresenter {
         mRef = new WeakReference<>(activity);
         if (mEventsSub == null || mEventsSub.isUnsubscribed()) {
             mEventsSub = mEvents
+                    .subscribeOn(Schedulers.computation())
                     .map(new Func1<String, String>() {
                         @Override
                         public String call(String s) {
@@ -154,7 +155,7 @@ public class MainPresenter {
                             return s != null && !s.isEmpty();
                         }
                     })
-                    .debounce(LOOKUP_DEBOUNCE, TimeUnit.MILLISECONDS, Schedulers.computation())
+                    .debounce(LOOKUP_DEBOUNCE, TimeUnit.MILLISECONDS)
                     .subscribe(new Action1<String>() {
                         @Override
                         public void call(String s) {
