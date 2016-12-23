@@ -38,6 +38,7 @@ class LanguageAdapter extends BaseAdapter implements CompoundButton.OnCheckedCha
 
     private final LayoutInflater inflater;
     private final List<Language> dataset;
+    private CheckedChangeListener listener;
 
     public LanguageAdapter(Context context, List<Language> dataset) {
         this.inflater = LayoutInflater.from(context);
@@ -46,6 +47,10 @@ class LanguageAdapter extends BaseAdapter implements CompoundButton.OnCheckedCha
         } else {
             this.dataset = dataset;
         }
+    }
+
+    public void setListener(CheckedChangeListener listener) {
+        this.listener = listener;
     }
 
     @Override
@@ -85,7 +90,9 @@ class LanguageAdapter extends BaseAdapter implements CompoundButton.OnCheckedCha
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         Language lang = (Language) buttonView.getTag();
-        lang.setFavorite(isChecked);
+        if (listener != null) {
+            listener.onCheckedChange(lang, isChecked);
+        }
     }
 
     @Override
@@ -101,6 +108,10 @@ class LanguageAdapter extends BaseAdapter implements CompoundButton.OnCheckedCha
     @Override
     public long getItemId(int position) {
         return getItem(position).hashCode();
+    }
+
+    public interface CheckedChangeListener {
+        void onCheckedChange(Language language, boolean isChecked);
     }
 
     private static class ViewHolder {

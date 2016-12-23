@@ -22,7 +22,7 @@ import android.view.inputmethod.InputMethodManager;
 import com.italankin.dictionary.App;
 import com.italankin.dictionary.BuildConfig;
 import com.italankin.dictionary.api.ApiClient;
-import com.italankin.dictionary.ui.main.MainPresenter;
+import com.italankin.dictionary.ui.PresenterFactory;
 import com.italankin.dictionary.utils.NetworkInterceptor;
 import com.italankin.dictionary.utils.SharedPrefs;
 
@@ -85,8 +85,9 @@ public class MainModule {
     }
 
     @Provides
-    MainPresenter provideMainPresenter(ApiClient client, SharedPrefs prefs) {
-        return new MainPresenter(client, prefs);
+    @Singleton
+    PresenterFactory providePresenterFactory(ApiClient client, SharedPrefs prefs) {
+        return new PresenterFactory(client, prefs);
     }
 
 }

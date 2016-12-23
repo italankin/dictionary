@@ -15,8 +15,10 @@
  */
 package com.italankin.dictionary.ui.main;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.Size;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.italankin.dictionary.BuildConfig;
 import com.italankin.dictionary.R;
@@ -28,14 +30,15 @@ import com.italankin.dictionary.utils.SharedPrefs;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
-import rx.Subscriber;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
@@ -93,6 +96,8 @@ public class MainPresenter {
      * A {@link Subscription} for handling emissions of {@link #mEvents}.
      */
     private Subscription mEventsSub;
+    private Result mLastResult;
+    private ArrayList<String> mHistory = new ArrayList<>(0);
 
     /**
      * Callback function called when receiving languages list.
@@ -135,26 +140,28 @@ public class MainPresenter {
      */
     public void attach(MainActivity activity) {
         mRef = new WeakReference<>(activity);
-        mEventsSub = mEvents
-                .map(new Func1<String, String>() {
-                    @Override
-                    public String call(String s) {
-                        return s.replaceAll("[^\\p{L}\\w -]", "").trim();
-                    }
-                })
-                .filter(new Func1<String, Boolean>() {
-                    @Override
-                    public Boolean call(String s) {
-                        return s != null && !s.isEmpty();
-                    }
-                })
-                .debounce(LOOKUP_DEBOUNCE, TimeUnit.MILLISECONDS, Schedulers.computation())
-                .subscribe(new Action1<String>() {
-                    @Override
-                    public void call(String s) {
-                        lookupInternal(s);
-                    }
-                });
+        if (mEventsSub == null || mEventsSub.isUnsubscribed()) {
+            mEventsSub = mEvents
+                    .map(new Func1<String, String>() {
+                        @Override
+                        public String call(String s) {
+                            return s.replaceAll("[^\\p{L}\\w -]", "").trim();
+                        }
+                    })
+                    .filter(new Func1<String, Boolean>() {
+                        @Override
+                        public Boolean call(String s) {
+                            return s != null && !s.isEmpty();
+                        }
+                    })
+                    .debounce(LOOKUP_DEBOUNCE, TimeUnit.MILLISECONDS, Schedulers.computation())
+                    .subscribe(new Action1<String>() {
+                        @Override
+                        public void call(String s) {
+                            lookupInternal(s);
+                        }
+                    });
+        }
     }
 
     /**
@@ -162,6 +169,12 @@ public class MainPresenter {
      */
     public void detach() {
         mRef.clear();
+    }
+
+    /**
+     * Should be called when activity is finishing.
+     */
+    public void clearSubscriptions() {
         if (mSubLangs != null && !mSubLangs.isUnsubscribed()) {
             mSubLangs.unsubscribe();
             mSubLangs = null;
@@ -176,63 +189,9 @@ public class MainPresenter {
         }
     }
 
-    /**
-     * Load languages list. They will be loaded from net, if there are no cached files.
-     */
-    public void loadLanguages() {
-        if (mLangs != null && mDest != null && mSource != null) {
-            mRef.get().onLanguagesResult(mLangs, getDestLanguageIndex(), getSourceLanguageIndex());
-            return;
-        }
-
-        if (mSubLangs != null && !mSubLangs.isUnsubscribed()) {
-            // wait for request to finish
-            return;
-        }
-
-        if (mPrefs.shouldUpdateLangs()) {
-            mSubLangs = mClient.getLangs(BuildConfig.API_KEY)
-                    .doOnNext(new Action1<List<Language>>() {
-                        @Override
-                        public void call(List<Language> list) {
-                            mPrefs.saveLanguagesList(list, Locale.getDefault().getLanguage());
-                            updateLanguages(list);
-                        }
-                    })
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(onGetLangsResult, mGetLangsErrorHandler);
-        } else {
-            mSubLangs = mPrefs.getLanguagesList()
-                    .map(new Func1<List<Language>, Object>() {
-                        @Override
-                        public Boolean call(List<Language> languages) {
-                            updateLanguages(languages);
-                            return true;
-                        }
-                    })
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(onGetLangsResult, mGetLangsErrorHandler);
-        }
-    }
-
-    /**
-     * Setup presenter fields for manipulating with languages.
-     *
-     * @param list list of the languages
-     */
-    private void updateLanguages(List<Language> list) {
-        mLangs = list;
-        if (!list.isEmpty()) {
-            setSourceLanguageByCode(mPrefs.getSourceLang());
-            setDestLanguageByCode(mPrefs.getDestLang());
-            sortLanguages();
-        }
-    }
-
-    public void sortLanguages() {
-        Collections.sort(mLangs);
-    }
+    ///////////////////////////////////////////////////////////////////////////
+    // Lookup
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * Queue lookup request.
@@ -284,6 +243,10 @@ public class MainPresenter {
                         new Action1<Result>() {
                             @Override
                             public void call(Result result) {
+                                mLastResult = result;
+                                if (result != null && !mHistory.contains(result.text)) {
+                                    mHistory.add(result.text);
+                                }
                                 MainActivity a = mRef.get();
                                 if (a != null) {
                                     if (result != null) {
@@ -291,10 +254,6 @@ public class MainPresenter {
                                     } else {
                                         a.onEmptyResult();
                                     }
-                                }
-                                if (mSubLookup != null && !mSubLookup.isUnsubscribed()) {
-                                    mSubLookup.unsubscribe();
-                                    mSubLookup = null;
                                 }
                             }
                         },
@@ -316,9 +275,113 @@ public class MainPresenter {
         }
     }
 
+    public Result getLastResult() {
+        return mLastResult;
+    }
+
+    /**
+     * Convert {@link Result} into "shareable" form.
+     *
+     * @return array of 2 strings, first is the text, second is the translations
+     */
+    @Size(2)
+    @Nullable
+    public String[] getShareResult() {
+        if (mLastResult == null) {
+            return null;
+        }
+        String[] result = new String[2];
+        if (mPrefs.shareIncludeTranscription() && mLastResult.transcription != null &&
+                !mLastResult.transcription.isEmpty()) {
+            result[0] = mLastResult.text + " [" + mLastResult.transcription + "]";
+        } else {
+            result[0] = mLastResult.text;
+        }
+        result[1] = mLastResult.toString();
+        return result;
+    }
+
+    public boolean isRequestInProgress() {
+        return mSubLookup != null && !mSubLookup.isUnsubscribed();
+    }
+
+    public ArrayList<String> getHistory() {
+        return mHistory;
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Languages
     ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Load languages list. They will be loaded from net, if there are no cached files.
+     */
+    public void loadLanguages() {
+        if (mLangs != null && mDest != null && mSource != null) {
+            mRef.get().onLanguagesResult(mLangs, getDestLanguageIndex(), getSourceLanguageIndex());
+            return;
+        }
+
+        if (mSubLangs != null && !mSubLangs.isUnsubscribed()) {
+            // wait for request to finish
+            return;
+        }
+
+        if (mPrefs.shouldUpdateLangs()) {
+            mSubLangs = loadLanguagesFromRemote()
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(onGetLangsResult, mGetLangsErrorHandler);
+        } else {
+            mSubLangs = mPrefs.getLanguagesList()
+                    .map(new Func1<List<Language>, Object>() {
+                        @Override
+                        public Boolean call(List<Language> languages) {
+                            updateLanguages(languages);
+                            return true;
+                        }
+                    })
+                    .onErrorResumeNext(new Func1<Throwable, Observable<?>>() {
+                        @Override
+                        public Observable<List<Language>> call(Throwable throwable) {
+                            return loadLanguagesFromRemote();
+                        }
+                    })
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(onGetLangsResult, mGetLangsErrorHandler);
+        }
+    }
+
+    @NonNull
+    private Observable<List<Language>> loadLanguagesFromRemote() {
+        return mClient.getLangs(BuildConfig.API_KEY)
+                .doOnNext(new Action1<List<Language>>() {
+                    @Override
+                    public void call(List<Language> list) {
+                        mPrefs.setLangsTimestamp(new Date());
+                        updateLanguages(list);
+                        saveLanguages();
+                    }
+                });
+    }
+
+    /**
+     * Setup presenter fields for manipulating with languages.
+     *
+     * @param list list of the languages
+     */
+    private void updateLanguages(List<Language> list) {
+        mLangs = list;
+        if (!list.isEmpty()) {
+            setSourceLanguageByCode(mPrefs.getSourceLang());
+            setDestLanguageByCode(mPrefs.getDestLang());
+            sortLanguages();
+        }
+    }
+
+    public void sortLanguages() {
+        Collections.sort(mLangs);
+    }
 
     /**
      * Set source language by its position in languages list.
@@ -419,51 +482,7 @@ public class MainPresenter {
      * Save language list on the disk.
      */
     public void saveLanguages() {
-        if (mSubLangs != null && !mSubLangs.isUnsubscribed()) {
-            mSubLangs.unsubscribe();
-            mSubLangs = null;
-        }
-
-        mSubLangs = Observable
-                .create(new Observable.OnSubscribe<Object>() {
-                    @Override
-                    public void call(Subscriber<? super Object> subscriber) {
-                        try {
-                            String code = Locale.getDefault().getLanguage();
-                            mPrefs.saveLanguagesList(mLangs, code);
-                            if (!subscriber.isUnsubscribed()) {
-                                subscriber.onNext(null);
-                            }
-                        } catch (Exception e) {
-                            if (!subscriber.isUnsubscribed()) {
-                                subscriber.onError(e);
-                            }
-                        }
-                    }
-                })
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                        new Action1<Object>() {
-                            @Override
-                            public void call(Object o) {
-                                if (BuildConfig.DEBUG) {
-                                    Log.d("MainPresenter", "saveLanguages: success");
-                                }
-                                if (mSubLangs != null && !mSubLangs.isUnsubscribed()) {
-                                    mSubLangs.unsubscribe();
-                                    mSubLangs = null;
-                                }
-                            }
-                        },
-                        new Action1<Throwable>() {
-                            @Override
-                            public void call(Throwable throwable) {
-                                if (BuildConfig.DEBUG) {
-                                    Log.d("MainPresenter", "saveLanguages: " + throwable.toString());
-                                }
-                            }
-                        }
-                );
+        mPrefs.saveLanguagesList(mLangs);
     }
 
     ///////////////////////////////////////////////////////////////////////////

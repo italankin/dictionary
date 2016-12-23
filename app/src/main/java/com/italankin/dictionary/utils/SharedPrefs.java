@@ -18,7 +18,6 @@ package com.italankin.dictionary.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -30,13 +29,23 @@ import com.italankin.dictionary.dto.Language;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.Type;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Callable;
 
 import rx.Observable;
 import rx.Observer;
+import rx.Subscription;
+import rx.functions.Action0;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 /**
@@ -44,11 +53,14 @@ import rx.schedulers.Schedulers;
  */
 public class SharedPrefs {
 
-    private static final String LANGS = "langs.json";
+    private static final String LANGS_FILE_NAME = "langs.json";
+    private static final SimpleDateFormat LANGS_TIMESTAMP =
+            new SimpleDateFormat("yyyy-MM-dd'T'HH:MM:ssZ", Locale.US);
 
     private static final String PREF_SOURCE = "source";
     private static final String PREF_DEST = "dest";
     private static final String PREF_LANGS_LOCALE = "langs_locale";
+    private static final String PREF_LANGS_TIMESTAMP = "langs_timestamp";
     private static final String PREF_LOOKUP_REVERSE = "lookup_reverse";
     private static final String PREF_BACK_FOCUS = "back_focus";
     private static final String PREF_CLOSE_ON_SHARE = "close_on_share";
@@ -59,11 +71,12 @@ public class SharedPrefs {
     private static final String PREF_FILTER_POS_FILTER = "filter_pos_filter";
     private static final String PREF_SHOW_SHARE_FAB = "show_share_fab";
 
-    private SharedPreferences mPreferences;
-    private Context mContext;
-    private Gson mGson = new Gson();
+    private final SharedPreferences mPreferences;
+    private final Context mContext;
+    private final Gson mGson = new Gson();
 
-    private Observable<List<Language>> mLanguages;
+    private Observable<List<Language>> mLanguagesObservable;
+    private Subscription mSaveLanguagesSub;
 
     public SharedPrefs(Context context) {
         mContext = context;
@@ -110,98 +123,136 @@ public class SharedPrefs {
     // Languages list
     ///////////////////////////////////////////////////////////////////////////
 
-    public void saveLanguagesList(final List<Language> list, final String locale) {
-        Observable
-                .fromCallable(new Callable<Boolean>() {
-                    @Override
-                    public Boolean call() throws Exception {
-                        File file = getLangsFile();
-                        FileOutputStream fs = new FileOutputStream(file);
-                        String json = mGson.toJson(list);
-                        fs.write(json.getBytes());
-                        fs.close();
-                        mPreferences.edit().putString(PREF_LANGS_LOCALE, locale).apply();
-                        return true;
-                    }
-                })
-                .subscribeOn(Schedulers.io())
-                .subscribe(new Observer<Boolean>() {
-                    @Override
-                    public void onNext(Boolean value) {
-                        if (BuildConfig.DEBUG) {
-                            Log.d("SharedPrefs", "saveLanguagesList: " + value);
+    /**
+     * Save list of languages on disk.
+     *
+     * @param list list of languages
+     */
+    public void saveLanguagesList(List<Language> list) {
+        if (list == null) {
+            return;
+        }
+        if (mSaveLanguagesSub == null || mSaveLanguagesSub.isUnsubscribed()) {
+            mSaveLanguagesSub = Observable.just(new ArrayList<>(list))
+                    .map(new Func1<List<Language>, Boolean>() {
+                        @Override
+                        public Boolean call(List<Language> languages) {
+                            try {
+                                Collections.sort(languages);
+                                File file = getLangsFile();
+                                if (!file.delete() && BuildConfig.DEBUG) {
+                                    Log.d("SharedPrefs", "saveLanguagesList: delete failed");
+                                }
+                                FileOutputStream fs = new FileOutputStream(file);
+                                String json = mGson.toJson(languages);
+                                fs.write(json.getBytes());
+                                fs.close();
+                                String locale = Locale.getDefault().getLanguage();
+                                mPreferences.edit().putString(PREF_LANGS_LOCALE, locale).apply();
+                                return true;
+                            } catch (IOException e) {
+                                return false;
+                            }
                         }
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        if (BuildConfig.DEBUG) {
-                            Log.e("SharedPrefs", "saveLanguagesList: ", e);
+                    })
+                    .doOnTerminate(new Action0() {
+                        @Override
+                        public void call() {
+                            mSaveLanguagesSub = null;
                         }
-                    }
+                    })
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(new Observer<Boolean>() {
+                        @Override
+                        public void onNext(Boolean value) {
+                            if (BuildConfig.DEBUG) {
+                                Log.d("SharedPrefs", "saveLanguagesList: " + value);
+                            }
+                        }
 
-                    @Override
-                    public void onCompleted() {
-                    }
-                });
+                        @Override
+                        public void onError(Throwable e) {
+                            if (BuildConfig.DEBUG) {
+                                Log.e("SharedPrefs", "saveLanguagesList: ", e);
+                            }
+                        }
+
+                        @Override
+                        public void onCompleted() {
+                        }
+                    });
+        }
     }
 
     public Observable<List<Language>> getLanguagesList() {
-        if (mLanguages == null) {
-            mLanguages = getLanguagesListObservable();
-            mLanguages.subscribe(new Observer<List<Language>>() {
-                @Override
-                public void onNext(List<Language> languages) {
-                    saveLanguagesList(languages, Locale.getDefault().getLanguage());
-                }
+        if (mLanguagesObservable == null) {
+            mLanguagesObservable = getLanguagesListObservable();
+            mLanguagesObservable
+                    .doOnTerminate(new Action0() {
+                        @Override
+                        public void call() {
+                            mLanguagesObservable = null;
+                        }
+                    })
+                    .subscribe(new Observer<List<Language>>() {
+                        @Override
+                        public void onNext(List<Language> languages) {
+                        }
 
-                @Override
-                public void onError(Throwable e) {
-                    mLanguages = null;
-                    if (BuildConfig.DEBUG) {
-                        Log.e("SharedPrefs", "getLanguagesList: ", e);
-                    }
-                }
+                        @Override
+                        public void onError(Throwable e) {
+                            purgeLanguages();
+                            if (BuildConfig.DEBUG) {
+                                Log.e("SharedPrefs", "getLanguagesList: ", e);
+                            }
+                        }
 
-                @Override
-                public void onCompleted() {
-                }
-            });
+                        @Override
+                        public void onCompleted() {
+                        }
+                    });
         }
-        return mLanguages;
+        return mLanguagesObservable;
     }
 
-    @NonNull
-    private Observable<List<Language>> getLanguagesListObservable() {
-        return Observable
-                .fromCallable(new Callable<List<Language>>() {
-                    @Override
-                    public List<Language> call() throws Exception {
-                        File file = getLangsFile();
-                        FileReader fs = new FileReader(file);
-                        Type collectionType = new TypeToken<List<Language>>() {
-                        }.getType();
-                        return mGson.fromJson(fs, collectionType);
-                    }
-                })
-                .subscribeOn(Schedulers.io())
-                .cache();
+    public void setLangsTimestamp(Date date) {
+        String timestamp = LANGS_TIMESTAMP.format(date);
+        mPreferences.edit().putString(PREF_LANGS_TIMESTAMP, timestamp).apply();
     }
 
     public boolean shouldUpdateLangs() {
+        boolean updatedLastTwoWeeks = false;
+        if (mPreferences.contains(PREF_LANGS_TIMESTAMP)) {
+            try {
+                String s = mPreferences.getString(PREF_LANGS_TIMESTAMP, null);
+                Date timestamp = LANGS_TIMESTAMP.parse(s);
+                Calendar calendar = Calendar.getInstance();
+                calendar.add(Calendar.DAY_OF_MONTH, -14);
+                updatedLastTwoWeeks = timestamp.after(calendar.getTime());
+            } catch (ParseException e) {
+                // failed to parse date
+            }
+        }
         String savedLocale = mPreferences.getString(PREF_LANGS_LOCALE, null);
         String currentLocale = Locale.getDefault().getLanguage();
-        return currentLocale != null && !currentLocale.equals(savedLocale) || !hasLangsFile();
+        return !updatedLastTwoWeeks || !currentLocale.equals(savedLocale) || !hasLangsFile();
     }
 
     public boolean hasLangsFile() {
         return getLangsFile().exists();
     }
 
-    @NonNull
-    private File getLangsFile() {
-        File dir = mContext.getFilesDir();
-        return new File(dir, LANGS);
+    public void purgeLanguages() {
+        if (mSaveLanguagesSub != null && !mSaveLanguagesSub.isUnsubscribed()) {
+            mSaveLanguagesSub.unsubscribe();
+        }
+        File file = getLangsFile();
+        if (file.exists()) {
+            boolean delete = file.delete();
+            if (BuildConfig.DEBUG) {
+                Log.d("SharedPrefs", "purgeLanguages: " + delete);
+            }
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -234,6 +285,31 @@ public class SharedPrefs {
         int morpho = mPreferences.getBoolean(PREF_FILTER_MORPHO, false) ? ApiClient.FILTER_MORPHO : 0;
         int pos = mPreferences.getBoolean(PREF_FILTER_POS_FILTER, false) ? ApiClient.FILTER_POS_FILTER : 0;
         return family | shortPos | morpho | pos;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Internal
+    ///////////////////////////////////////////////////////////////////////////
+
+    private File getLangsFile() {
+        File dir = mContext.getFilesDir();
+        return new File(dir, LANGS_FILE_NAME);
+    }
+
+    private Observable<List<Language>> getLanguagesListObservable() {
+        return Observable
+                .fromCallable(new Callable<List<Language>>() {
+                    @Override
+                    public List<Language> call() throws Exception {
+                        File file = getLangsFile();
+                        FileReader fs = new FileReader(file);
+                        Type collectionType = new TypeToken<List<Language>>() {
+                        }.getType();
+                        return mGson.fromJson(fs, collectionType);
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .cache();
     }
 
 }

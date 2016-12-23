@@ -1,8 +1,8 @@
 <android.support.design.widget.CoordinatorLayout
-    android:id="@+id/root"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.main.MainActivity">
@@ -16,7 +16,9 @@
         android:clipToPadding="false"
         android:paddingBottom="4dp"
         android:paddingTop="4dp"
-        tools:listitem="@layout/item_attribute"/>
+        android:visibility="invisible"
+        tools:listitem="@layout/item_attribute"
+        tools:visibility="visible"/>
 
     <android.support.v7.widget.CardView
         android:id="@+id/input_card"
