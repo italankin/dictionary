@@ -244,9 +244,11 @@ public class MainPresenter {
                         new Action1<Result>() {
                             @Override
                             public void call(Result result) {
-                                mLastResult = result;
-                                if (result != null && !mHistory.contains(result.text)) {
-                                    mHistory.add(result.text);
+                                if (result != null) {
+                                    mLastResult = result;
+                                    if (!mHistory.contains(result.text)) {
+                                        mHistory.add(result.text);
+                                    }
                                 }
                                 MainActivity a = mRef.get();
                                 if (a != null) {
