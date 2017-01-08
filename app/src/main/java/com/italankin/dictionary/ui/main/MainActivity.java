@@ -201,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
         });
         // Behavior which will offset input layout accoring to scroll events
         CoordinatorLayout.LayoutParams lp = (CoordinatorLayout.LayoutParams) mInputLayout.getLayoutParams();
-        lp.setBehavior(new HidingViewBehavior(mInputLayout, mRecyclerView));
+        lp.setBehavior(new HidingViewBehavior(this, mInputLayout, mRecyclerView));
         mInputLayout.getParent().requestLayout();
 
         mInput.setImeActionLabel(getString(R.string.lookup), KeyEvent.KEYCODE_ENTER);

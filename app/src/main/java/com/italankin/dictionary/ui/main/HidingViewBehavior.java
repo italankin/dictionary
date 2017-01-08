@@ -15,9 +15,11 @@
  */
 package com.italankin.dictionary.ui.main;
 
+import android.content.Context;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
@@ -26,14 +28,18 @@ public class HidingViewBehavior extends CoordinatorLayout.Behavior<View> {
 
     private static final Interpolator ANIM_INTERPOLATOR = new DecelerateInterpolator(2);
     private static final int ANIM_DURATION = 250;
+    private static final float MIN_VELOCITY_DIP = 1500;
 
+    private final float minVelocity;
     private final View hidingView;
     private final View scrollingView;
     private int maxOffset = 0;
 
-    public HidingViewBehavior(View hidingView, View scrollingView) {
+    public HidingViewBehavior(Context context, View hidingView, View scrollingView) {
         this.hidingView = hidingView;
         this.scrollingView = scrollingView;
+        DisplayMetrics dm = context.getResources().getDisplayMetrics();
+        this.minVelocity = MIN_VELOCITY_DIP * dm.density;
     }
 
     @Override
@@ -74,9 +80,12 @@ public class HidingViewBehavior extends CoordinatorLayout.Behavior<View> {
     @Override
     public boolean onNestedPreFling(CoordinatorLayout coordinatorLayout, View child, View target,
                                     float velocityX, float velocityY) {
-        if (Math.abs(velocityY) > Math.abs(velocityX)) {
+        float absY = Math.abs(velocityY);
+        if (absY > Math.abs(velocityX)) {
             if (velocityY > 0) {
                 hideView();
+            } else if (absY >= minVelocity) {
+                showView();
             }
         }
         return false;
