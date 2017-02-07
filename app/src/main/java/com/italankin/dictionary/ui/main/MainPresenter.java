@@ -146,7 +146,7 @@ public class MainPresenter {
                     .map(new Func1<String, String>() {
                         @Override
                         public String call(String s) {
-                            return s.replaceAll("[^\\p{L}\\w -]", "").trim();
+                            return s.replaceAll("[^\\p{L}\\w -']", "").trim();
                         }
                     })
                     .filter(new Func1<String, Boolean>() {
