@@ -45,6 +45,7 @@ import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
 import rx.functions.Action0;
+import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
@@ -185,34 +186,23 @@ public class SharedPrefs {
     }
 
     public Observable<List<Language>> getLanguagesList() {
-        if (mLanguagesObservable == null) {
-            mLanguagesObservable = getLanguagesListObservable();
-            mLanguagesObservable
-                    .doOnTerminate(new Action0() {
-                        @Override
-                        public void call() {
-                            mLanguagesObservable = null;
-                        }
-                    })
-                    .subscribe(new Observer<List<Language>>() {
-                        @Override
-                        public void onNext(List<Language> languages) {
-                        }
-
-                        @Override
-                        public void onError(Throwable e) {
-                            purgeLanguages();
-                            if (BuildConfig.DEBUG) {
-                                Log.e("SharedPrefs", "getLanguagesList: ", e);
-                            }
-                        }
-
-                        @Override
-                        public void onCompleted() {
-                        }
-                    });
-        }
-        return mLanguagesObservable;
+        return Observable
+                .fromCallable(new Callable<List<Language>>() {
+                    @Override
+                    public List<Language> call() throws Exception {
+                        File file = getLangsFile();
+                        FileReader fs = new FileReader(file);
+                        Type collectionType = new TypeToken<List<Language>>() {}.getType();
+                        return mGson.fromJson(fs, collectionType);
+                    }
+                })
+                .doOnError(new Action1<Throwable>() {
+                    @Override
+                    public void call(Throwable throwable) {
+                        purgeLanguages();
+                        Log.e("SharedPrefs", "getLanguagesList: ", throwable);
+                    }
+                });
     }
 
     public void setLangsTimestamp(Date date) {
@@ -294,22 +284,6 @@ public class SharedPrefs {
     private File getLangsFile() {
         File dir = mContext.getFilesDir();
         return new File(dir, LANGS_FILE_NAME);
-    }
-
-    private Observable<List<Language>> getLanguagesListObservable() {
-        return Observable
-                .fromCallable(new Callable<List<Language>>() {
-                    @Override
-                    public List<Language> call() throws Exception {
-                        File file = getLangsFile();
-                        FileReader fs = new FileReader(file);
-                        Type collectionType = new TypeToken<List<Language>>() {
-                        }.getType();
-                        return mGson.fromJson(fs, collectionType);
-                    }
-                })
-                .subscribeOn(Schedulers.io())
-                .cache();
     }
 
 }
