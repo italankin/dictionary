@@ -33,25 +33,19 @@ public class HidingViewBehavior extends CoordinatorLayout.Behavior<View> {
     private final float minVelocity;
     private final View hidingView;
     private final View scrollingView;
-    private int maxOffset = 0;
+    private final int maxOffset;
 
-    public HidingViewBehavior(Context context, View hidingView, View scrollingView) {
+    public HidingViewBehavior(Context context, View hidingView, View scrollingView, int maxOffset) {
         this.hidingView = hidingView;
         this.scrollingView = scrollingView;
         DisplayMetrics dm = context.getResources().getDisplayMetrics();
         this.minVelocity = MIN_VELOCITY_DIP * dm.density;
+        this.maxOffset = maxOffset;
     }
 
     @Override
     public boolean layoutDependsOn(CoordinatorLayout parent, View child, View dependency) {
         return dependency instanceof RecyclerView;
-    }
-
-    @Override
-    public boolean onLayoutChild(CoordinatorLayout parent, View child, int layoutDirection) {
-        // set maximum offset to be equal view's height
-        maxOffset = hidingView.getHeight();
-        return false;
     }
 
     @Override

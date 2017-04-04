@@ -39,6 +39,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.animation.DecelerateInterpolator;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -98,6 +99,9 @@ public class MainActivity extends AppCompatActivity {
     //region Views
     @BindView(R.id.toolbar)
     Toolbar toolbar;
+
+    @BindView(R.id.root)
+    CoordinatorLayout mRoot;
 
     /**
      * EditText for text input
@@ -196,19 +200,20 @@ public class MainActivity extends AppCompatActivity {
                     //noinspection deprecation
                     vto.removeGlobalOnLayoutListener(this);
                 }
+                // Behavior which will offset input layout accoring to scroll events
+                CoordinatorLayout.LayoutParams lp = (CoordinatorLayout.LayoutParams) mInputLayout.getLayoutParams();
+                lp.setBehavior(new HidingViewBehavior(MainActivity.this, mInputLayout,
+                        mRecyclerView, mInputLayout.getHeight()));
+                mInputLayout.getParent().requestLayout();
                 resetViewsState();
             }
         });
-        // Behavior which will offset input layout accoring to scroll events
-        CoordinatorLayout.LayoutParams lp = (CoordinatorLayout.LayoutParams) mInputLayout.getLayoutParams();
-        lp.setBehavior(new HidingViewBehavior(this, mInputLayout, mRecyclerView));
-        mInputLayout.getParent().requestLayout();
 
-        mInput.setImeActionLabel(getString(R.string.lookup), KeyEvent.KEYCODE_ENTER);
-        mInput.setOnKeyListener(new View.OnKeyListener() {
+        mInput.setImeActionLabel(getString(R.string.lookup), EditorInfo.IME_ACTION_SEARCH);
+        mInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
-            public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if (keyCode == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN) {
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                     startLookup();
                     return true;
                 }
@@ -220,7 +225,6 @@ public class MainActivity extends AppCompatActivity {
             public void onFocusChange(View v, boolean hasFocus) {
                 if (hasFocus) {
                     resetViewsState();
-                    inputManager.showSoftInput(mInput, 0);
                 }
             }
         });
@@ -297,8 +301,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
+    protected void onStop() {
+        super.onStop();
         mPresenter.saveLanguages();
     }
 
@@ -316,6 +320,12 @@ public class MainActivity extends AppCompatActivity {
         handleIntent(intent);
     }
 
+    /**
+     * Called when a new {@link Intent} is received.
+     *
+     * @param intent new intent
+     * @return {@code true}, if {@code intent} was successfully processed, {@code false} otherwise
+     */
     private boolean handleIntent(Intent intent) {
         if (intent.getType() != null && intent.hasExtra(Intent.EXTRA_TEXT)) {
             String text = intent.getStringExtra(Intent.EXTRA_TEXT);
@@ -324,7 +334,6 @@ public class MainActivity extends AppCompatActivity {
             if ("text/plain".equals(intent.getType()) && !TextUtils.isEmpty(text)) {
                 intent.setType(null);
                 mInput.setText(text);
-                mInput.selectAll();
                 resetViewsState();
                 startLookup(text);
             }
@@ -559,8 +568,10 @@ public class MainActivity extends AppCompatActivity {
             }
             if (mPresenter.isRequestInProgress()) {
                 showProgressBar();
-            } else {
+            } else if (mInput.getText().length() == 0) {
                 mInput.requestFocus();
+            } else {
+                mInput.clearFocus();
             }
         }
     }
@@ -617,6 +628,7 @@ public class MainActivity extends AppCompatActivity {
     public void onLookupResult(Result result) {
         List<TranslationEx> translations = result.translations;
         mInput.setText(result.text);
+        mInput.clearFocus();
         if (!TextUtils.isEmpty(result.transcription)) {
             mTranscription.setText(String.format("[%s]", result.transcription));
         } else {
@@ -670,7 +682,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public void onLanguagesError() {
         setControlsState(false);
-        Snackbar snackbar = Snackbar.make(mInput, R.string.error_langs, Snackbar.LENGTH_INDEFINITE);
+        Snackbar snackbar = Snackbar.make(mRoot, R.string.error_langs, Snackbar.LENGTH_INDEFINITE);
         snackbar.setAction(R.string.retry, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
