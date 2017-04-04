@@ -12,7 +12,7 @@ android {
         applicationId 'com.italankin.dictionary'
         minSdkVersion 14
         targetSdkVersion 25
-        versionCode 21
+        versionCode 22
         versionName '1.10.0'
         archivesBaseName = "dictionary-$versionName"
     }
