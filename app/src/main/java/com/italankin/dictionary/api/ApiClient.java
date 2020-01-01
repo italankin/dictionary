@@ -15,10 +15,9 @@
  */
 package com.italankin.dictionary.api;
 
-import android.support.annotation.IntDef;
+import androidx.annotation.IntDef;
 
 import com.italankin.dictionary.dto.Definition;
-import com.italankin.dictionary.dto.DicResult;
 import com.italankin.dictionary.dto.Language;
 
 import java.io.UnsupportedEncodingException;
@@ -32,13 +31,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import io.reactivex.Single;
+import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
-import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
-import rx.Observable;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
 
 /**
  * Client class for API usage
@@ -67,7 +65,7 @@ public class ApiClient {
 
     public ApiClient(OkHttpClient client, String endpoint) {
         GsonConverterFactory converter = GsonConverterFactory.create();
-        RxJavaCallAdapterFactory adapter = RxJavaCallAdapterFactory.createWithScheduler(Schedulers.io());
+        RxJava2CallAdapterFactory adapter = RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io());
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(endpoint)
                 .addCallAdapterFactory(adapter)
@@ -83,41 +81,38 @@ public class ApiClient {
      * @param key API key
      * @return list of available languages
      */
-    public Observable<List<Language>> getLangs(String key) {
+    public Single<List<Language>> getLangs(String key) {
         return mService.getLangs(key)
-                .map(new Func1<String[], List<Language>>() {
-                    @Override
-                    public List<Language> call(String[] entries) {
-                        List<Language> list = new ArrayList<>(entries.length);
-                        Set<String> set = new HashSet<>(entries.length);
-                        String defaultCode = Locale.getDefault().getLanguage();
-                        String l1, l2;
-                        Language lang;
-                        for (String s : entries) {
-                            int i = s.indexOf("-");
-                            if (i == -1) {
-                                continue;
-                            }
-                            l1 = s.substring(0, i);
-                            l2 = s.substring(i + 1);
+                .map(entries -> {
+                    List<Language> list = new ArrayList<>(entries.length);
+                    Set<String> set = new HashSet<>(entries.length);
+                    String defaultCode = Locale.getDefault().getLanguage();
+                    String l1, l2;
+                    Language lang;
+                    for (String s : entries) {
+                        int i = s.indexOf("-");
+                        if (i == -1) {
+                            continue;
+                        }
+                        l1 = s.substring(0, i);
+                        l2 = s.substring(i + 1);
 
-                            // source language
-                            if (!set.contains(l1)) {
-                                lang = languageFromCode(l1, defaultCode);
-                                list.add(lang);
-                                set.add(l1);
-                            }
-
-                            // destination language
-                            if (!set.contains(l2)) {
-                                lang = languageFromCode(l2, defaultCode);
-                                list.add(lang);
-                                set.add(l2);
-                            }
+                        // source language
+                        if (!set.contains(l1)) {
+                            lang = languageFromCode(l1, defaultCode);
+                            list.add(lang);
+                            set.add(l1);
                         }
 
-                        return list;
+                        // destination language
+                        if (!set.contains(l2)) {
+                            lang = languageFromCode(l2, defaultCode);
+                            list.add(lang);
+                            set.add(l2);
+                        }
                     }
+
+                    return list;
                 });
     }
 
@@ -141,28 +136,17 @@ public class ApiClient {
      *              </ul>
      * @return {@link List} of {@link Definition}s
      */
-    public Observable<List<Definition>> lookup(String key, String lang, String text,
-            String ui, @LookupFlags int flags) {
+    public Single<List<Definition>> lookup(String key, String lang, String text,
+                                           String ui, @LookupFlags int flags) {
         try {
             text = URLDecoder.decode(text, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            return Observable.error(e);
+            return Single.error(e);
         }
         return mService.lookup(key, lang, text, ui, flags)
-                .map(new Func1<DicResult, List<Definition>>() {
-                    @Override
-                    public List<Definition> call(DicResult dicResult) {
-                        return dicResult.def;
-                    }
-                })
-                .map(new Func1<List<Definition>, List<Definition>>() {
-                    @Override
-                    public List<Definition> call(List<Definition> definitions) {
-                        if (definitions == null) {
-                            return Collections.emptyList();
-                        }
-                        return definitions;
-                    }
+                .map(dicResult -> {
+                    List<Definition> result = dicResult.def;
+                    return result!=null ?result:Collections.emptyList();
                 });
     }
 

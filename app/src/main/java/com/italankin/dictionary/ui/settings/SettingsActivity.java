@@ -20,14 +20,11 @@ import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.view.View;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import com.italankin.dictionary.R;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
 
 /**
  * Activity for displaying and manipulating user preferences.
@@ -36,9 +33,6 @@ public class SettingsActivity extends AppCompatActivity implements SettingsRootF
 
     public static final String TAG_ROOT = "root";
     public static final String TAG_SEARCH_OPTIONS = "search_options";
-
-    @BindView(R.id.toolbar)
-    Toolbar toolbar;
 
     private FragmentManager mManager;
 
@@ -50,15 +44,10 @@ public class SettingsActivity extends AppCompatActivity implements SettingsRootF
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
-        ButterKnife.bind(this);
 
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        });
+        toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         mManager = getFragmentManager();
 

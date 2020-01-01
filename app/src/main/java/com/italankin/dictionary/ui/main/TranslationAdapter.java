@@ -16,17 +16,17 @@
 package com.italankin.dictionary.ui.main;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.widget.PopupMenu;
-import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.italankin.dictionary.R;
 import com.italankin.dictionary.dto.TranslationEx;
@@ -162,46 +162,35 @@ class TranslationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     public class ItemViewHolder extends RecyclerView.ViewHolder {
-        public TextView text;
-        public TextView means;
-        public TextView syns;
-        public TextView pos;
-        public ImageView menu;
+        TextView text;
+        TextView means;
+        TextView syns;
+        TextView pos;
+        ImageView menu;
 
         private PopupMenu popupMenu;
 
-        public ItemViewHolder(View v) {
-            super(v);
-            v.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (mListener != null) {
-                        mListener.onItemClick(getAdapterPosition());
-                    }
+        public ItemViewHolder(View view) {
+            super(view);
+            view.setOnClickListener(v -> {
+                if (mListener != null) {
+                    mListener.onItemClick(getAdapterPosition());
                 }
             });
-            text = (TextView) v.findViewById(R.id.text);
-            means = (TextView) v.findViewById(R.id.means);
-            syns = (TextView) v.findViewById(R.id.synonyms);
-            pos = (TextView) v.findViewById(R.id.pos);
-            menu = (ImageView) v.findViewById(R.id.overflow);
-            popupMenu = new PopupMenu(v.getContext(), menu);
+            text = view.findViewById(R.id.text);
+            means = view.findViewById(R.id.means);
+            syns = view.findViewById(R.id.synonyms);
+            pos = view.findViewById(R.id.pos);
+            menu = view.findViewById(R.id.overflow);
+            popupMenu = new PopupMenu(view.getContext(), menu);
             popupMenu.inflate(R.menu.attribute);
-            popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem item) {
-                    if (mListener != null) {
-                        mListener.onItemMenuClick(getAdapterPosition(), item.getItemId());
-                    }
-                    return true;
+            popupMenu.setOnMenuItemClickListener(item -> {
+                if (mListener != null) {
+                    mListener.onItemMenuClick(getAdapterPosition(), item.getItemId());
                 }
+                return true;
             });
-            menu.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    popupMenu.show();
-                }
-            });
+            menu.setOnClickListener(v -> popupMenu.show());
         }
     }
 

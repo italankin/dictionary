@@ -18,9 +18,6 @@ package com.italankin.dictionary.ui.translation;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.ShareCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -30,13 +27,16 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ShareCompat;
+
 import com.italankin.dictionary.R;
 import com.italankin.dictionary.dto.Attribute;
 import com.italankin.dictionary.dto.TranslationEx;
 import com.italankin.dictionary.ui.main.MainActivity;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
 
 /**
  * Activity is displaying single translation item in the more detailed form.
@@ -46,26 +46,6 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
     private static final String EXTRA_DATA = "data";
 
     private TranslationEx mData;
-
-    //region Views
-    @BindView(R.id.toolbar)
-    Toolbar toolbar;
-
-    @BindView(R.id.text_translation)
-    TextView textTrans;
-
-    @BindView(R.id.text_position)
-    TextView textPos;
-
-    @BindView(R.id.card_means)
-    View layoutMeans;
-
-    @BindView(R.id.card_synonyms)
-    View layoutSynonyms;
-
-    @BindView(R.id.card_examples)
-    View layoutExamples;
-    //endregion
 
     public static Intent getStartIntent(Context context, TranslationEx data) {
         Intent starter = new Intent(context, TranslationActivity.class);
@@ -84,43 +64,44 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
         }
 
         setContentView(R.layout.activity_translation);
-        ButterKnife.bind(this);
+
 
         // setup toolbar
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        });
+        toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         // translation text
+        TextView textTrans = findViewById(R.id.text_translation);
         textTrans.setText(mData.text);
         textTrans.setOnClickListener(this);
         textTrans.setOnLongClickListener(this);
 
         // speech position text
+        TextView textPos = findViewById(R.id.text_position);
         textPos.setText(mData.pos);
 
         // process means array, if we got one
         if (mData.mean != null && mData.mean.length > 0) {
+            View layoutMeans = findViewById(R.id.card_means);
             layoutMeans.setVisibility(View.VISIBLE);
-            LinearLayout listMeans = (LinearLayout) findViewById(R.id.layout_means);
+            LinearLayout listMeans = findViewById(R.id.layout_means);
             addViewsForAttributes(listMeans, mData.mean);
         }
 
         // process synonyms array
         if (mData.syn != null && mData.syn.length > 0) {
+            View layoutSynonyms = findViewById(R.id.card_synonyms);
             layoutSynonyms.setVisibility(View.VISIBLE);
-            LinearLayout listSynonyms = (LinearLayout) findViewById(R.id.layout_synonyms);
+            LinearLayout listSynonyms = findViewById(R.id.layout_synonyms);
             addViewsForAttributes(listSynonyms, mData.syn);
         }
 
         // process examples array
         if (mData.ex != null && mData.ex.length > 0) {
+            View layoutExamples = findViewById(R.id.card_examples);
             layoutExamples.setVisibility(View.VISIBLE);
-            LinearLayout listExamples = (LinearLayout) findViewById(R.id.layout_examples);
+            LinearLayout listExamples = findViewById(R.id.layout_examples);
             addViewsForAttributes(listExamples, mData.ex);
         }
     }
@@ -144,7 +125,7 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelable(EXTRA_DATA, mData);
     }
@@ -157,23 +138,22 @@ public class TranslationActivity extends AppCompatActivity implements View.OnCli
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_share:
-                String text = mData.means + "\n" +
-                        mData.synonyms + "\n" +
-                        mData.examples;
-                Intent intent = ShareCompat.IntentBuilder
-                        .from(this)
-                        .setType("text/plain")
-                        .setText(text)
-                        .setSubject(mData.text)
-                        .getIntent();
-                if (intent.resolveActivity(getPackageManager()) != null) {
-                    startActivity(intent);
-                } else {
-                    Toast.makeText(this, R.string.error_no_app, Toast.LENGTH_SHORT).show();
-                }
-                return true;
+        if (item.getItemId() == R.id.action_share) {
+            String text = mData.means + "\n" +
+                    mData.synonyms + "\n" +
+                    mData.examples;
+            Intent intent = ShareCompat.IntentBuilder
+                    .from(this)
+                    .setType("text/plain")
+                    .setText(text)
+                    .setSubject(mData.text)
+                    .getIntent();
+            if (intent.resolveActivity(getPackageManager()) != null) {
+                startActivity(intent);
+            } else {
+                Toast.makeText(this, R.string.error_no_app, Toast.LENGTH_SHORT).show();
+            }
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }

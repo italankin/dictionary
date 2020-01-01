@@ -39,15 +39,11 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.Callable;
 
-import rx.Observable;
-import rx.Observer;
-import rx.Subscription;
-import rx.functions.Action0;
-import rx.functions.Action1;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * Wrapper around {@link SharedPreferences} for this application purposes.
@@ -77,7 +73,7 @@ public class SharedPrefs {
     private final Gson mGson = new Gson();
 
     private Observable<List<Language>> mLanguagesObservable;
-    private Subscription mSaveLanguagesSub;
+    private Disposable mSaveLanguagesSub;
 
     public SharedPrefs(Context context) {
         mContext = context;
@@ -133,75 +129,46 @@ public class SharedPrefs {
         if (list == null) {
             return;
         }
-        if (mSaveLanguagesSub == null || mSaveLanguagesSub.isUnsubscribed()) {
+        if (mSaveLanguagesSub == null || mSaveLanguagesSub.isDisposed()) {
             mSaveLanguagesSub = Observable.just(new ArrayList<>(list))
-                    .map(new Func1<List<Language>, Boolean>() {
-                        @Override
-                        public Boolean call(List<Language> languages) {
-                            try {
-                                Collections.sort(languages);
-                                File file = getLangsFile();
-                                if (!file.delete() && BuildConfig.DEBUG) {
-                                    Log.d("SharedPrefs", "saveLanguagesList: delete failed");
-                                }
-                                FileOutputStream fs = new FileOutputStream(file);
-                                String json = mGson.toJson(languages);
-                                fs.write(json.getBytes());
-                                fs.close();
-                                String locale = Locale.getDefault().getLanguage();
-                                mPreferences.edit().putString(PREF_LANGS_LOCALE, locale).apply();
-                                return true;
-                            } catch (IOException e) {
-                                return false;
+                    .map( languages -> {
+                        try {
+                            Collections.sort(languages);
+                            File file = getLangsFile();
+                            if (!file.delete() && BuildConfig.DEBUG) {
+                                Log.d("SharedPrefs", "saveLanguagesList: delete failed");
                             }
-                        }
-                    })
-                    .doOnTerminate(new Action0() {
-                        @Override
-                        public void call() {
-                            mSaveLanguagesSub = null;
+                            FileOutputStream fs = new FileOutputStream(file);
+                            String json = mGson.toJson(languages);
+                            fs.write(json.getBytes());
+                            fs.close();
+                            String locale = Locale.getDefault().getLanguage();
+                            mPreferences.edit().putString(PREF_LANGS_LOCALE, locale).apply();
+                            return true;
+                        } catch (IOException e) {
+                            return false;
                         }
                     })
                     .subscribeOn(Schedulers.io())
-                    .subscribe(new Observer<Boolean>() {
-                        @Override
-                        public void onNext(Boolean value) {
-                            if (BuildConfig.DEBUG) {
-                                Log.d("SharedPrefs", "saveLanguagesList: " + value);
-                            }
-                        }
-
-                        @Override
-                        public void onError(Throwable e) {
-                            if (BuildConfig.DEBUG) {
-                                Log.e("SharedPrefs", "saveLanguagesList: ", e);
-                            }
-                        }
-
-                        @Override
-                        public void onCompleted() {
-                        }
+                    .subscribe(result -> {
+                        Log.d("SharedPrefs", "saveLanguagesList: " + result);
+                    }, throwable -> {
+                        Log.e("SharedPrefs", "saveLanguagesList: ", throwable);
                     });
         }
     }
 
-    public Observable<List<Language>> getLanguagesList() {
-        return Observable
-                .fromCallable(new Callable<List<Language>>() {
-                    @Override
-                    public List<Language> call() throws Exception {
-                        File file = getLangsFile();
-                        FileReader fs = new FileReader(file);
-                        Type collectionType = new TypeToken<List<Language>>() {}.getType();
-                        return mGson.fromJson(fs, collectionType);
-                    }
+    public Single<List<Language>> getLanguagesList() {
+        return Single
+                .fromCallable(() -> {
+                    File file = getLangsFile();
+                    FileReader fs = new FileReader(file);
+                    Type collectionType = new TypeToken<List<Language>>() {}.getType();
+                    return mGson.<List<Language>>fromJson(fs, collectionType);
                 })
-                .doOnError(new Action1<Throwable>() {
-                    @Override
-                    public void call(Throwable throwable) {
-                        purgeLanguages();
-                        Log.e("SharedPrefs", "getLanguagesList: ", throwable);
-                    }
+                .doOnError(throwable -> {
+                    purgeLanguages();
+                    Log.e("SharedPrefs", "getLanguagesList: ", throwable);
                 });
     }
 
@@ -233,8 +200,8 @@ public class SharedPrefs {
     }
 
     public void purgeLanguages() {
-        if (mSaveLanguagesSub != null && !mSaveLanguagesSub.isUnsubscribed()) {
-            mSaveLanguagesSub.unsubscribe();
+        if (mSaveLanguagesSub != null && !mSaveLanguagesSub.isDisposed()) {
+            mSaveLanguagesSub.dispose();
         }
         File file = getLangsFile();
         if (file.exists()) {

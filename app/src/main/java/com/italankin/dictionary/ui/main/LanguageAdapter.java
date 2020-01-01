@@ -59,7 +59,7 @@ class LanguageAdapter extends BaseAdapter implements CompoundButton.OnCheckedCha
     public View getView(int position, View convertView, ViewGroup parent) {
         Language item = getItem(position);
         convertView = inflater.inflate(R.layout.item_spinner_language, parent, false);
-        TextView text = (TextView) convertView.findViewById(R.id.text);
+        TextView text = convertView.findViewById(R.id.text);
         text.setText(item.getName());
         return convertView;
     }
@@ -71,8 +71,8 @@ class LanguageAdapter extends BaseAdapter implements CompoundButton.OnCheckedCha
         if (convertView == null) {
             convertView = inflater.inflate(R.layout.item_spinner_language_dropdown, parent, false);
             holder = new ViewHolder();
-            holder.text = (TextView) convertView.findViewById(R.id.text);
-            holder.checkBox = (CheckBox) convertView.findViewById(R.id.checkbox);
+            holder.text = convertView.findViewById(R.id.text);
+            holder.checkBox = convertView.findViewById(R.id.checkbox);
             holder.checkBox.setOnCheckedChangeListener(this);
             convertView.setTag(holder);
         } else {

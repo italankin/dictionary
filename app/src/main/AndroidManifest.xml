@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.italankin.dictionary">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.italankin.dictionary">
 
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:name=".App"
@@ -10,7 +11,8 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="false"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        tools:ignore="GoogleAppIndexingWarning">
 
         <activity
             android:name=".ui.main.MainActivity"
@@ -19,30 +21,28 @@
             android:windowSoftInputMode="adjustResize">
 
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
             <intent-filter>
-                <action android:name="android.intent.action.SEND"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-                <data android:mimeType="text/plain"/>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
             </intent-filter>
 
             <intent-filter>
-                <action android:name="com.italankin.dictionary.MAIN"/>
+                <action android:name="com.italankin.dictionary.MAIN" />
             </intent-filter>
         </activity>
 
         <activity
             android:name=".ui.translation.TranslationActivity"
-            android:label="@string/translaton">
-        </activity>
+            android:label="@string/translaton" />
 
         <activity
             android:name=".ui.settings.SettingsActivity"
-            android:label="@string/settings">
-        </activity>
+            android:label="@string/settings" />
 
     </application>
 

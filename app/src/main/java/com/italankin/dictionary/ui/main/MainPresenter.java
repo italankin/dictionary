@@ -15,15 +15,15 @@
  */
 package com.italankin.dictionary.ui.main;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.Size;
 import android.text.TextUtils;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.Size;
 
 import com.italankin.dictionary.BuildConfig;
 import com.italankin.dictionary.R;
 import com.italankin.dictionary.api.ApiClient;
-import com.italankin.dictionary.dto.Definition;
 import com.italankin.dictionary.dto.Language;
 import com.italankin.dictionary.dto.Result;
 import com.italankin.dictionary.utils.SharedPrefs;
@@ -37,15 +37,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-import retrofit2.adapter.rxjava.HttpException;
-import rx.Observable;
-import rx.Subscription;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
-import rx.subjects.PublishSubject;
-import rx.subjects.Subject;
+import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
+import retrofit2.HttpException;
 
 /**
  * Presenter for working with {@link MainActivity}.
@@ -81,30 +80,30 @@ public class MainPresenter {
     /**
      * Languages load events.
      */
-    private Subscription mSubLangs;
+    private Disposable mSubLangs;
 
     /**
      * Lookup events subscription
      */
-    private Subscription mSubLookup;
+    private Disposable mSubLookup;
 
     /**
      * {@link Subject} for filtering input events.
      */
-    private Subject<String, String> mEvents = PublishSubject.create();
+    private Subject<String> mEvents = PublishSubject.create();
     /**
-     * A {@link Subscription} for handling emissions of {@link #mEvents}.
+     * A {@link Disposable} for handling emissions of {@link #mEvents}.
      */
-    private Subscription mEventsSub;
+    private Disposable mEventsSub;
     private Result mLastResult;
     private ArrayList<String> mHistory = new ArrayList<>(0);
 
     /**
      * Callback function called when receiving languages list.
      */
-    private Action1<Object> onGetLangsResult = new Action1<Object>() {
+    private Consumer<Object> onGetLangsResult = new Consumer<Object>() {
         @Override
-        public void call(Object o) {
+        public void accept(Object o) {
             MainActivity a = mRef.get();
             if (a != null) {
                 a.onLanguagesResult(mLangs, getDestLanguageIndex(), getSourceLanguageIndex());
@@ -116,9 +115,9 @@ public class MainPresenter {
     /**
      * Handling languages fetching errors.
      */
-    private Action1<Throwable> mGetLangsErrorHandler = new Action1<Throwable>() {
+    private Consumer<Throwable> mGetLangsErrorHandler = new Consumer<Throwable>() {
         @Override
-        public void call(Throwable throwable) {
+        public void accept(Throwable throwable) {
             if (BuildConfig.DEBUG) {
                 throwable.printStackTrace();
             }
@@ -140,28 +139,13 @@ public class MainPresenter {
      */
     public void attach(MainActivity activity) {
         mRef = new WeakReference<>(activity);
-        if (mEventsSub == null || mEventsSub.isUnsubscribed()) {
+        if (mEventsSub == null || mEventsSub.isDisposed()) {
             mEventsSub = mEvents
                     .subscribeOn(Schedulers.computation())
-                    .map(new Func1<String, String>() {
-                        @Override
-                        public String call(String s) {
-                            return s.replaceAll("[^\\p{L}\\w -']", "").trim();
-                        }
-                    })
-                    .filter(new Func1<String, Boolean>() {
-                        @Override
-                        public Boolean call(String s) {
-                            return s != null && !s.isEmpty();
-                        }
-                    })
+                    .map(s -> s.replaceAll("[^\\p{L}\\w -']", "").trim())
+                    .filter(s -> s != null && !s.isEmpty())
                     .debounce(LOOKUP_DEBOUNCE, TimeUnit.MILLISECONDS)
-                    .subscribe(new Action1<String>() {
-                        @Override
-                        public void call(String s) {
-                            lookupInternal(s);
-                        }
-                    });
+                    .subscribe(this::lookupInternal);
         }
     }
 
@@ -176,16 +160,16 @@ public class MainPresenter {
      * Should be called when activity is finishing.
      */
     public void clearSubscriptions() {
-        if (mSubLangs != null && !mSubLangs.isUnsubscribed()) {
-            mSubLangs.unsubscribe();
+        if (mSubLangs != null && !mSubLangs.isDisposed()) {
+            mSubLangs.dispose();
             mSubLangs = null;
         }
-        if (mSubLookup != null && !mSubLookup.isUnsubscribed()) {
-            mSubLookup.unsubscribe();
+        if (mSubLookup != null && !mSubLookup.isDisposed()) {
+            mSubLookup.dispose();
             mSubLookup = null;
         }
-        if (mEventsSub != null && !mEventsSub.isUnsubscribed()) {
-            mEventsSub.unsubscribe();
+        if (mEventsSub != null && !mEventsSub.isDisposed()) {
+            mEventsSub.dispose();
             mEventsSub = null;
         }
     }
@@ -209,59 +193,42 @@ public class MainPresenter {
      * @param text string to lookup
      */
     private void lookupInternal(final String text) {
-        if (mSubLookup != null && !mSubLookup.isUnsubscribed()) {
+        if (mSubLookup != null && !mSubLookup.isDisposed()) {
             // cancel existing sent request
-            mSubLookup.unsubscribe();
+            mSubLookup.dispose();
             mSubLookup = null;
         }
 
         @ApiClient.LookupFlags final int flags = mPrefs.getSearchFilter();
 
         mSubLookup = mClient.lookup(BuildConfig.API_KEY, getLangParam(false), text, mUiLanguage, flags)
-                .flatMap(new Func1<List<Definition>, Observable<List<Definition>>>() {
-                    @Override
-                    public Observable<List<Definition>> call(List<Definition> definitions) {
-                        if (definitions.isEmpty() && mPrefs.lookupReverse()) {
-                            // if we got no result, attempt to lookup in reverse direction
-                            //noinspection WrongConstant
-                            return mClient.lookup(BuildConfig.API_KEY, getLangParam(true), text,
-                                    mUiLanguage, flags);
-                        }
-                        return Observable.just(definitions);
+                .flatMap(definitions -> {
+                    if (definitions.isEmpty() && mPrefs.lookupReverse()) {
+                        // if we got no result, attempt to lookup in reverse direction
+                        //noinspection WrongConstant
+                        return mClient.lookup(BuildConfig.API_KEY, getLangParam(true), text,
+                                mUiLanguage, flags);
                     }
+                    return Single.just(definitions);
                 })
-                .map(new Func1<List<Definition>, Result>() {
-                    @Override
-                    public Result call(List<Definition> definitions) {
-                        if (definitions.isEmpty()) {
-                            return null;
-                        }
-                        return new Result(definitions);
-                    }
-                })
+                .map(definitions -> definitions.isEmpty() ? null : new Result(definitions))
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        new Action1<Result>() {
-                            @Override
-                            public void call(Result result) {
-                                if (result != null) {
-                                    mLastResult = result;
-                                    if (!mHistory.contains(result.text)) {
-                                        mHistory.add(result.text);
-                                    }
-                                }
-                                MainActivity a = mRef.get();
-                                if (a != null) {
-                                    if (result != null) {
-                                        a.onLookupResult(result);
-                                    } else {
-                                        a.onEmptyResult();
-                                    }
-                                }
-                            }
-                        },
-                        mErrorHandler
-                );
+                .subscribe(result -> {
+                    if (result != null) {
+                        mLastResult = result;
+                        if (!mHistory.contains(result.text)) {
+                            mHistory.add(result.text);
+                        }
+                    }
+                    MainActivity a = mRef.get();
+                    if (a != null) {
+                        if (result != null) {
+                            a.onLookupResult(result);
+                        } else {
+                            a.onEmptyResult();
+                        }
+                    }
+                }, mErrorHandler);
     }
 
     /**
@@ -305,7 +272,7 @@ public class MainPresenter {
     }
 
     public boolean isRequestInProgress() {
-        return mSubLookup != null && !mSubLookup.isUnsubscribed();
+        return mSubLookup != null && !mSubLookup.isDisposed();
     }
 
     public ArrayList<String> getHistory() {
@@ -325,7 +292,7 @@ public class MainPresenter {
             return;
         }
 
-        if (mSubLangs != null && !mSubLangs.isUnsubscribed()) {
+        if (mSubLangs != null && !mSubLangs.isDisposed()) {
             // wait for request to finish
             return;
         }
@@ -336,19 +303,11 @@ public class MainPresenter {
                     .subscribe(onGetLangsResult, mGetLangsErrorHandler);
         } else {
             mSubLangs = mPrefs.getLanguagesList()
-                    .map(new Func1<List<Language>, Object>() {
-                        @Override
-                        public Boolean call(List<Language> languages) {
-                            updateLanguages(languages);
-                            return true;
-                        }
+                    .map(languages -> {
+                        updateLanguages(languages);
+                        return languages;
                     })
-                    .onErrorResumeNext(new Func1<Throwable, Observable<?>>() {
-                        @Override
-                        public Observable<List<Language>> call(Throwable throwable) {
-                            return loadLanguagesFromRemote();
-                        }
-                    })
+                    .onErrorResumeNext(throwable -> loadLanguagesFromRemote())
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(onGetLangsResult, mGetLangsErrorHandler);
@@ -356,15 +315,12 @@ public class MainPresenter {
     }
 
     @NonNull
-    private Observable<List<Language>> loadLanguagesFromRemote() {
+    private Single<List<Language>> loadLanguagesFromRemote() {
         return mClient.getLangs(BuildConfig.API_KEY)
-                .doOnNext(new Action1<List<Language>>() {
-                    @Override
-                    public void call(List<Language> list) {
-                        mPrefs.setLangsTimestamp(new Date());
-                        updateLanguages(list);
-                        saveLanguages();
-                    }
+                .doOnSuccess(list -> {
+                    mPrefs.setLangsTimestamp(new Date());
+                    updateLanguages(list);
+                    saveLanguages();
                 });
     }
 
@@ -495,9 +451,9 @@ public class MainPresenter {
     /**
      * Generic error handler.
      */
-    private Action1<Throwable> mErrorHandler = new Action1<Throwable>() {
+    private Consumer<Throwable> mErrorHandler = new Consumer<Throwable>() {
         @Override
-        public void call(Throwable throwable) {
+        public void accept(Throwable throwable) {
             if (BuildConfig.DEBUG) {
                 throwable.printStackTrace();
             }

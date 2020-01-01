@@ -17,23 +17,13 @@ package com.italankin.dictionary.ui.main;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.annotation.SuppressLint;
 import android.content.ClipData;
 import android.content.ClipboardManager;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.ShareCompat;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -49,6 +39,17 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.app.ShareCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.italankin.dictionary.App;
 import com.italankin.dictionary.R;
 import com.italankin.dictionary.dto.Language;
@@ -64,14 +65,9 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-import butterknife.OnFocusChange;
-import butterknife.OnLongClick;
-
 import static android.widget.AdapterView.OnItemSelectedListener;
 
+@SuppressLint("RestrictedApi")
 public class MainActivity extends AppCompatActivity {
 
     private static final int SWITCH_ANIM_DURATION = 450;
@@ -96,58 +92,30 @@ public class MainActivity extends AppCompatActivity {
     @Inject
     ClipboardManager clipboardManager;
 
-    //region Views
-    @BindView(R.id.toolbar)
-    Toolbar toolbar;
-
-    @BindView(R.id.root)
-    CoordinatorLayout mRoot;
-
+    private CoordinatorLayout mRoot;
     /**
      * EditText for text input
      */
-    @BindView(R.id.edit_input)
-    EditText mInput;
-
-    @BindView(R.id.input_card)
-    View mInputLayout;
-
+    private EditText mInput;
+    private View mInputLayout;
     /**
      * TextView in toolbar indicating current destination language
      */
-    @BindView(R.id.spinner_lang_source)
-    Spinner mSpinnerSource;
-
+    private Spinner mSpinnerSource;
     /**
      * TextView in toolbar indicating current source language
      */
-    @BindView(R.id.spinner_lang_dest)
-    Spinner mSpinnerDest;
-
+    private Spinner mSpinnerDest;
     /**
      * Arrow in the toolbar for switching languages
      */
-    @BindView(R.id.swap_langs)
-    View mSwapLangs;
-
-    @BindView(R.id.lookup)
-    View mLookup;
-
-    @BindView(R.id.text_transcription)
-    TextView mTranscription;
-
-    @BindView(R.id.toolbar_inner_layout)
-    View mToolbarInnerLayout;
-
-    @BindView(R.id.recycler_view)
-    RecyclerView mRecyclerView;
-
-    @BindView(R.id.progress_bar)
-    ProgressBar mProgressBar;
-
-    @BindView(R.id.btn_share)
-    FloatingActionButton mShareFab;
-    //endregion
+    private View mSwapLangs;
+    private View mLookup;
+    private TextView mTranscription;
+    private View mToolbarInnerLayout;
+    private RecyclerView mRecyclerView;
+    private ProgressBar mProgressBar;
+    private FloatingActionButton mShareFab;
 
     private MainPresenter mPresenter;
     private Bundle mPresenterBundle;
@@ -171,8 +139,41 @@ public class MainActivity extends AppCompatActivity {
         mPresenter.attach(this);
 
         setContentView(R.layout.activity_main);
-        ButterKnife.bind(this);
 
+        mRoot = findViewById(R.id.root);
+        mInput = findViewById(R.id.edit_input);
+        mInput.setOnFocusChangeListener((view, hasFocus) -> {
+            if (hasFocus) {
+                mRecyclerView.smoothScrollToPosition(0);
+            }
+        });
+        mInputLayout = findViewById(R.id.input_card);
+        mSpinnerSource = findViewById(R.id.spinner_lang_source);
+        mSpinnerDest = findViewById(R.id.spinner_lang_dest);
+        mSwapLangs = findViewById(R.id.swap_langs);
+        mSwapLangs.setOnClickListener(view -> swapLanguages());
+        mSwapLangs.setOnLongClickListener(view -> {
+            Toast.makeText(this, R.string.toast_swap_langs, Toast.LENGTH_SHORT).show();
+            return true;
+        });
+        mLookup = findViewById(R.id.lookup);
+        mLookup.setOnClickListener(view -> startLookup());
+        mTranscription = findViewById(R.id.text_transcription);
+        mTranscription.setOnClickListener(view -> {
+            Intent intent = ShareCompat.IntentBuilder
+                    .from(this)
+                    .setType("text/plain")
+                    .setText(mTranscription.getText().toString())
+                    .createChooserIntent();
+            startActivity(intent);
+        });
+        mToolbarInnerLayout = findViewById(R.id.toolbar_inner_layout);
+        mRecyclerView = findViewById(R.id.recycler_view);
+        mProgressBar = findViewById(R.id.progress_bar);
+        mShareFab = findViewById(R.id.btn_share);
+        mShareFab.setOnClickListener(view -> shareLastResult());
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         setupInputLayout();
         setupRecyclerView();
@@ -182,12 +183,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupInputLayout() {
-        mInputLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mInput.requestFocus();
-            }
-        });
+        mInputLayout.setOnClickListener(v -> mInput.requestFocus());
         ViewTreeObserver vto = mInputLayout.getViewTreeObserver();
         // add a global layout listener to update RecyclerView's offset
         vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -197,10 +193,9 @@ public class MainActivity extends AppCompatActivity {
                 if (Build.VERSION.SDK_INT >= 16) {
                     vto.removeOnGlobalLayoutListener(this);
                 } else {
-                    //noinspection deprecation
                     vto.removeGlobalOnLayoutListener(this);
                 }
-                // Behavior which will offset input layout accoring to scroll events
+                // Behavior which will offset input layout according to scroll events
                 CoordinatorLayout.LayoutParams lp = (CoordinatorLayout.LayoutParams) mInputLayout.getLayoutParams();
                 lp.setBehavior(new HidingViewBehavior(MainActivity.this, mInputLayout,
                         mRecyclerView, mInputLayout.getHeight()));
@@ -210,22 +205,16 @@ public class MainActivity extends AppCompatActivity {
         });
 
         mInput.setImeActionLabel(getString(R.string.lookup), EditorInfo.IME_ACTION_SEARCH);
-        mInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    startLookup();
-                    return true;
-                }
-                return false;
+        mInput.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                startLookup();
+                return true;
             }
+            return false;
         });
-        mInput.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (hasFocus) {
-                    resetViewsState();
-                }
+        mInput.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                resetViewsState();
             }
         });
     }
@@ -295,7 +284,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putBundle(KEY_PRESENTER_BUNDLE, mPresenterBundle);
     }
@@ -317,6 +306,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
         handleIntent(intent);
     }
 
@@ -361,48 +351,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             super.onBackPressed();
         }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // ButterKnife
-    ///////////////////////////////////////////////////////////////////////////
-
-    @OnClick(R.id.lookup)
-    void onLookupClick() {
-        startLookup();
-    }
-
-    @OnFocusChange(R.id.edit_input)
-    void onEditInputFocusChange(boolean hasFocus) {
-        if (hasFocus) {
-            mRecyclerView.smoothScrollToPosition(0);
-        }
-    }
-
-    @OnClick(R.id.text_transcription)
-    void onTranscriptionClick() {
-        Intent intent = ShareCompat.IntentBuilder
-                .from(this)
-                .setType("text/plain")
-                .setText(mTranscription.getText().toString())
-                .createChooserIntent();
-        startActivity(intent);
-    }
-
-    @OnClick(R.id.swap_langs)
-    void onSwapLangsClick() {
-        swapLanguages();
-    }
-
-    @OnLongClick(R.id.swap_langs)
-    boolean onSwapLangsLongClick() {
-        Toast.makeText(MainActivity.this, R.string.toast_swap_langs, Toast.LENGTH_SHORT).show();
-        return true;
-    }
-
-    @OnClick(R.id.btn_share)
-    void onShareFabClick() {
-        shareLastResult();
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -463,12 +411,9 @@ public class MainActivity extends AppCompatActivity {
         builder.setTitle(R.string.dialog_history);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_list_item_1, history);
-        builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                resetViewsState();
-                startLookup(history.get(which));
-            }
+        builder.setAdapter(adapter, (dialog, which) -> {
+            resetViewsState();
+            startLookup(history.get(which));
         });
         builder.show();
     }
@@ -505,12 +450,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public void onLanguagesResult(List<Language> languages, int destIndex, int sourceIndex) {
         final LanguageAdapter adapter = new LanguageAdapter(this, languages);
-        adapter.setListener(new LanguageAdapter.CheckedChangeListener() {
-            @Override
-            public void onCheckedChange(Language language, boolean isChecked) {
-                language.setFavorite(isChecked);
-            }
-        });
+        adapter.setListener(Language::setFavorite);
         mSpinnerSource.setAdapter(adapter);
         mSpinnerSource.setSelection(sourceIndex);
         mSpinnerSource.setOnItemSelectedListener(new OnItemSelectedListener() {
@@ -600,20 +540,17 @@ public class MainActivity extends AppCompatActivity {
                 -mSpinnerDest.getHeight(),
                 0f,
                 SWITCH_ANIM_DURATION,
-                new SwitchAnimation.OnSwitchListener() {
-                    @Override
-                    public void onSwitch() {
-                        OnItemSelectedListener listener = mSpinnerDest.getOnItemSelectedListener();
-                        mSpinnerDest.setOnItemSelectedListener(null);
-                        mSpinnerDest.setSelection(mPresenter.getDestLanguageIndex());
-                        mSpinnerDest.setOnItemSelectedListener(listener);
-                        listener = mSpinnerSource.getOnItemSelectedListener();
-                        mSpinnerSource.setOnItemSelectedListener(null);
-                        mSpinnerSource.setSelection(mPresenter.getSourceLanguageIndex());
-                        mSpinnerSource.setOnItemSelectedListener(listener);
-                        mSpinnerDest.setEnabled(true);
-                        mSpinnerSource.setEnabled(true);
-                    }
+                () -> {
+                    OnItemSelectedListener listener = mSpinnerDest.getOnItemSelectedListener();
+                    mSpinnerDest.setOnItemSelectedListener(null);
+                    mSpinnerDest.setSelection(mPresenter.getDestLanguageIndex());
+                    mSpinnerDest.setOnItemSelectedListener(listener);
+                    listener = mSpinnerSource.getOnItemSelectedListener();
+                    mSpinnerSource.setOnItemSelectedListener(null);
+                    mSpinnerSource.setSelection(mPresenter.getSourceLanguageIndex());
+                    mSpinnerSource.setOnItemSelectedListener(listener);
+                    mSpinnerDest.setEnabled(true);
+                    mSpinnerSource.setEnabled(true);
                 });
         anim.start();
         anim = new SwitchAnimation(mSpinnerSource, mSpinnerSource.getHeight(), 0, SWITCH_ANIM_DURATION, null);
@@ -660,11 +597,8 @@ public class MainActivity extends AppCompatActivity {
             messaage = getString(R.string.error);
         }
         Snackbar snackbar = Snackbar.make(mInput, messaage, Snackbar.LENGTH_LONG);
-        snackbar.setAction(android.R.string.ok, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // empty callback for showing OK button
-            }
+        snackbar.setAction(android.R.string.ok, v -> {
+            // empty callback for showing OK button
         });
         snackbar.show();
         hideProgressBar();
@@ -683,12 +617,7 @@ public class MainActivity extends AppCompatActivity {
     public void onLanguagesError() {
         setControlsState(false);
         Snackbar snackbar = Snackbar.make(mRoot, R.string.error_langs, Snackbar.LENGTH_INDEFINITE);
-        snackbar.setAction(R.string.retry, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mPresenter.loadLanguages();
-            }
-        });
+        snackbar.setAction(R.string.retry, v -> mPresenter.loadLanguages());
         snackbar.show();
     }
 

@@ -17,13 +17,13 @@ package com.italankin.dictionary.di.modules;
 
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.util.Log;
 import android.view.inputmethod.InputMethodManager;
 
 import com.italankin.dictionary.App;
 import com.italankin.dictionary.BuildConfig;
 import com.italankin.dictionary.api.ApiClient;
 import com.italankin.dictionary.ui.PresenterFactory;
-import com.italankin.dictionary.utils.NetworkInterceptor;
 import com.italankin.dictionary.utils.SharedPrefs;
 
 import javax.inject.Singleton;
@@ -31,6 +31,7 @@ import javax.inject.Singleton;
 import dagger.Module;
 import dagger.Provides;
 import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 
 /**
  * Main application module, contains main dependencies.
@@ -73,7 +74,10 @@ public class MainModule {
     OkHttpClient provideOkHttpClient() {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         if (BuildConfig.DEBUG) {
-            builder.addInterceptor(new NetworkInterceptor());
+            HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor(s -> {
+                Log.d("OkHttp", s);
+            });
+            builder.addInterceptor(interceptor);
         }
         return builder.build();
     }

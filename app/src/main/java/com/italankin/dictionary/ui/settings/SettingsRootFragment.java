@@ -15,7 +15,6 @@
  */
 package com.italankin.dictionary.ui.settings;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.preference.Preference;
@@ -24,8 +23,6 @@ import android.preference.PreferenceScreen;
 
 import com.italankin.dictionary.BuildConfig;
 import com.italankin.dictionary.R;
-
-import de.psdev.licensesdialog.LicensesDialog;
 
 /**
  * Root fragment for settings screen.
@@ -50,16 +47,6 @@ public class SettingsRootFragment extends PreferenceFragment {
         mCallbacks = (Callbacks) context;
     }
 
-    /**
-     * Workaround for API < 23, which do not have {@link #onAttach(Context)} method.
-     */
-    @Override
-    @SuppressWarnings({"deprecation"})
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        mCallbacks = (Callbacks) activity;
-    }
-
     @Override
     public void onDetach() {
         super.onDetach();
@@ -70,11 +57,11 @@ public class SettingsRootFragment extends PreferenceFragment {
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
         String key = preference.getKey();
         if (key.equals("open_source_libs")) {
-            LicensesDialog dialog = new LicensesDialog.Builder(getActivity())
-                    .setNotices(R.raw.notices)
-                    .setTitle(R.string.pref_open_source_libs)
-                    .build();
-            dialog.showAppCompat();
+//            LicensesDialog dialog = new LicensesDialog.Builder(getActivity())
+//                    .setNotices(R.raw.notices)
+//                    .setTitle(R.string.pref_open_source_libs)
+//                    .build();
+//            dialog.showAppCompat();
             return true;
         } else if (key.equals("search_filters")) {
             mCallbacks.onSearchFiltersClick();

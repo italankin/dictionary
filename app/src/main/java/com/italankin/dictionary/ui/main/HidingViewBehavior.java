@@ -16,13 +16,15 @@
 package com.italankin.dictionary.ui.main;
 
 import android.content.Context;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.v4.view.ViewCompat;
-import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
+
+import androidx.annotation.NonNull;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.view.ViewCompat;
+import androidx.recyclerview.widget.RecyclerView;
 
 public class HidingViewBehavior extends CoordinatorLayout.Behavior<View> {
 
@@ -44,27 +46,27 @@ public class HidingViewBehavior extends CoordinatorLayout.Behavior<View> {
     }
 
     @Override
-    public boolean layoutDependsOn(CoordinatorLayout parent, View child, View dependency) {
+    public boolean layoutDependsOn(@NonNull CoordinatorLayout parent, @NonNull View child, @NonNull View dependency) {
         return dependency instanceof RecyclerView;
     }
 
     @Override
-    public boolean onStartNestedScroll(CoordinatorLayout coordinatorLayout, View child,
-                                       View directTargetChild, View target, int nestedScrollAxes) {
+    public boolean onStartNestedScroll(@NonNull CoordinatorLayout coordinatorLayout, @NonNull View child,
+                                       @NonNull View directTargetChild, @NonNull View target, int nestedScrollAxes) {
         // we only interested in vertical scroll events
         return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL) > 0;
     }
 
     @Override
-    public void onNestedPreScroll(CoordinatorLayout coordinatorLayout, View child, View target,
-                                  int dx, int dy, int[] consumed) {
+    public void onNestedPreScroll(@NonNull CoordinatorLayout coordinatorLayout, @NonNull View child, @NonNull View target,
+                                  int dx, int dy, @NonNull int[] consumed) {
         if (!isViewHidden()) {
             consumed[1] = offsetViews(dy);
         }
     }
 
     @Override
-    public void onNestedScroll(CoordinatorLayout coordinatorLayout, View child, View target,
+    public void onNestedScroll(@NonNull CoordinatorLayout coordinatorLayout, @NonNull View child, @NonNull View target,
                                int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed) {
         if (dyUnconsumed < 0) {
             offsetViews(dyUnconsumed);
@@ -72,7 +74,7 @@ public class HidingViewBehavior extends CoordinatorLayout.Behavior<View> {
     }
 
     @Override
-    public boolean onNestedPreFling(CoordinatorLayout coordinatorLayout, View child, View target,
+    public boolean onNestedPreFling(@NonNull CoordinatorLayout coordinatorLayout, @NonNull View child, @NonNull View target,
                                     float velocityX, float velocityY) {
         float absY = Math.abs(velocityY);
         if (absY > Math.abs(velocityX)) {
@@ -98,7 +100,7 @@ public class HidingViewBehavior extends CoordinatorLayout.Behavior<View> {
             // scroll towards end of the list
             actual = Math.min(dy, getMaximumOffset() + ty);
         } else {
-            // scrool towards start of the list
+            // scroll towards start of the list
             actual = Math.max(dy, ty);
         }
         if (actual != 0) {
