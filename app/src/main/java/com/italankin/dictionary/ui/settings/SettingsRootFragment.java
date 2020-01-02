@@ -20,6 +20,7 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
+import android.widget.Toast;
 
 import com.italankin.dictionary.BuildConfig;
 import com.italankin.dictionary.R;
@@ -56,12 +57,9 @@ public class SettingsRootFragment extends PreferenceFragment {
     @Override
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
         String key = preference.getKey();
-        if (key.equals("open_source_libs")) {
-//            LicensesDialog dialog = new LicensesDialog.Builder(getActivity())
-//                    .setNotices(R.raw.notices)
-//                    .setTitle(R.string.pref_open_source_libs)
-//                    .build();
-//            dialog.showAppCompat();
+        if ("open_source_libs".equals(key)) {
+            Toast.makeText(getActivity(), "TODO", Toast.LENGTH_SHORT).show();
+            // TODO
             return true;
         } else if (key.equals("search_filters")) {
             mCallbacks.onSearchFiltersClick();

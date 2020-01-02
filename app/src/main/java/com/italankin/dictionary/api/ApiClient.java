@@ -23,7 +23,7 @@ import com.italankin.dictionary.dto.Language;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -49,19 +49,16 @@ public class ApiClient {
     public static final int FILTER_MORPHO = 0x4;
     public static final int FILTER_POS_FILTER = 0x8;
 
-    @Retention(RetentionPolicy.SOURCE)
-    @IntDef(value = {FILTER_NONE, FILTER_FAMILY, FILTER_SHORT_POS, FILTER_MORPHO, FILTER_POS_FILTER})
-    public @interface LookupFlags {
+    private static Language languageFromCode(String code) {
+        Locale locale = new Locale(code);
+        return new Language(code, capitalize(locale.getDisplayName()));
+    }
+
+    private static String capitalize(String name) {
+        return name.substring(0, 1).toUpperCase(Locale.getDefault()) + name.substring(1);
     }
 
     private final ApiService mService;
-
-    private static Language languageFromCode(String code, String defaultCode) {
-        Locale locale = new Locale(code);
-        Language lang = new Language(code, locale.getDisplayName());
-        lang.setFavorite(defaultCode.equals(code));
-        return lang;
-    }
 
     public ApiClient(OkHttpClient client, String endpoint) {
         GsonConverterFactory converter = GsonConverterFactory.create();
@@ -86,9 +83,7 @@ public class ApiClient {
                 .map(entries -> {
                     List<Language> list = new ArrayList<>(entries.length);
                     Set<String> set = new HashSet<>(entries.length);
-                    String defaultCode = Locale.getDefault().getLanguage();
                     String l1, l2;
-                    Language lang;
                     for (String s : entries) {
                         int i = s.indexOf("-");
                         if (i == -1) {
@@ -98,20 +93,15 @@ public class ApiClient {
                         l2 = s.substring(i + 1);
 
                         // source language
-                        if (!set.contains(l1)) {
-                            lang = languageFromCode(l1, defaultCode);
-                            list.add(lang);
-                            set.add(l1);
+                        if (set.add(l1)) {
+                            list.add(languageFromCode(l1));
                         }
 
                         // destination language
-                        if (!set.contains(l2)) {
-                            lang = languageFromCode(l2, defaultCode);
-                            list.add(lang);
-                            set.add(l2);
+                        if (set.add(l2)) {
+                            list.add(languageFromCode(l2));
                         }
                     }
-
                     return list;
                 });
     }
@@ -139,7 +129,7 @@ public class ApiClient {
     public Single<List<Definition>> lookup(String key, String lang, String text,
                                            String ui, @LookupFlags int flags) {
         try {
-            text = URLDecoder.decode(text, "UTF-8");
+            text = URLEncoder.encode(text, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             return Single.error(e);
         }
@@ -150,4 +140,9 @@ public class ApiClient {
                 });
     }
 
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef(value = {FILTER_NONE, FILTER_FAMILY, FILTER_SHORT_POS, FILTER_MORPHO, FILTER_POS_FILTER})
+    public @interface LookupFlags {
+
+    }
 }

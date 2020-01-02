@@ -85,8 +85,9 @@ class TranslationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         mListener = listener;
     }
 
+    @NonNull
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         if (viewType == TYPE_ITEM) {
             View v = mInflater.inflate(R.layout.item_attribute, parent, false);
             return new ItemViewHolder(v);
@@ -95,7 +96,7 @@ class TranslationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
         if (getItemViewType(position) == TYPE_SPACE) {
             return;
         }

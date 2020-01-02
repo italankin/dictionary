@@ -33,5 +33,4 @@ public interface ApiService {
             @Query("text") String text,
             @Query("ui") String ui,
             @Query("flags") int flags);
-
 }

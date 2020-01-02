@@ -54,8 +54,7 @@ class LanguageAdapter extends BaseAdapter implements CompoundButton.OnCheckedCha
     }
 
     @Override
-    @SuppressLint({"ViewHolder"})
-    // As there's only one selected item, VH is not necessary
+    @SuppressLint("ViewHolder") // As there's only one selected item, VH is not necessary
     public View getView(int position, View convertView, ViewGroup parent) {
         Language item = getItem(position);
         convertView = inflater.inflate(R.layout.item_spinner_language, parent, false);
@@ -82,7 +81,7 @@ class LanguageAdapter extends BaseAdapter implements CompoundButton.OnCheckedCha
         Language item = getItem(position);
         holder.text.setText(item.getName());
         holder.checkBox.setTag(item);
-        holder.checkBox.setChecked(item.isFavorite());
+//        holder.checkBox.setChecked(item.isFavorite()); // TODO
 
         return convertView;
     }

@@ -40,8 +40,6 @@ It's highly recommended to change `apiKey` field with _your_ API key. You can ge
 * [Retrofit](http://square.github.io/retrofit/)
 * [OkHttp](http://square.github.io/okhttp/)
 * [Gson](https://github.com/google/gson)
-* [ButterKnife](http://jakewharton.github.io/butterknife/)
-* [LicensesDialog](https://github.com/PSDev/LicensesDialog)
 
 # License #
 

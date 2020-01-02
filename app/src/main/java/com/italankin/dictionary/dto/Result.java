@@ -19,12 +19,15 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * Container object used to represent query result.
  */
 public class Result implements Parcelable {
+
+    public static final Result EMPTY = new Result(Collections.emptyList());
 
     public List<Definition> rawResult;
     public String text;

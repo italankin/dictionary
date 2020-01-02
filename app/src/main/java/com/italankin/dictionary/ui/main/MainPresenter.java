@@ -21,6 +21,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
+import com.arellomobile.mvp.InjectViewState;
+import com.arellomobile.mvp.MvpPresenter;
 import com.italankin.dictionary.BuildConfig;
 import com.italankin.dictionary.R;
 import com.italankin.dictionary.api.ApiClient;
@@ -29,13 +31,14 @@ import com.italankin.dictionary.dto.Result;
 import com.italankin.dictionary.utils.SharedPrefs;
 
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+
+import javax.inject.Inject;
 
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -45,58 +48,53 @@ import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.Subject;
 import retrofit2.HttpException;
+import timber.log.Timber;
 
 /**
  * Presenter for working with {@link MainActivity}.
  */
-public class MainPresenter {
+@InjectViewState
+public class MainPresenter extends MvpPresenter<MainView> {
 
     private static final int LOOKUP_DEBOUNCE = 450;
 
     /**
      * Api client for making requests
      */
-    private final ApiClient mClient;
+    private final ApiClient apiClient;
     /**
      * Application shared preferences
      */
-    private final SharedPrefs mPrefs;
-
-    /**
-     * Reference to attached activity
-     */
-    private WeakReference<MainActivity> mRef;
+    private final SharedPrefs prefs;
 
     /**
      * UI language for receiving results for this locale (if available)
      */
-    private final String mUiLanguage;
-
-    private List<Language> mLangs;
-
-    private Language mSource;
-    private Language mDest;
+    private final String uiLanguage;
+    private List<Language> langs;
+    private Language source;
+    private Language dest;
 
     /**
      * Languages load events.
      */
-    private Disposable mSubLangs;
+    private Disposable langsDisposable;
 
     /**
      * Lookup events subscription
      */
-    private Disposable mSubLookup;
+    private Disposable lookupDisposable;
 
     /**
      * {@link Subject} for filtering input events.
      */
-    private Subject<String> mEvents = PublishSubject.create();
+    private Subject<String> events = PublishSubject.create();
     /**
-     * A {@link Disposable} for handling emissions of {@link #mEvents}.
+     * A {@link Disposable} for handling emissions of {@link #events}.
      */
-    private Disposable mEventsSub;
-    private Result mLastResult;
-    private ArrayList<String> mHistory = new ArrayList<>(0);
+    private Disposable eventsDisposable;
+    private Result lastResult;
+    private ArrayList<String> history = new ArrayList<>(0);
 
     /**
      * Callback function called when receiving languages list.
@@ -104,73 +102,51 @@ public class MainPresenter {
     private Consumer<Object> onGetLangsResult = new Consumer<Object>() {
         @Override
         public void accept(Object o) {
-            MainActivity a = mRef.get();
-            if (a != null) {
-                a.onLanguagesResult(mLangs, getDestLanguageIndex(), getSourceLanguageIndex());
-            }
-            mSubLangs = null;
+            getViewState().onLanguagesResult(langs, getDestLanguageIndex(), getSourceLanguageIndex());
         }
     };
 
     /**
      * Handling languages fetching errors.
      */
-    private Consumer<Throwable> mGetLangsErrorHandler = new Consumer<Throwable>() {
-        @Override
-        public void accept(Throwable throwable) {
-            if (BuildConfig.DEBUG) {
-                throwable.printStackTrace();
-            }
-            MainActivity a = mRef.get();
-            if (a != null) {
-                a.onLanguagesError();
-            }
-        }
+    private Consumer<Throwable> getLangsErrorHandler = throwable -> {
+        Timber.e(throwable, "getLangs:");
+        getViewState().onLanguagesError();
     };
 
+    @Inject
     public MainPresenter(ApiClient client, SharedPrefs prefs) {
-        mClient = client;
-        mPrefs = prefs;
-        mUiLanguage = Locale.getDefault().getLanguage();
+        apiClient = client;
+        this.prefs = prefs;
+        uiLanguage = Locale.getDefault().getLanguage();
     }
 
-    /**
-     * @param activity activity for attaching presenter to
-     */
-    public void attach(MainActivity activity) {
-        mRef = new WeakReference<>(activity);
-        if (mEventsSub == null || mEventsSub.isDisposed()) {
-            mEventsSub = mEvents
-                    .subscribeOn(Schedulers.computation())
-                    .map(s -> s.replaceAll("[^\\p{L}\\w -']", "").trim())
-                    .filter(s -> s != null && !s.isEmpty())
-                    .debounce(LOOKUP_DEBOUNCE, TimeUnit.MILLISECONDS)
-                    .subscribe(this::lookupInternal);
-        }
-    }
-
-    /**
-     * Called when activity is finishing or recreating itself.
-     */
-    public void detach() {
-        mRef.clear();
+    @Override
+    protected void onFirstViewAttach() {
+        eventsDisposable = events
+                .subscribeOn(Schedulers.computation())
+                .map(s -> s.replaceAll("[^\\p{L}\\w -']", "").trim())
+                .filter(s -> !s.isEmpty())
+                .debounce(LOOKUP_DEBOUNCE, TimeUnit.MILLISECONDS)
+                .subscribe(this::lookupInternal);
     }
 
     /**
      * Should be called when activity is finishing.
      */
-    public void clearSubscriptions() {
-        if (mSubLangs != null && !mSubLangs.isDisposed()) {
-            mSubLangs.dispose();
-            mSubLangs = null;
+    @Override
+    public void onDestroy() {
+        if (langsDisposable != null && !langsDisposable.isDisposed()) {
+            langsDisposable.dispose();
+            langsDisposable = null;
         }
-        if (mSubLookup != null && !mSubLookup.isDisposed()) {
-            mSubLookup.dispose();
-            mSubLookup = null;
+        if (lookupDisposable != null && !lookupDisposable.isDisposed()) {
+            lookupDisposable.dispose();
+            lookupDisposable = null;
         }
-        if (mEventsSub != null && !mEventsSub.isDisposed()) {
-            mEventsSub.dispose();
-            mEventsSub = null;
+        if (eventsDisposable != null && !eventsDisposable.isDisposed()) {
+            eventsDisposable.dispose();
+            eventsDisposable = null;
         }
     }
 
@@ -184,7 +160,7 @@ public class MainPresenter {
      * @param text string to lookup
      */
     public void lookup(String text) {
-        mEvents.onNext(text);
+        events.onNext(text);
     }
 
     /**
@@ -193,42 +169,34 @@ public class MainPresenter {
      * @param text string to lookup
      */
     private void lookupInternal(final String text) {
-        if (mSubLookup != null && !mSubLookup.isDisposed()) {
+        if (lookupDisposable != null && !lookupDisposable.isDisposed()) {
             // cancel existing sent request
-            mSubLookup.dispose();
-            mSubLookup = null;
+            lookupDisposable.dispose();
+            lookupDisposable = null;
         }
-
-        @ApiClient.LookupFlags final int flags = mPrefs.getSearchFilter();
-
-        mSubLookup = mClient.lookup(BuildConfig.API_KEY, getLangParam(false), text, mUiLanguage, flags)
+        int flags = prefs.getSearchFilter();
+        lookupDisposable = apiClient.lookup(BuildConfig.API_KEY, getLangParam(false), text, uiLanguage, flags)
                 .flatMap(definitions -> {
-                    if (definitions.isEmpty() && mPrefs.lookupReverse()) {
+                    if (definitions.isEmpty() && prefs.lookupReverse()) {
                         // if we got no result, attempt to lookup in reverse direction
-                        //noinspection WrongConstant
-                        return mClient.lookup(BuildConfig.API_KEY, getLangParam(true), text,
-                                mUiLanguage, flags);
+                        return apiClient.lookup(BuildConfig.API_KEY, getLangParam(true),
+                                text, uiLanguage, flags);
                     }
                     return Single.just(definitions);
                 })
-                .map(definitions -> definitions.isEmpty() ? null : new Result(definitions))
+                .map(definitions -> definitions.isEmpty() ? Result.EMPTY : new Result(definitions))
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(result -> {
-                    if (result != null) {
-                        mLastResult = result;
-                        if (!mHistory.contains(result.text)) {
-                            mHistory.add(result.text);
+                    if (result != Result.EMPTY) {
+                        lastResult = result;
+                        if (!history.contains(result.text)) {
+                            history.add(result.text);
                         }
+                        getViewState().onLookupResult(result);
+                    } else {
+                        getViewState().onEmptyResult();
                     }
-                    MainActivity a = mRef.get();
-                    if (a != null) {
-                        if (result != null) {
-                            a.onLookupResult(result);
-                        } else {
-                            a.onEmptyResult();
-                        }
-                    }
-                }, mErrorHandler);
+                }, errorHandler);
     }
 
     /**
@@ -239,14 +207,14 @@ public class MainPresenter {
      */
     private String getLangParam(boolean reverse) {
         if (reverse) {
-            return mDest.getCode() + "-" + mSource.getCode();
+            return dest.getCode() + "-" + source.getCode();
         } else {
-            return mSource.getCode() + "-" + mDest.getCode();
+            return source.getCode() + "-" + dest.getCode();
         }
     }
 
     public Result getLastResult() {
-        return mLastResult;
+        return lastResult;
     }
 
     /**
@@ -257,26 +225,26 @@ public class MainPresenter {
     @Size(2)
     @Nullable
     public String[] getShareResult() {
-        if (mLastResult == null) {
+        if (lastResult == null) {
             return null;
         }
         String[] result = new String[2];
-        if (mPrefs.shareIncludeTranscription() && mLastResult.transcription != null &&
-                !mLastResult.transcription.isEmpty()) {
-            result[0] = mLastResult.text + " [" + mLastResult.transcription + "]";
+        if (prefs.shareIncludeTranscription() && lastResult.transcription != null &&
+                !lastResult.transcription.isEmpty()) {
+            result[0] = lastResult.text + " [" + lastResult.transcription + "]";
         } else {
-            result[0] = mLastResult.text;
+            result[0] = lastResult.text;
         }
-        result[1] = mLastResult.toString();
+        result[1] = lastResult.toString();
         return result;
     }
 
     public boolean isRequestInProgress() {
-        return mSubLookup != null && !mSubLookup.isDisposed();
+        return lookupDisposable != null && !lookupDisposable.isDisposed();
     }
 
     public ArrayList<String> getHistory() {
-        return mHistory;
+        return history;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -287,22 +255,22 @@ public class MainPresenter {
      * Load languages list. They will be loaded from net, if there are no cached files.
      */
     public void loadLanguages() {
-        if (mLangs != null && mDest != null && mSource != null) {
-            mRef.get().onLanguagesResult(mLangs, getDestLanguageIndex(), getSourceLanguageIndex());
+        if (langs != null && dest != null && source != null) {
+            getViewState().onLanguagesResult(langs, getDestLanguageIndex(), getSourceLanguageIndex());
             return;
         }
 
-        if (mSubLangs != null && !mSubLangs.isDisposed()) {
+        if (langsDisposable != null && !langsDisposable.isDisposed()) {
             // wait for request to finish
             return;
         }
 
-        if (mPrefs.shouldUpdateLangs()) {
-            mSubLangs = loadLanguagesFromRemote()
+        if (prefs.shouldUpdateLangs()) {
+            langsDisposable = loadLanguagesFromRemote()
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(onGetLangsResult, mGetLangsErrorHandler);
+                    .subscribe(onGetLangsResult, getLangsErrorHandler);
         } else {
-            mSubLangs = mPrefs.getLanguagesList()
+            langsDisposable = prefs.getLanguagesList()
                     .map(languages -> {
                         updateLanguages(languages);
                         return languages;
@@ -310,15 +278,15 @@ public class MainPresenter {
                     .onErrorResumeNext(throwable -> loadLanguagesFromRemote())
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(onGetLangsResult, mGetLangsErrorHandler);
+                    .subscribe(onGetLangsResult, getLangsErrorHandler);
         }
     }
 
     @NonNull
     private Single<List<Language>> loadLanguagesFromRemote() {
-        return mClient.getLangs(BuildConfig.API_KEY)
+        return apiClient.getLangs(BuildConfig.API_KEY)
                 .doOnSuccess(list -> {
-                    mPrefs.setLangsTimestamp(new Date());
+                    prefs.setLangsTimestamp(new Date());
                     updateLanguages(list);
                     saveLanguages();
                 });
@@ -330,16 +298,16 @@ public class MainPresenter {
      * @param list list of the languages
      */
     private void updateLanguages(List<Language> list) {
-        mLangs = list;
+        langs = list;
         if (!list.isEmpty()) {
-            setSourceLanguageByCode(mPrefs.getSourceLang());
-            setDestLanguageByCode(mPrefs.getDestLang());
+            setSourceLanguageByCode(prefs.getSourceLang());
+            setDestLanguageByCode(prefs.getDestLang());
             sortLanguages();
         }
     }
 
     public void sortLanguages() {
-        Collections.sort(mLangs);
+        Collections.sort(langs);
     }
 
     /**
@@ -348,10 +316,10 @@ public class MainPresenter {
      * @param position language index
      */
     public boolean setSourceLanguage(int position) {
-        Language l = mLangs.get(position);
-        if (mSource != l) {
-            mSource = l;
-            mPrefs.setSourceLang(mSource);
+        Language l = langs.get(position);
+        if (source != l) {
+            source = l;
+            prefs.setSourceLang(source);
             return true;
         }
         return false;
@@ -363,10 +331,10 @@ public class MainPresenter {
      * @param position language index
      */
     public boolean setDestLanguage(int position) {
-        Language l = mLangs.get(position);
-        if (mDest != l) {
-            mDest = l;
-            mPrefs.setDestLang(mDest);
+        Language l = langs.get(position);
+        if (dest != l) {
+            dest = l;
+            prefs.setDestLang(dest);
             return true;
         }
         return false;
@@ -381,14 +349,14 @@ public class MainPresenter {
         if (code == null) {
             code = Locale.getDefault().getLanguage();
         }
-        mSource = mLangs.get(0);
-        for (Language l : mLangs) {
+        source = langs.get(0);
+        for (Language l : langs) {
             if (l.getCode().equals(code)) {
-                mSource = l;
+                source = l;
                 break;
             }
         }
-        mPrefs.setSourceLang(mSource);
+        prefs.setSourceLang(source);
     }
 
 
@@ -401,37 +369,37 @@ public class MainPresenter {
         if (code == null) {
             code = Locale.getDefault().getLanguage();
         }
-        mDest = mLangs.get(0);
-        for (Language l : mLangs) {
+        dest = langs.get(0);
+        for (Language l : langs) {
             if (l.getCode().equals(code)) {
-                mDest = l;
+                dest = l;
                 break;
             }
         }
-        mPrefs.setDestLang(mDest);
+        prefs.setDestLang(dest);
     }
 
     public int getSourceLanguageIndex() {
-        return mLangs.indexOf(mSource);
+        return langs.indexOf(source);
     }
 
     public int getDestLanguageIndex() {
-        return mLangs.indexOf(mDest);
+        return langs.indexOf(dest);
     }
 
     /**
      * Swap languages.
      *
      * @return {@code true}, if languages were swapped, {@code false} otherwise
-     * (ex. {@link #mSource} == {@link #mDest})
+     * (ex. {@link #source} == {@link #dest})
      */
     public boolean swapLanguages() {
-        if (!TextUtils.equals(mSource.getCode(), mDest.getCode())) {
-            Language tmp = mSource;
-            mSource = mDest;
-            mPrefs.setSourceLang(mSource);
-            mDest = tmp;
-            mPrefs.setDestLang(mDest);
+        if (!TextUtils.equals(source.getCode(), dest.getCode())) {
+            Language tmp = source;
+            source = dest;
+            prefs.setSourceLang(source);
+            dest = tmp;
+            prefs.setDestLang(dest);
             return true;
         }
         return false;
@@ -441,7 +409,7 @@ public class MainPresenter {
      * Save language list on the disk.
      */
     public void saveLanguages() {
-        mPrefs.saveLanguagesList(mLangs);
+        prefs.saveLanguagesList(langs);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -451,41 +419,35 @@ public class MainPresenter {
     /**
      * Generic error handler.
      */
-    private Consumer<Throwable> mErrorHandler = new Consumer<Throwable>() {
-        @Override
-        public void accept(Throwable throwable) {
-            if (BuildConfig.DEBUG) {
-                throwable.printStackTrace();
-            }
-            MainActivity a = mRef.get();
-            if (a != null) {
-                String message = a.getString(R.string.error);
-                if (throwable instanceof IOException) {
-                    message = a.getString(R.string.error_no_connection);
-                }
-                if (throwable instanceof HttpException) {
-                    HttpException e = (HttpException) throwable;
-                    switch (e.code()) {
-                        case 400:
-                        case 501:
-                            message = a.getString(R.string.error_lang_not_supported);
-                            break;
-                        case 401:
-                        case 402:
-                        case 403:
-                        case 502:
-                            // just error
-                            break;
-                        case 413:
-                            message = a.getString(R.string.error_long_request);
-                            break;
-                        default:
-                            message = a.getString(R.string.error_no_results);
-                    }
-                }
-                a.onError(message);
+    private Consumer<Throwable> errorHandler = throwable -> {
+        if (BuildConfig.DEBUG) {
+            throwable.printStackTrace();
+        }
+        int message = R.string.error;
+        if (throwable instanceof IOException) {
+            message = R.string.error_no_connection;
+        }
+        if (throwable instanceof HttpException) {
+            HttpException e = (HttpException) throwable;
+            switch (e.code()) {
+                case 400:
+                case 501:
+                    message = R.string.error_lang_not_supported;
+                    break;
+                case 401:
+                case 402:
+                case 403:
+                case 502:
+                    // just error
+                    break;
+                case 413:
+                    message = R.string.error_long_request;
+                    break;
+                default:
+                    message = R.string.error_no_results;
             }
         }
+        getViewState().showError(message);
     };
 
 }

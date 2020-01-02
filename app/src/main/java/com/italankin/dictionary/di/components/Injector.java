@@ -27,8 +27,7 @@ import dagger.Component;
  */
 @Singleton
 @Component(modules = MainModule.class)
-public interface Injector {
+public interface Injector extends Presenters.Dependencies {
 
     void inject(MainActivity target);
-
 }

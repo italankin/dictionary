@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.italankin.dictionary.ui.main;
+package com.italankin.dictionary.ui.main.util;
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;
@@ -24,7 +24,7 @@ import android.view.animation.DecelerateInterpolator;
 /**
  * Animation for creating a switch-like effect.
  */
-class SwitchAnimation {
+public class SwitchAnimation {
 
     private View mView;
     private float mTranslationX;

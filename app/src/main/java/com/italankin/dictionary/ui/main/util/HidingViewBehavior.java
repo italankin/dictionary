@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.italankin.dictionary.ui.main;
+package com.italankin.dictionary.ui.main.util;
 
 import android.content.Context;
 import android.util.DisplayMetrics;

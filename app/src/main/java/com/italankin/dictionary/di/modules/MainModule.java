@@ -23,7 +23,6 @@ import android.view.inputmethod.InputMethodManager;
 import com.italankin.dictionary.App;
 import com.italankin.dictionary.BuildConfig;
 import com.italankin.dictionary.api.ApiClient;
-import com.italankin.dictionary.ui.PresenterFactory;
 import com.italankin.dictionary.utils.SharedPrefs;
 
 import javax.inject.Singleton;
@@ -87,11 +86,4 @@ public class MainModule {
     ApiClient provideApiClient(OkHttpClient client) {
         return new ApiClient(client, BuildConfig.BASE_URL);
     }
-
-    @Provides
-    @Singleton
-    PresenterFactory providePresenterFactory(ApiClient client, SharedPrefs prefs) {
-        return new PresenterFactory(client, prefs);
-    }
-
 }
