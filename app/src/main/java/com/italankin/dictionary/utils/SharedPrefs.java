@@ -1,49 +1,31 @@
-/*
- * Copyright 2016 Igor Talankin
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.italankin.dictionary.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.italankin.dictionary.BuildConfig;
 import com.italankin.dictionary.api.ApiClient;
 import com.italankin.dictionary.dto.Language;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import io.reactivex.Observable;
+import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import timber.log.Timber;
 
 /**
  * Wrapper around {@link SharedPreferences} for this application purposes.
@@ -68,16 +50,15 @@ public class SharedPrefs {
     private static final String PREF_FILTER_POS_FILTER = "filter_pos_filter";
     private static final String PREF_SHOW_SHARE_FAB = "show_share_fab";
 
-    private final SharedPreferences mPreferences;
-    private final Context mContext;
-    private final Gson mGson = new Gson();
+    private final File filesDir;
+    private final SharedPreferences preferences;
+    private final Gson gson = new Gson();
 
-    private Observable<List<Language>> mLanguagesObservable;
     private Disposable mSaveLanguagesSub;
 
     public SharedPrefs(Context context) {
-        mContext = context;
-        mPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        filesDir = context.getFilesDir();
+        preferences = PreferenceManager.getDefaultSharedPreferences(context);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -85,7 +66,7 @@ public class SharedPrefs {
     ///////////////////////////////////////////////////////////////////////////
 
     public void setDestLang(String code) {
-        SharedPreferences.Editor editor = mPreferences.edit();
+        SharedPreferences.Editor editor = preferences.edit();
         editor.putString(PREF_DEST, code);
         editor.apply();
     }
@@ -95,7 +76,7 @@ public class SharedPrefs {
     }
 
     public String getDestLang() {
-        return mPreferences.getString(PREF_DEST, null);
+        return preferences.getString(PREF_DEST, null);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -103,7 +84,7 @@ public class SharedPrefs {
     ///////////////////////////////////////////////////////////////////////////
 
     public void setSourceLang(String code) {
-        SharedPreferences.Editor editor = mPreferences.edit();
+        SharedPreferences.Editor editor = preferences.edit();
         editor.putString(PREF_SOURCE, code);
         editor.apply();
     }
@@ -113,7 +94,7 @@ public class SharedPrefs {
     }
 
     public String getSourceLang() {
-        return mPreferences.getString(PREF_SOURCE, null);
+        return preferences.getString(PREF_SOURCE, null);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -130,31 +111,24 @@ public class SharedPrefs {
             return;
         }
         if (mSaveLanguagesSub == null || mSaveLanguagesSub.isDisposed()) {
-            mSaveLanguagesSub = Observable.just(new ArrayList<>(list))
-                    .map( languages -> {
-                        try {
-                            Collections.sort(languages);
-                            File file = getLangsFile();
-                            if (!file.delete() && BuildConfig.DEBUG) {
-                                Log.d("SharedPrefs", "saveLanguagesList: delete failed");
-                            }
-                            FileOutputStream fs = new FileOutputStream(file);
-                            String json = mGson.toJson(languages);
-                            fs.write(json.getBytes());
-                            fs.close();
-                            String locale = Locale.getDefault().getLanguage();
-                            mPreferences.edit().putString(PREF_LANGS_LOCALE, locale).apply();
-                            return true;
-                        } catch (IOException e) {
-                            return false;
+            mSaveLanguagesSub = Completable
+                    .fromCallable(() -> {
+                        Collections.sort(list);
+                        File file = getLangsFile();
+                        if (!file.delete()) {
+                            Timber.d("saveLanguagesList: delete failed");
                         }
+                        FileOutputStream fs = new FileOutputStream(file);
+                        String json = gson.toJson(list);
+                        fs.write(json.getBytes());
+                        fs.close();
+                        String locale = Locale.getDefault().getLanguage();
+                        preferences.edit().putString(PREF_LANGS_LOCALE, locale).apply();
+                        return true;
                     })
                     .subscribeOn(Schedulers.io())
-                    .subscribe(result -> {
-                        Log.d("SharedPrefs", "saveLanguagesList: " + result);
-                    }, throwable -> {
-                        Log.e("SharedPrefs", "saveLanguagesList: ", throwable);
-                    });
+                    .subscribe(() -> Timber.d("saveLanguagesList: success"),
+                            throwable -> Timber.e(throwable, "saveLanguagesList:"));
         }
     }
 
@@ -164,24 +138,24 @@ public class SharedPrefs {
                     File file = getLangsFile();
                     FileReader fs = new FileReader(file);
                     Type collectionType = new TypeToken<List<Language>>() {}.getType();
-                    return mGson.<List<Language>>fromJson(fs, collectionType);
+                    return gson.<List<Language>>fromJson(fs, collectionType);
                 })
                 .doOnError(throwable -> {
                     purgeLanguages();
-                    Log.e("SharedPrefs", "getLanguagesList: ", throwable);
+                    Timber.e(throwable, "getLanguagesList:");
                 });
     }
 
     public void setLangsTimestamp(Date date) {
         String timestamp = LANGS_TIMESTAMP.format(date);
-        mPreferences.edit().putString(PREF_LANGS_TIMESTAMP, timestamp).apply();
+        preferences.edit().putString(PREF_LANGS_TIMESTAMP, timestamp).apply();
     }
 
     public boolean shouldUpdateLangs() {
         boolean updatedLastTwoWeeks = false;
-        if (mPreferences.contains(PREF_LANGS_TIMESTAMP)) {
+        if (preferences.contains(PREF_LANGS_TIMESTAMP)) {
             try {
-                String s = mPreferences.getString(PREF_LANGS_TIMESTAMP, null);
+                String s = preferences.getString(PREF_LANGS_TIMESTAMP, null);
                 Date timestamp = LANGS_TIMESTAMP.parse(s);
                 Calendar calendar = Calendar.getInstance();
                 calendar.add(Calendar.DAY_OF_MONTH, -14);
@@ -190,7 +164,7 @@ public class SharedPrefs {
                 // failed to parse date
             }
         }
-        String savedLocale = mPreferences.getString(PREF_LANGS_LOCALE, null);
+        String savedLocale = preferences.getString(PREF_LANGS_LOCALE, null);
         String currentLocale = Locale.getDefault().getLanguage();
         return !updatedLastTwoWeeks || !currentLocale.equals(savedLocale) || !hasLangsFile();
     }
@@ -205,10 +179,7 @@ public class SharedPrefs {
         }
         File file = getLangsFile();
         if (file.exists()) {
-            boolean delete = file.delete();
-            if (BuildConfig.DEBUG) {
-                Log.d("SharedPrefs", "purgeLanguages: " + delete);
-            }
+            Timber.d("purgeLanguages: %s", file.delete());
         }
     }
 
@@ -217,30 +188,30 @@ public class SharedPrefs {
     ///////////////////////////////////////////////////////////////////////////
 
     public boolean showShareFab() {
-        return mPreferences.getBoolean(PREF_SHOW_SHARE_FAB, true);
+        return preferences.getBoolean(PREF_SHOW_SHARE_FAB, true);
     }
 
     public boolean lookupReverse() {
-        return mPreferences.getBoolean(PREF_LOOKUP_REVERSE, true);
+        return preferences.getBoolean(PREF_LOOKUP_REVERSE, true);
     }
 
     public boolean backFocusSearch() {
-        return mPreferences.getBoolean(PREF_BACK_FOCUS, false);
+        return preferences.getBoolean(PREF_BACK_FOCUS, false);
     }
 
     public boolean closeOnShare() {
-        return mPreferences.getBoolean(PREF_CLOSE_ON_SHARE, false);
+        return preferences.getBoolean(PREF_CLOSE_ON_SHARE, false);
     }
 
     public boolean shareIncludeTranscription() {
-        return mPreferences.getBoolean(PREF_INCLUDE_TRANSCRIPTION, false);
+        return preferences.getBoolean(PREF_INCLUDE_TRANSCRIPTION, false);
     }
 
     public int getSearchFilter() {
-        int family = mPreferences.getBoolean(PREF_FILTER_FAMILY, true) ? ApiClient.FILTER_FAMILY : 0;
-        int shortPos = mPreferences.getBoolean(PREF_FILTER_SHORT_POS, false) ? ApiClient.FILTER_SHORT_POS : 0;
-        int morpho = mPreferences.getBoolean(PREF_FILTER_MORPHO, false) ? ApiClient.FILTER_MORPHO : 0;
-        int pos = mPreferences.getBoolean(PREF_FILTER_POS_FILTER, false) ? ApiClient.FILTER_POS_FILTER : 0;
+        int family = preferences.getBoolean(PREF_FILTER_FAMILY, true) ? ApiClient.FILTER_FAMILY : 0;
+        int shortPos = preferences.getBoolean(PREF_FILTER_SHORT_POS, false) ? ApiClient.FILTER_SHORT_POS : 0;
+        int morpho = preferences.getBoolean(PREF_FILTER_MORPHO, false) ? ApiClient.FILTER_MORPHO : 0;
+        int pos = preferences.getBoolean(PREF_FILTER_POS_FILTER, false) ? ApiClient.FILTER_POS_FILTER : 0;
         return family | shortPos | morpho | pos;
     }
 
@@ -249,8 +220,7 @@ public class SharedPrefs {
     ///////////////////////////////////////////////////////////////////////////
 
     private File getLangsFile() {
-        File dir = mContext.getFilesDir();
-        return new File(dir, LANGS_FILE_NAME);
+        return new File(filesDir, LANGS_FILE_NAME);
     }
 
 }

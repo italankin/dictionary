@@ -1,18 +1,3 @@
-/*
- * Copyright 2016 Igor Talankin
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.italankin.dictionary.api;
 
 import androidx.annotation.IntDef;
@@ -20,17 +5,16 @@ import androidx.annotation.IntDef;
 import com.italankin.dictionary.dto.Definition;
 import com.italankin.dictionary.dto.Language;
 
-import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
@@ -126,17 +110,13 @@ public class ApiClient {
      *              </ul>
      * @return {@link List} of {@link Definition}s
      */
-    public Single<List<Definition>> lookup(String key, String lang, String text,
-                                           String ui, @LookupFlags int flags) {
-        try {
-            text = URLEncoder.encode(text, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            return Single.error(e);
-        }
-        return mService.lookup(key, lang, text, ui, flags)
-                .map(dicResult -> {
+    public Maybe<List<Definition>> lookup(String key, String lang, String text,
+                                          String ui, @LookupFlags int flags) {
+        return Single.fromCallable(() -> URLEncoder.encode(text, "UTF-8"))
+                .flatMap(s -> mService.lookup(key, lang, s, ui, flags))
+                .flatMapMaybe(dicResult -> {
                     List<Definition> result = dicResult.def;
-                    return result!=null ?result:Collections.emptyList();
+                    return result != null ? Maybe.just(result) : Maybe.empty();
                 });
     }
 

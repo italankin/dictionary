@@ -28,4 +28,7 @@ public interface MainView extends MvpView {
 
     @StateStrategyType(OneExecutionStateStrategy.class)
     void onEmptyResult();
+
+    @StateStrategyType(OneExecutionStateStrategy.class)
+    void switchLanguages(int destIndex, int sourceIndex);
 }

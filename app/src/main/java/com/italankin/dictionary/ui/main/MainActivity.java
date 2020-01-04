@@ -1,18 +1,3 @@
-/*
- * Copyright 2016 Igor Talankin
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.italankin.dictionary.ui.main;
 
 import android.animation.Animator;
@@ -493,12 +478,10 @@ public class MainActivity extends MvpAppCompatActivity implements MainView {
     }
 
     private void swapLanguages() {
-        if (!presenter.swapLanguages()) {
+        if (!presenter.onSwapLanguages()) {
             return;
         }
         startLookup();
-
-        // anim stuff
 
         float rotation = 180f;
         if (swapLangs.getRotation() > 0) {
@@ -512,25 +495,30 @@ public class MainActivity extends MvpAppCompatActivity implements MainView {
 
         spinnerDest.setEnabled(false);
         spinnerSource.setEnabled(false);
-        SwitchAnimation anim = new SwitchAnimation(spinnerDest,
+
+        new SwitchAnimation(spinnerDest,
                 -spinnerDest.getHeight(),
                 0f,
                 SWITCH_ANIM_DURATION,
-                () -> {
-                    OnItemSelectedListener listener = spinnerDest.getOnItemSelectedListener();
-                    spinnerDest.setOnItemSelectedListener(null);
-                    spinnerDest.setSelection(presenter.getDestLanguageIndex());
-                    spinnerDest.setOnItemSelectedListener(listener);
-                    listener = spinnerSource.getOnItemSelectedListener();
-                    spinnerSource.setOnItemSelectedListener(null);
-                    spinnerSource.setSelection(presenter.getSourceLanguageIndex());
-                    spinnerSource.setOnItemSelectedListener(listener);
-                    spinnerDest.setEnabled(true);
-                    spinnerSource.setEnabled(true);
-                });
-        anim.start();
-        anim = new SwitchAnimation(spinnerSource, spinnerSource.getHeight(), 0, SWITCH_ANIM_DURATION, null);
-        anim.start();
+                presenter::onSwitchLanguages)
+                .start();
+        new SwitchAnimation(spinnerSource, spinnerSource.getHeight(), 0, SWITCH_ANIM_DURATION, null)
+                .start();
+    }
+
+    @Override
+    public void switchLanguages(int destIndex, int sourceIndex) {
+        OnItemSelectedListener destListener = spinnerDest.getOnItemSelectedListener();
+        spinnerDest.setOnItemSelectedListener(null);
+        spinnerDest.setSelection(destIndex);
+        spinnerDest.setOnItemSelectedListener(destListener);
+        spinnerDest.setEnabled(true);
+
+        OnItemSelectedListener sourceListener = spinnerSource.getOnItemSelectedListener();
+        spinnerSource.setOnItemSelectedListener(null);
+        spinnerSource.setSelection(sourceIndex);
+        spinnerSource.setOnItemSelectedListener(sourceListener);
+        spinnerSource.setEnabled(true);
     }
 
     /**

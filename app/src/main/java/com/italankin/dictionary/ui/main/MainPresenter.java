@@ -1,18 +1,3 @@
-/*
- * Copyright 2016 Igor Talankin
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.italankin.dictionary.ui.main;
 
 import android.text.TextUtils;
@@ -20,6 +5,7 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Size;
+import androidx.annotation.StringRes;
 
 import com.arellomobile.mvp.InjectViewState;
 import com.arellomobile.mvp.MvpPresenter;
@@ -40,10 +26,10 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.Subject;
@@ -57,6 +43,7 @@ import timber.log.Timber;
 public class MainPresenter extends MvpPresenter<MainView> {
 
     private static final int LOOKUP_DEBOUNCE = 450;
+    private static final String SANITIZE_PATTERN = "[^\\p{L}\\w -']";
 
     /**
      * Api client for making requests
@@ -96,24 +83,6 @@ public class MainPresenter extends MvpPresenter<MainView> {
     private Result lastResult;
     private ArrayList<String> history = new ArrayList<>(0);
 
-    /**
-     * Callback function called when receiving languages list.
-     */
-    private Consumer<Object> onGetLangsResult = new Consumer<Object>() {
-        @Override
-        public void accept(Object o) {
-            getViewState().onLanguagesResult(langs, getDestLanguageIndex(), getSourceLanguageIndex());
-        }
-    };
-
-    /**
-     * Handling languages fetching errors.
-     */
-    private Consumer<Throwable> getLangsErrorHandler = throwable -> {
-        Timber.e(throwable, "getLangs:");
-        getViewState().onLanguagesError();
-    };
-
     @Inject
     public MainPresenter(ApiClient client, SharedPrefs prefs) {
         apiClient = client;
@@ -125,8 +94,7 @@ public class MainPresenter extends MvpPresenter<MainView> {
     protected void onFirstViewAttach() {
         eventsDisposable = events
                 .subscribeOn(Schedulers.computation())
-                .map(s -> s.replaceAll("[^\\p{L}\\w -']", "").trim())
-                .filter(s -> !s.isEmpty())
+                .map(MainPresenter::sanitizeInput)
                 .debounce(LOOKUP_DEBOUNCE, TimeUnit.MILLISECONDS)
                 .subscribe(this::lookupInternal);
     }
@@ -160,7 +128,9 @@ public class MainPresenter extends MvpPresenter<MainView> {
      * @param text string to lookup
      */
     public void lookup(String text) {
-        events.onNext(text);
+        if (text != null && !text.isEmpty()) {
+            events.onNext(text);
+        }
     }
 
     /**
@@ -168,7 +138,7 @@ public class MainPresenter extends MvpPresenter<MainView> {
      *
      * @param text string to lookup
      */
-    private void lookupInternal(final String text) {
+    private void lookupInternal(String text) {
         if (lookupDisposable != null && !lookupDisposable.isDisposed()) {
             // cancel existing sent request
             lookupDisposable.dispose();
@@ -176,15 +146,16 @@ public class MainPresenter extends MvpPresenter<MainView> {
         }
         int flags = prefs.getSearchFilter();
         lookupDisposable = apiClient.lookup(BuildConfig.API_KEY, getLangParam(false), text, uiLanguage, flags)
-                .flatMap(definitions -> {
-                    if (definitions.isEmpty() && prefs.lookupReverse()) {
-                        // if we got no result, attempt to lookup in reverse direction
+                .switchIfEmpty(Maybe.defer(() -> {
+                    if (prefs.lookupReverse()) {
                         return apiClient.lookup(BuildConfig.API_KEY, getLangParam(true),
                                 text, uiLanguage, flags);
+                    } else {
+                        return Maybe.empty();
                     }
-                    return Single.just(definitions);
-                })
-                .map(definitions -> definitions.isEmpty() ? Result.EMPTY : new Result(definitions))
+                }))
+                .map(Result::new)
+                .defaultIfEmpty(Result.EMPTY)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(result -> {
                     if (result != Result.EMPTY) {
@@ -196,7 +167,10 @@ public class MainPresenter extends MvpPresenter<MainView> {
                     } else {
                         getViewState().onEmptyResult();
                     }
-                }, errorHandler);
+                }, throwable -> {
+                    Timber.e(throwable, "lookupInternal:");
+                    getViewState().showError(getErrorMessage(throwable));
+                });
     }
 
     /**
@@ -268,17 +242,26 @@ public class MainPresenter extends MvpPresenter<MainView> {
         if (prefs.shouldUpdateLangs()) {
             langsDisposable = loadLanguagesFromRemote()
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(onGetLangsResult, getLangsErrorHandler);
+                    .subscribe(ignored -> {
+                        Timber.d("loadLanguages: %s", langs);
+                        getViewState().onLanguagesResult(langs, getDestLanguageIndex(), getSourceLanguageIndex());
+                    }, throwable -> {
+                        Timber.e(throwable, "loadLanguages:");
+                        getViewState().onLanguagesError();
+                    });
         } else {
             langsDisposable = prefs.getLanguagesList()
-                    .map(languages -> {
-                        updateLanguages(languages);
-                        return languages;
-                    })
+                    .map(this::updateLanguages)
                     .onErrorResumeNext(throwable -> loadLanguagesFromRemote())
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(onGetLangsResult, getLangsErrorHandler);
+                    .subscribe(ignored -> {
+                        Timber.d("loadLanguages: %s", langs);
+                        getViewState().onLanguagesResult(langs, getDestLanguageIndex(), getSourceLanguageIndex());
+                    }, throwable -> {
+                        Timber.e(throwable, "loadLanguages:");
+                        getViewState().onLanguagesError();
+                    });
         }
     }
 
@@ -297,13 +280,14 @@ public class MainPresenter extends MvpPresenter<MainView> {
      *
      * @param list list of the languages
      */
-    private void updateLanguages(List<Language> list) {
+    private List<Language> updateLanguages(List<Language> list) {
         langs = list;
         if (!list.isEmpty()) {
             setSourceLanguageByCode(prefs.getSourceLang());
             setDestLanguageByCode(prefs.getDestLang());
             sortLanguages();
         }
+        return langs;
     }
 
     public void sortLanguages() {
@@ -379,21 +363,13 @@ public class MainPresenter extends MvpPresenter<MainView> {
         prefs.setDestLang(dest);
     }
 
-    public int getSourceLanguageIndex() {
-        return langs.indexOf(source);
-    }
-
-    public int getDestLanguageIndex() {
-        return langs.indexOf(dest);
-    }
-
     /**
      * Swap languages.
      *
      * @return {@code true}, if languages were swapped, {@code false} otherwise
      * (ex. {@link #source} == {@link #dest})
      */
-    public boolean swapLanguages() {
+    public boolean onSwapLanguages() {
         if (!TextUtils.equals(source.getCode(), dest.getCode())) {
             Language tmp = source;
             source = dest;
@@ -416,38 +392,43 @@ public class MainPresenter extends MvpPresenter<MainView> {
     // Error handlers
     ///////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Generic error handler.
-     */
-    private Consumer<Throwable> errorHandler = throwable -> {
-        if (BuildConfig.DEBUG) {
-            throwable.printStackTrace();
-        }
-        int message = R.string.error;
+    @StringRes
+    private int getErrorMessage(Throwable throwable) {
         if (throwable instanceof IOException) {
-            message = R.string.error_no_connection;
-        }
-        if (throwable instanceof HttpException) {
+            return R.string.error_no_connection;
+        } else if (throwable instanceof HttpException) {
             HttpException e = (HttpException) throwable;
             switch (e.code()) {
                 case 400:
                 case 501:
-                    message = R.string.error_lang_not_supported;
-                    break;
+                    return R.string.error_lang_not_supported;
                 case 401:
                 case 402:
                 case 403:
                 case 502:
-                    // just error
-                    break;
+                    return R.string.error;
                 case 413:
-                    message = R.string.error_long_request;
-                    break;
+                    return R.string.error_long_request;
                 default:
-                    message = R.string.error_no_results;
+                    return R.string.error_no_results;
             }
         }
-        getViewState().showError(message);
-    };
+        return R.string.error;
+    }
 
+    public void onSwitchLanguages() {
+        getViewState().switchLanguages(getDestLanguageIndex(), getSourceLanguageIndex());
+    }
+
+    private int getSourceLanguageIndex() {
+        return langs.indexOf(source);
+    }
+
+    private int getDestLanguageIndex() {
+        return langs.indexOf(dest);
+    }
+
+    private static String sanitizeInput(String s) {
+        return s.replaceAll(SANITIZE_PATTERN, "").trim();
+    }
 }
