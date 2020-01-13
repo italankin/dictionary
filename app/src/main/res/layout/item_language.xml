@@ -14,5 +14,4 @@
     android:padding="8dp"
     android:textColor="#fff"
     android:textSize="16sp"
-    tools:background="#888"
     tools:text="Language" />

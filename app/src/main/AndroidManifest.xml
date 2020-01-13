@@ -43,6 +43,7 @@
         <activity
             android:name=".ui.settings.SettingsActivity"
             android:label="@string/settings" />
+        <activity android:name="com.italankin.dictionary2.ui.main.DictionaryActivity" />
 
     </application>
 

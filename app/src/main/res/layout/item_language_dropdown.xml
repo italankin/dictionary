@@ -5,8 +5,7 @@
     android:layout_height="wrap_content"
     android:background="?selectableItemBackground"
     android:minWidth="240dp"
-    android:padding="16dp"
-    tools:background="#888">
+    android:padding="16dp">
 
     <TextView
         android:id="@+id/text"

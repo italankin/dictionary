@@ -11,7 +11,7 @@ import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import com.italankin.dictionary.R;
-import com.italankin.dictionary.dto.Language;
+import com.italankin.dictionary.api.dto.Language;
 
 import java.util.Collections;
 import java.util.List;
@@ -19,19 +19,19 @@ import java.util.List;
 /**
  * Adapter for language list.
  */
-class LanguageAdapter extends BaseAdapter implements CompoundButton.OnCheckedChangeListener {
+public class LanguageAdapter extends BaseAdapter implements CompoundButton.OnCheckedChangeListener {
 
     private final LayoutInflater inflater;
-    private final List<Language> dataset;
+    private List<Language> dataset;
     private CheckedChangeListener listener;
 
-    public LanguageAdapter(Context context, List<Language> dataset) {
+    public LanguageAdapter(Context context) {
         this.inflater = LayoutInflater.from(context);
-        if (dataset == null) {
-            this.dataset = Collections.emptyList();
-        } else {
-            this.dataset = dataset;
-        }
+    }
+
+    public void setDataset(List<Language> newDataset) {
+        dataset = newDataset != null ? Collections.unmodifiableList(newDataset) : Collections.emptyList();
+        notifyDataSetChanged();
     }
 
     public void setListener(CheckedChangeListener listener) {
@@ -42,7 +42,7 @@ class LanguageAdapter extends BaseAdapter implements CompoundButton.OnCheckedCha
     @SuppressLint("ViewHolder") // As there's only one selected item, VH is not necessary
     public View getView(int position, View convertView, ViewGroup parent) {
         Language item = getItem(position);
-        convertView = inflater.inflate(R.layout.item_spinner_language, parent, false);
+        convertView = inflater.inflate(R.layout.item_language, parent, false);
         TextView text = convertView.findViewById(R.id.text);
         text.setText(item.getName());
         return convertView;
@@ -53,7 +53,7 @@ class LanguageAdapter extends BaseAdapter implements CompoundButton.OnCheckedCha
         ViewHolder holder;
 
         if (convertView == null) {
-            convertView = inflater.inflate(R.layout.item_spinner_language_dropdown, parent, false);
+            convertView = inflater.inflate(R.layout.item_language_dropdown, parent, false);
             holder = new ViewHolder();
             holder.text = convertView.findViewById(R.id.text);
             holder.checkBox = convertView.findViewById(R.id.checkbox);

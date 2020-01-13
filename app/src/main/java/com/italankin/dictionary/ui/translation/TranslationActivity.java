@@ -18,8 +18,8 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ShareCompat;
 
 import com.italankin.dictionary.R;
-import com.italankin.dictionary.dto.Attribute;
-import com.italankin.dictionary.dto.TranslationEx;
+import com.italankin.dictionary.api.dto.Attribute;
+import com.italankin.dictionary.api.dto.TranslationEx;
 import com.italankin.dictionary.ui.main.MainActivity;
 
 

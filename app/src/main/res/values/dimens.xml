@@ -7,4 +7,6 @@
 
     <dimen name="fab_share_margin">16dp</dimen>
     <dimen name="list_extra_space">72dp</dimen>
+
+    <dimen name="toolbar_inset">16dp</dimen>
 </resources>

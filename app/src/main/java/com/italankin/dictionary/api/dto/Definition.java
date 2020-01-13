@@ -1,4 +1,4 @@
-package com.italankin.dictionary.dto;
+package com.italankin.dictionary.api.dto;
 
 import android.os.Parcel;
 import android.os.Parcelable;

@@ -20,12 +20,10 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ShareCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -38,11 +36,10 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.italankin.dictionary.App;
 import com.italankin.dictionary.R;
-import com.italankin.dictionary.dto.Language;
-import com.italankin.dictionary.dto.Result;
-import com.italankin.dictionary.dto.TranslationEx;
+import com.italankin.dictionary.api.dto.Language;
+import com.italankin.dictionary.api.dto.Result;
+import com.italankin.dictionary.api.dto.TranslationEx;
 import com.italankin.dictionary.ui.main.util.HidingViewBehavior;
-import com.italankin.dictionary.ui.main.util.SwitchAnimation;
 import com.italankin.dictionary.ui.settings.SettingsActivity;
 import com.italankin.dictionary.ui.translation.TranslationActivity;
 import com.italankin.dictionary.utils.SharedPrefs;
@@ -57,10 +54,7 @@ import static android.widget.AdapterView.OnItemSelectedListener;
 @SuppressLint("RestrictedApi")
 public class MainActivity extends MvpAppCompatActivity implements MainView {
 
-    private static final int SWITCH_ANIM_DURATION = 450;
-    private static final int SWAP_LANGS_ANIM_DURATION = 300;
     private static final long PROGRESS_ANIM_DURATION = 300;
-    private static final int TOOLBAR_ANIM_IN_DURATION = 600;
     private static final int SHARE_FAB_ANIM_DURATION = 300;
 
     private static final int REQUEST_CODE_SHARE = 17;
@@ -78,26 +72,10 @@ public class MainActivity extends MvpAppCompatActivity implements MainView {
     ClipboardManager clipboardManager;
 
     private CoordinatorLayout rootLayout;
-    /**
-     * EditText for text input
-     */
     private EditText input;
     private View inputLayout;
-    /**
-     * TextView in toolbar indicating current destination language
-     */
-    private Spinner spinnerSource;
-    /**
-     * TextView in toolbar indicating current source language
-     */
-    private Spinner spinnerDest;
-    /**
-     * Arrow in the toolbar for switching languages
-     */
-    private View swapLangs;
     private View lookup;
     private TextView transcription;
-    private View toolbarInnerLayout;
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private FloatingActionButton shareFab;
@@ -105,7 +83,7 @@ public class MainActivity extends MvpAppCompatActivity implements MainView {
 
     @ProvidePresenter
     MainPresenter providePresenter() {
-        return App.presenters().mainPresenter();
+        return App.presenters().getMainPresenter();
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -127,14 +105,7 @@ public class MainActivity extends MvpAppCompatActivity implements MainView {
             }
         });
         inputLayout = findViewById(R.id.input_card);
-        spinnerSource = findViewById(R.id.spinner_lang_source);
-        spinnerDest = findViewById(R.id.spinner_lang_dest);
-        swapLangs = findViewById(R.id.swap_langs);
         swapLangs.setOnClickListener(v -> swapLanguages());
-        swapLangs.setOnLongClickListener(v -> {
-            Toast.makeText(this, R.string.toast_swap_langs, Toast.LENGTH_SHORT).show();
-            return true;
-        });
         lookup = findViewById(R.id.lookup);
         lookup.setOnClickListener(view -> startLookup());
         transcription = findViewById(R.id.text_transcription);
@@ -146,13 +117,12 @@ public class MainActivity extends MvpAppCompatActivity implements MainView {
                     .createChooserIntent();
             startActivity(intent);
         });
-        toolbarInnerLayout = findViewById(R.id.toolbar_inner_layout);
         recyclerView = findViewById(R.id.recycler_view);
         progressBar = findViewById(R.id.progress_bar);
         shareFab = findViewById(R.id.btn_share);
         shareFab.setOnClickListener(v -> shareLastResult());
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         setupInputLayout();
         setupRecyclerView();
@@ -251,7 +221,7 @@ public class MainActivity extends MvpAppCompatActivity implements MainView {
     protected void onStart() {
         super.onStart();
         int fabVisibility = shareFab.getVisibility();
-        if (prefs.showShareFab()) {
+        if (prefs.getShowShareFab()) {
             Result result = presenter.getLastResult();
             if (result != null && fabVisibility != View.VISIBLE) {
                 showShareFab();
@@ -299,14 +269,14 @@ public class MainActivity extends MvpAppCompatActivity implements MainView {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE_SHARE && resultCode == RESULT_OK && prefs.closeOnShare()) {
+        if (requestCode == REQUEST_CODE_SHARE && resultCode == RESULT_OK && prefs.getCloseOnShare()) {
             finish();
         }
     }
 
     @Override
     public void onBackPressed() {
-        if (prefs.backFocusSearch() && !input.hasFocus()) {
+        if (prefs.getBackFocusSearch() && !input.hasFocus()) {
             input.requestFocus();
         } else {
             super.onBackPressed();
@@ -410,8 +380,9 @@ public class MainActivity extends MvpAppCompatActivity implements MainView {
      */
     @Override
     public void onLanguagesResult(List<Language> languages, int destIndex, int sourceIndex) {
-        final LanguageAdapter adapter = new LanguageAdapter(this, languages);
-//        adapter.setListener(Language::setFavorite); // TODO
+        toolbar.setLanguages(languages, sourceIndex, destIndex);
+
+        //        adapter.setListener(Language::setFavorite); // TODO
         spinnerSource.setAdapter(adapter);
         spinnerSource.setSelection(sourceIndex);
         spinnerSource.setOnItemSelectedListener(new OnItemSelectedListener() {
@@ -482,28 +453,7 @@ public class MainActivity extends MvpAppCompatActivity implements MainView {
             return;
         }
         startLookup();
-
-        float rotation = 180f;
-        if (swapLangs.getRotation() > 0) {
-            rotation *= -1;
-        }
-        swapLangs.setRotation(0);
-        swapLangs.animate()
-                .rotationBy(rotation)
-                .setDuration(SWAP_LANGS_ANIM_DURATION)
-                .start();
-
-        spinnerDest.setEnabled(false);
-        spinnerSource.setEnabled(false);
-
-        new SwitchAnimation(spinnerDest,
-                -spinnerDest.getHeight(),
-                0f,
-                SWITCH_ANIM_DURATION,
-                presenter::onSwitchLanguages)
-                .start();
-        new SwitchAnimation(spinnerSource, spinnerSource.getHeight(), 0, SWITCH_ANIM_DURATION, null)
-                .start();
+        toolbar.animateSwapLanguages();
     }
 
     @Override
@@ -542,7 +492,7 @@ public class MainActivity extends MvpAppCompatActivity implements MainView {
             recyclerView.setVisibility(View.VISIBLE);
         }
         hideProgressBar();
-        if (prefs.showShareFab() && shareFab.getVisibility() != View.VISIBLE) {
+        if (prefs.getShowShareFab() && shareFab.getVisibility() != View.VISIBLE) {
             showShareFab();
         }
     }

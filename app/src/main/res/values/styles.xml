@@ -6,8 +6,7 @@
         <item name="colorAccent">@color/accent</item>
     </style>
 
-    <style name="AppTheme" parent="BaseAppTheme">
-    </style>
+    <style name="AppTheme" parent="BaseAppTheme" />
 
     <style name="TranslationTextItem">
         <item name="android:background">@drawable/bg_list_item</item>
@@ -27,7 +26,6 @@
         <item name="popupTheme">@style/ThemeOverlay.AppCompat.Light</item>
     </style>
 
-    <style name="Toolbar" parent="@style/BaseToolbar">
-    </style>
+    <style name="Toolbar" parent="@style/BaseToolbar" />
 
 </resources>

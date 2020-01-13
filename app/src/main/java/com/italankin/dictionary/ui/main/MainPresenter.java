@@ -9,11 +9,10 @@ import androidx.annotation.StringRes;
 
 import com.arellomobile.mvp.InjectViewState;
 import com.arellomobile.mvp.MvpPresenter;
-import com.italankin.dictionary.BuildConfig;
 import com.italankin.dictionary.R;
-import com.italankin.dictionary.api.ApiClient;
-import com.italankin.dictionary.dto.Language;
-import com.italankin.dictionary.dto.Result;
+import com.italankin.dictionary.api.DictionaryApiClient;
+import com.italankin.dictionary.api.dto.Language;
+import com.italankin.dictionary.api.dto.Result;
 import com.italankin.dictionary.utils.SharedPrefs;
 
 import java.io.IOException;
@@ -48,7 +47,7 @@ public class MainPresenter extends MvpPresenter<MainView> {
     /**
      * Api client for making requests
      */
-    private final ApiClient apiClient;
+    private final DictionaryApiClient apiClient;
     /**
      * Application shared preferences
      */
@@ -84,7 +83,7 @@ public class MainPresenter extends MvpPresenter<MainView> {
     private ArrayList<String> history = new ArrayList<>(0);
 
     @Inject
-    public MainPresenter(ApiClient client, SharedPrefs prefs) {
+    public MainPresenter(DictionaryApiClient client, SharedPrefs prefs) {
         apiClient = client;
         this.prefs = prefs;
         uiLanguage = Locale.getDefault().getLanguage();
@@ -145,10 +144,10 @@ public class MainPresenter extends MvpPresenter<MainView> {
             lookupDisposable = null;
         }
         int flags = prefs.getSearchFilter();
-        lookupDisposable = apiClient.lookup(BuildConfig.API_KEY, getLangParam(false), text, uiLanguage, flags)
+        lookupDisposable = apiClient.lookup(getLangParam(false), text, uiLanguage, flags)
                 .switchIfEmpty(Maybe.defer(() -> {
-                    if (prefs.lookupReverse()) {
-                        return apiClient.lookup(BuildConfig.API_KEY, getLangParam(true),
+                    if (prefs.getLookupReverse()) {
+                        return apiClient.lookup(getLangParam(true),
                                 text, uiLanguage, flags);
                     } else {
                         return Maybe.empty();
@@ -203,7 +202,7 @@ public class MainPresenter extends MvpPresenter<MainView> {
             return null;
         }
         String[] result = new String[2];
-        if (prefs.shareIncludeTranscription() && lastResult.transcription != null &&
+        if (prefs.getShareIncludeTranscription() && lastResult.transcription != null &&
                 !lastResult.transcription.isEmpty()) {
             result[0] = lastResult.text + " [" + lastResult.transcription + "]";
         } else {
@@ -239,7 +238,7 @@ public class MainPresenter extends MvpPresenter<MainView> {
             return;
         }
 
-        if (prefs.shouldUpdateLangs()) {
+        if (prefs.getShouldUpdateLanguages()) {
             langsDisposable = loadLanguagesFromRemote()
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(ignored -> {
@@ -267,9 +266,9 @@ public class MainPresenter extends MvpPresenter<MainView> {
 
     @NonNull
     private Single<List<Language>> loadLanguagesFromRemote() {
-        return apiClient.getLangs(BuildConfig.API_KEY)
+        return apiClient.getLanguages()
                 .doOnSuccess(list -> {
-                    prefs.setLangsTimestamp(new Date());
+                    prefs.setLanguagesTimestamp(new Date());
                     updateLanguages(list);
                     saveLanguages();
                 });

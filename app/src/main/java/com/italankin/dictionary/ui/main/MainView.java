@@ -4,8 +4,8 @@ import com.arellomobile.mvp.MvpView;
 import com.arellomobile.mvp.viewstate.strategy.OneExecutionStateStrategy;
 import com.arellomobile.mvp.viewstate.strategy.StateStrategyType;
 import com.arellomobile.strategy.TagStrategy;
-import com.italankin.dictionary.dto.Language;
-import com.italankin.dictionary.dto.Result;
+import com.italankin.dictionary.api.dto.Language;
+import com.italankin.dictionary.api.dto.Result;
 
 import java.util.List;
 
