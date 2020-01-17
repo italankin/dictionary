@@ -62,4 +62,8 @@
 
     <string name="content_desc_more">More options</string>
     <string name="content_desc_swap_langs">Swap languages</string>
+
+    <string name="transcription_format" translatable="false">[%s]</string>
+
+    <string name="clip">clip</string>
 </resources>

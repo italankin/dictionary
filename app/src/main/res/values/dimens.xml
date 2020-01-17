@@ -6,7 +6,8 @@
     <dimen name="text_size_small">14sp</dimen>
 
     <dimen name="fab_share_margin">16dp</dimen>
-    <dimen name="list_extra_space">72dp</dimen>
+    <dimen name="list_bottom_padding_fab">88dp</dimen>
+    <dimen name="list_bottom_padding_no_fab">16dp</dimen>
 
     <dimen name="toolbar_inset">16dp</dimen>
 </resources>

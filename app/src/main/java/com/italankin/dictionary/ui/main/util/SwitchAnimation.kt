@@ -11,7 +11,7 @@ class SwitchAnimation(
         private val translationX: Float,
         private val translationY: Float,
         private val duration: Long,
-        private val listener: (() -> Unit)?
+        private val listener: (() -> Unit)? = null
 ) {
 
     companion object {
@@ -46,16 +46,5 @@ class SwitchAnimation(
                 ObjectAnimator.ofFloat(view, "alpha", 0f, 1f)
         )
         duration = this@SwitchAnimation.duration / 2
-    }
-
-    /**
-     * Animation events listener.
-     */
-    interface OnSwitchListener {
-        /**
-         * Triggered when animation is mid-air (when view is actually invisible and ready to
-         * "switch" state.
-         */
-        fun onSwitch()
     }
 }

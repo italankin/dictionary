@@ -19,14 +19,14 @@
         tools:listitem="@layout/item_attribute"
         tools:visibility="visible" />
 
-    <com.italankin.dictionary2.ui.widget.InputFieldView
-        android:id="@+id/input_card"
+    <com.italankin.dictionary2.ui.main.widget.InputFieldView
+        android:id="@+id/input_field"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="?actionBarSize"
         app:cardCornerRadius="0dp" />
 
-    <com.italankin.dictionary2.ui.widget.CustomToolbar
+    <com.italankin.dictionary2.ui.main.widget.CustomToolbar
         android:id="@+id/toolbar"
         style="@style/Toolbar"
         android:layout_width="match_parent"

@@ -1,4 +1,4 @@
-package com.italankin.dictionary2.ui.widget
+package com.italankin.dictionary2.ui.main.widget
 
 import android.content.Context
 import android.util.AttributeSet
@@ -15,7 +15,7 @@ import com.italankin.dictionary.R
 import com.italankin.dictionary.api.dto.Language
 import com.italankin.dictionary.ui.main.LanguageAdapter
 import com.italankin.dictionary.ui.main.util.SwitchAnimation
-import com.italankin.dictionary2.ui.ext.doSilently
+import com.italankin.dictionary2.ui.ext.setSelection
 import kotlin.math.sign
 
 class CustomToolbar : Toolbar {
@@ -31,7 +31,7 @@ class CustomToolbar : Toolbar {
     private val btnSwap: View
 
     private var languageCallbacks: LanguageCallbacks? = null
-    private var adapter: LanguageAdapter
+    private var languageAdapter: LanguageAdapter
 
     constructor(context: Context) : this(context, null)
 
@@ -39,7 +39,7 @@ class CustomToolbar : Toolbar {
         val inset = context.resources.getDimensionPixelSize(R.dimen.toolbar_inset)
         setContentInsetsRelative(inset, inset)
         navigationIcon = null
-        adapter = LanguageAdapter(context)
+        languageAdapter = LanguageAdapter(context)
         inflate(context, R.layout.toolbar_inner, this)
         btnSwap = findViewById<View>(R.id.swap_langs)
         btnSwap.setOnLongClickListener {
@@ -58,26 +58,30 @@ class CustomToolbar : Toolbar {
         this.languageCallbacks = callbacks
     }
 
+    fun setOnButtonSwapClickListener(listener: (View) -> Unit) {
+        btnSwap.setOnClickListener(listener)
+    }
+
     fun setAdapterListener(listener: LanguageAdapter.CheckedChangeListener) {
-        adapter.setListener(listener)
+        languageAdapter.setListener(listener)
     }
 
     fun setLanguages(languages: List<Language>, sourceIndex: Int, destIndex: Int) {
-        adapter.setDataset(languages)
+        languageAdapter.setDataset(languages)
         setSelectedLanguages(sourceIndex, destIndex)
     }
 
-    fun setSelectedLanguages(sourceIndex: Int, destIndex: Int) {
-        spinnerDest.doSilently {
-            setSelection(destIndex)
+    fun setSelectedLanguages(sourceIndex: Int = -1, destIndex: Int = -1) {
+        if (destIndex >= 0) {
+            spinnerDest.setSelection(destIndex, silent = true)
         }
-        spinnerSource.doSilently {
-            setSelection(sourceIndex)
+        if (sourceIndex >= 0) {
+            spinnerSource.setSelection(sourceIndex, silent = true)
         }
     }
 
     fun notifyLanguagesChanged() {
-        adapter.notifyDataSetChanged()
+        languageAdapter.notifyDataSetChanged()
     }
 
     fun animateAppearance() {
@@ -119,14 +123,13 @@ class CustomToolbar : Toolbar {
                 spinnerSource,
                 spinnerSource.height.toFloat(),
                 0f,
-                ANIM_SWITCH_DURATION,
-                null
+                ANIM_SWITCH_DURATION
         ).start()
     }
 
     private fun initSpinners() {
         spinnerSource = findViewById(R.id.spinner_lang_source)
-        spinnerSource.adapter = adapter
+        spinnerSource.adapter = languageAdapter
         spinnerSource.onItemSelectedListener = object : OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
                 languageCallbacks?.onSourceLanguageChanged(position)
@@ -138,7 +141,7 @@ class CustomToolbar : Toolbar {
         }
 
         spinnerDest = findViewById(R.id.spinner_lang_dest)
-        spinnerDest.adapter = adapter
+        spinnerDest.adapter = languageAdapter
         spinnerDest.onItemSelectedListener = object : OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
                 languageCallbacks?.onDestLanguageChanged(position)

@@ -54,8 +54,6 @@ import static android.widget.AdapterView.OnItemSelectedListener;
 @SuppressLint("RestrictedApi")
 public class MainActivity extends MvpAppCompatActivity implements MainView {
 
-    private static final long PROGRESS_ANIM_DURATION = 300;
-    private static final int SHARE_FAB_ANIM_DURATION = 300;
 
     private static final int REQUEST_CODE_SHARE = 17;
 
@@ -98,17 +96,15 @@ public class MainActivity extends MvpAppCompatActivity implements MainView {
         setContentView(R.layout.activity_main);
 
         rootLayout = findViewById(R.id.root);
-        input = findViewById(R.id.edit_input);
         input.setOnFocusChangeListener((view, hasFocus) -> {
             if (hasFocus) {
                 recyclerView.smoothScrollToPosition(0);
             }
         });
-        inputLayout = findViewById(R.id.input_card);
+        inputLayout = findViewById(R.id.input_field);
         swapLangs.setOnClickListener(v -> swapLanguages());
         lookup = findViewById(R.id.lookup);
         lookup.setOnClickListener(view -> startLookup());
-        transcription = findViewById(R.id.text_transcription);
         transcription.setOnClickListener(view -> {
             Intent intent = ShareCompat.IntentBuilder
                     .from(this)
